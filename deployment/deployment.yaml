@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ohc-account-invoice
+  namespace: ohc-account-invoice
+  labels:
+    app: ohc-account-invoice
+    version: v1.0.0
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ohc-account-invoice
+  template:
+    metadata:
+      labels:
+        app: ohc-account-invoice
+        version: v1.0.0
+    spec:
+      containers:
+      - name: ohc-account-invoice
+        image: ohc-account-invoice:1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        env:
+        # 从ConfigMap获取配置
+        - name: APP_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: ohc-account-invoice-config
+              key: APP_NAME
+        - name: APP_VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: ohc-account-invoice-config
+              key: APP_VERSION
+        - name: HOST
+          valueFrom:
+            configMapKeyRef:
+              name: ohc-account-invoice-config
+              key: HOST
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ohc-account-invoice-config
+              key: PORT
+        - name: STORAGE_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: ohc-account-invoice-config
+              key: STORAGE_TYPE
+        - name: LOCAL_STORAGE_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: ohc-account-invoice-config
+              key: LOCAL_STORAGE_PATH
+        - name: MINIO_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: ohc-account-invoice-config
+              key: MINIO_ENDPOINT
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ohc-account-invoice-secret
+              key: minio-access-key
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ohc-account-invoice-secret
+              key: minio-secret-key
+        - name: MINIO_BUCKET_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: ohc-account-invoice-config
+              key: MINIO_BUCKET_NAME
+        - name: MINIO_SECURE
+          valueFrom:
+            configMapKeyRef:
+              name: ohc-account-invoice-config
+              key: MINIO_SECURE
+        - name: AWS_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: ohc-account-invoice-config
+              key: AWS_REGION
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: ohc-account-invoice-secret
+              key: aws-access-key-id
+              optional: true
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ohc-account-invoice-secret
+              key: aws-secret-access-key
+              optional: true
+        - name: AWS_BUCKET_NAME
+          valueFrom:
+            secretKeyRef:
+              name: ohc-account-invoice-secret
+              key: aws-bucket-name
+              optional: true
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: ohc-account-invoice-config
+              key: LOG_LEVEL
+        - name: PYTHONUNBUFFERED
+          valueFrom:
+            configMapKeyRef:
+              name: ohc-account-invoice-config
+              key: PYTHONUNBUFFERED
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: generated-files
+          mountPath: /app/generated_files
+      volumes:
+      - name: generated-files
+        emptyDir: {}
+      restartPolicy: Always

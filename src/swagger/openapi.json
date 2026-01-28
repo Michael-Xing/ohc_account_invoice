@@ -1,0 +1,2689 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OHC账票生成服务",
+    "description": "OHC账票生成API服务",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/templates": {
+      "get": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "获取模板列表",
+        "description": "获取所有支持的模板列表",
+        "operationId": "list_templates_templates_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response List Templates Templates Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/templates/{template_name}": {
+      "get": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "获取模板信息",
+        "description": "获取指定模板的详细信息",
+        "operationId": "get_template_info_route_templates__template_name__get",
+        "parameters": [
+          {
+            "name": "template_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Template Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateInfoResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成文档",
+        "description": "生成账票文档（通用接口）",
+        "operationId": "generate_document_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/dhf-index": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成DHF INDEX",
+        "description": "生成制作文档・图纸一览",
+        "operationId": "generate_dhf_index_generate_dhf_index_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DHFIndexParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/ptf-index": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成PTF INDEX",
+        "description": "生成PTF INDEX",
+        "operationId": "generate_ptf_index_generate_ptf_index_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PTFIndexParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/es-individual-test-spec": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成ES个别试验要项书",
+        "description": "生成ES个别试验要项书",
+        "operationId": "generate_es_individual_test_spec_generate_es_individual_test_spec_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ESIndividualTestSpecParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/es-individual-test-result": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成ES个别试验结果书",
+        "description": "生成ES个别试验结果书",
+        "operationId": "generate_es_individual_test_result_generate_es_individual_test_result_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ESIndividualTestResultParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/pp-individual-test-result": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成PP个别试验结果书",
+        "description": "生成PP个别试验结果书",
+        "operationId": "generate_pp_individual_test_result_generate_pp_individual_test_result_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PPIndividualTestResultParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/es-verification-plan": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成ES验证计划书",
+        "description": "生成ES验证计划书",
+        "operationId": "generate_es_verification_plan_generate_es_verification_plan_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ESVerificationPlanParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/es-verification-result": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成ES验证结果书",
+        "description": "生成ES验证结果书",
+        "operationId": "generate_es_verification_result_generate_es_verification_result_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ESVerificationResultParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/pp-verification-plan": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成PP验证计划书",
+        "description": "生成PP验证计划书",
+        "operationId": "generate_pp_verification_plan_generate_pp_verification_plan_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PPVerificationPlanParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/pp-verification-result": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成PP验证结果书",
+        "description": "生成PP验证结果书",
+        "operationId": "generate_pp_verification_result_generate_pp_verification_result_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PPVerificationResultParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/basic-specification": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成基本规格书",
+        "description": "生成基本规格书",
+        "operationId": "generate_basic_specification_generate_basic_specification_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BasicSpecificationParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/pp-individual-test-spec": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成PP个别试验要项书",
+        "description": "生成PP个别试验要项书",
+        "operationId": "generate_pp_individual_test_spec_generate_pp_individual_test_spec_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PPIndividualTestSpecParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/follow-up-dr-minutes": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成跟进DR会议记录",
+        "description": "生成跟进DR会议记录",
+        "operationId": "generate_follow_up_dr_minutes_generate_follow_up_dr_minutes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FollowUpDRMinutesParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/labeling-specification": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成标签规格书",
+        "description": "生成标签规格书",
+        "operationId": "generate_labeling_specification_generate_labeling_specification_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabelingSpecificationParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/product-environment-assessment": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成产品环境评估要项书/结果书",
+        "description": "生成产品环境评估要项书/结果书",
+        "operationId": "generate_product_environment_assessment_generate_product_environment_assessment_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductEnvironmentAssessmentParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/existing-product-comparison": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成与现有产品对比表",
+        "description": "生成与现有产品对比表",
+        "operationId": "generate_existing_product_comparison_generate_existing_product_comparison_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExistingProductComparisonParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "健康检查",
+        "description": "检查服务健康状态",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/config": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "获取服务配置",
+        "description": "获取服务配置信息",
+        "operationId": "get_service_config_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/download/{filename}": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "下载文件",
+        "description": "下载生成的文件（仅本地存储时可用）",
+        "operationId": "download_file_download__filename__get",
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Filename"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "根路径",
+        "description": "返回API基本信息",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BasicSpecificationParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "product_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Product Name",
+            "description": "产品名称"
+          },
+          "overview": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Overview",
+            "description": "概述"
+          },
+          "technical_requirements": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Technical Requirements",
+            "description": "技术要求"
+          },
+          "acceptance_criteria": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Acceptance Criteria",
+            "description": "验收标准"
+          },
+          "compliance_standards": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compliance Standards",
+            "description": "符合标准"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "product_name",
+          "overview",
+          "technical_requirements",
+          "acceptance_criteria"
+        ],
+        "title": "BasicSpecificationParameters",
+        "description": "基本规格书 参数",
+        "example": {
+          "acceptance_criteria": "功能完整，性能达标",
+          "author": "张三",
+          "compliance_standards": "ISO 9001",
+          "date": "2025-01-22",
+          "overview": "企业级管理系统",
+          "product_name": "OHC系统",
+          "project_name": "OHC项目",
+          "technical_requirements": "支持1000并发用户",
+          "version": "1.0"
+        }
+      },
+      "DHFIndexParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Department",
+            "description": "部门"
+          },
+          "reviewer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer",
+            "description": "审核人"
+          },
+          "approval_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Date",
+            "description": "批准日期"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "document_type",
+          "department"
+        ],
+        "title": "DHFIndexParameters",
+        "description": "制作文档・图纸一览 (DHF INDEX) 参数",
+        "example": {
+          "approval_date": "2025-01-23",
+          "author": "张三",
+          "date": "2025-01-22",
+          "department": "研发部",
+          "document_type": "设计文档",
+          "project_name": "OHC项目",
+          "reviewer": "李四",
+          "version": "1.0"
+        }
+      },
+      "ESIndividualTestResultParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "test_item": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Test Item",
+            "description": "试验项目"
+          },
+          "test_result": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Test Result",
+            "description": "试验结果"
+          },
+          "test_date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Test Date",
+            "description": "试验日期"
+          },
+          "tester": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Tester",
+            "description": "试验人员"
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks",
+            "description": "备注"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "test_item",
+          "test_result",
+          "test_date",
+          "tester"
+        ],
+        "title": "ESIndividualTestResultParameters",
+        "description": "ES个别试验结果书 参数",
+        "example": {
+          "author": "张三",
+          "date": "2025-01-22",
+          "project_name": "OHC项目",
+          "remarks": "测试通过，无异常",
+          "test_date": "2025-01-21",
+          "test_item": "功能测试",
+          "test_result": "合格",
+          "tester": "李四",
+          "version": "1.0"
+        }
+      },
+      "ESIndividualTestSpecParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "test_item": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Test Item",
+            "description": "试验项目"
+          },
+          "test_purpose": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Test Purpose",
+            "description": "试验目的"
+          },
+          "test_method": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Test Method",
+            "description": "试验方法"
+          },
+          "acceptance_criteria": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Acceptance Criteria",
+            "description": "验收标准"
+          },
+          "test_equipment": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Equipment",
+            "description": "试验设备"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "test_item",
+          "test_purpose",
+          "test_method",
+          "acceptance_criteria"
+        ],
+        "title": "ESIndividualTestSpecParameters",
+        "description": "ES个别试验要项书 参数",
+        "example": {
+          "acceptance_criteria": "所有功能正常运行",
+          "author": "张三",
+          "date": "2025-01-22",
+          "project_name": "OHC项目",
+          "test_equipment": "测试服务器",
+          "test_item": "功能测试",
+          "test_method": "黑盒测试",
+          "test_purpose": "验证系统功能完整性",
+          "version": "1.0"
+        }
+      },
+      "ESVerificationPlanParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "verification_purpose": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Verification Purpose",
+            "description": "验证目的"
+          },
+          "verification_scope": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Verification Scope",
+            "description": "验证范围"
+          },
+          "verification_method": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Verification Method",
+            "description": "验证方法"
+          },
+          "verification_manager": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Verification Manager",
+            "description": "验证负责人"
+          },
+          "verification_schedule": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification Schedule",
+            "description": "验证计划"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "verification_purpose",
+          "verification_scope",
+          "verification_method",
+          "verification_manager"
+        ],
+        "title": "ESVerificationPlanParameters",
+        "description": "ES验证计划书 参数",
+        "example": {
+          "author": "张三",
+          "date": "2025-01-22",
+          "project_name": "OHC项目",
+          "verification_manager": "李四",
+          "verification_method": "黑盒测试",
+          "verification_purpose": "验证系统功能完整性",
+          "verification_schedule": "2周内完成",
+          "verification_scope": "全功能模块",
+          "version": "1.0"
+        }
+      },
+      "ESVerificationResultParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "verification_purpose": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Verification Purpose",
+            "description": "验证目的"
+          },
+          "verification_result": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Verification Result",
+            "description": "验证结果"
+          },
+          "verification_date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Verification Date",
+            "description": "验证日期"
+          },
+          "verification_manager": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Verification Manager",
+            "description": "验证负责人"
+          },
+          "issues_found": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issues Found",
+            "description": "发现的问题"
+          },
+          "recommendations": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommendations",
+            "description": "建议"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "verification_purpose",
+          "verification_result",
+          "verification_date",
+          "verification_manager"
+        ],
+        "title": "ESVerificationResultParameters",
+        "description": "ES验证结果书 参数",
+        "example": {
+          "author": "张三",
+          "date": "2025-01-22",
+          "issues_found": "无重大问题",
+          "project_name": "OHC项目",
+          "recommendations": "建议定期维护",
+          "verification_date": "2025-01-21",
+          "verification_manager": "李四",
+          "verification_purpose": "验证系统功能完整性",
+          "verification_result": "通过",
+          "version": "1.0"
+        }
+      },
+      "ExistingProductComparisonParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "comparison_products": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Comparison Products",
+            "description": "对比产品"
+          },
+          "comparison_criteria": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Comparison Criteria",
+            "description": "对比标准"
+          },
+          "comparison_results": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Comparison Results",
+            "description": "对比结果"
+          },
+          "advantages": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Advantages",
+            "description": "优势"
+          },
+          "disadvantages": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disadvantages",
+            "description": "劣势"
+          },
+          "recommendations": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommendations",
+            "description": "建议"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "comparison_products",
+          "comparison_criteria",
+          "comparison_results",
+          "advantages"
+        ],
+        "title": "ExistingProductComparisonParameters",
+        "description": "与现有产品对比表 参数",
+        "example": {
+          "advantages": "功能完整，性能稳定",
+          "author": "张三",
+          "comparison_criteria": "功能、性能、价格",
+          "comparison_products": "产品A、产品B",
+          "comparison_results": "功能更全面，性能更优",
+          "date": "2025-01-22",
+          "disadvantages": "价格较高",
+          "project_name": "OHC项目",
+          "recommendations": "建议优化成本结构",
+          "version": "1.0"
+        }
+      },
+      "FollowUpDRMinutesParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "meeting_date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Meeting Date",
+            "description": "会议日期"
+          },
+          "meeting_location": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Meeting Location",
+            "description": "会议地点"
+          },
+          "meeting_host": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Meeting Host",
+            "description": "主持人"
+          },
+          "attendees": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Attendees",
+            "description": "参会人员"
+          },
+          "meeting_topics": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Meeting Topics",
+            "description": "会议议题"
+          },
+          "discussion_content": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Discussion Content",
+            "description": "讨论内容"
+          },
+          "resolutions": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Resolutions",
+            "description": "决议事项"
+          },
+          "follow_up_actions": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Follow Up Actions",
+            "description": "后续行动"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "meeting_date",
+          "meeting_location",
+          "meeting_host",
+          "attendees",
+          "meeting_topics",
+          "discussion_content",
+          "resolutions",
+          "follow_up_actions"
+        ],
+        "title": "FollowUpDRMinutesParameters",
+        "description": "跟进DR会议记录 参数",
+        "example": {
+          "attendees": "张三、李四、王五",
+          "author": "张三",
+          "date": "2025-01-22",
+          "discussion_content": "讨论了当前项目进度和遇到的问题",
+          "follow_up_actions": "下周完成测试用例编写",
+          "meeting_date": "2025-01-21",
+          "meeting_host": "李四",
+          "meeting_location": "会议室A",
+          "meeting_topics": "项目进度讨论",
+          "project_name": "OHC项目",
+          "resolutions": "决定增加测试人员",
+          "version": "1.0"
+        }
+      },
+      "GenerateDocumentRequest": {
+        "properties": {
+          "template_name": {
+            "type": "string",
+            "title": "Template Name",
+            "description": "模板名称"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Parameters",
+            "description": "模板参数"
+          }
+        },
+        "type": "object",
+        "required": [
+          "template_name",
+          "parameters"
+        ],
+        "title": "GenerateDocumentRequest",
+        "description": "生成文档请求模型",
+        "example": {
+          "parameters": {
+            "author": "张三",
+            "date": "2025-01-22",
+            "department": "研发部",
+            "document_type": "设计文档",
+            "project_name": "OHC项目",
+            "version": "1.0"
+          },
+          "template_name": "DHF_INDEX"
+        }
+      },
+      "GenerateDocumentResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "是否成功"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "响应消息"
+          },
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Name",
+            "description": "生成的文件名"
+          },
+          "file_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Url",
+            "description": "文件下载链接（远程存储时）"
+          },
+          "file_content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Content",
+            "description": "文件内容（Base64编码，本地存储时）"
+          },
+          "storage_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Storage Type",
+            "description": "存储类型"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id",
+            "description": "项目编号"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "版本号"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "GenerateDocumentResponse",
+        "description": "生成文档响应模型",
+        "example": {
+          "file_content": "UEsDBBQAAAAIAA...",
+          "file_name": "OHC项目_v1.0_20250122_DHF_INDEX.xlsx",
+          "message": "文档生成成功",
+          "project_id": "OHC项目",
+          "storage_type": "local",
+          "success": true,
+          "version": "1.0"
+        }
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthCheckResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "服务状态"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service",
+            "description": "服务名称"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp",
+            "description": "检查时间"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "service",
+          "timestamp"
+        ],
+        "title": "HealthCheckResponse",
+        "description": "健康检查响应模型"
+      },
+      "LabelingSpecificationParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "product_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Product Name",
+            "description": "产品名称"
+          },
+          "label_type": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Label Type",
+            "description": "标签类型"
+          },
+          "label_content": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Label Content",
+            "description": "标签内容"
+          },
+          "label_size": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Label Size",
+            "description": "标签尺寸"
+          },
+          "label_material": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Label Material",
+            "description": "标签材料"
+          },
+          "compliance_requirements": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compliance Requirements",
+            "description": "合规要求"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "product_name",
+          "label_type",
+          "label_content",
+          "label_size",
+          "label_material"
+        ],
+        "title": "LabelingSpecificationParameters",
+        "description": "标签规格书 参数",
+        "example": {
+          "author": "张三",
+          "compliance_requirements": "符合CE标准",
+          "date": "2025-01-22",
+          "label_content": "产品名称、型号、生产日期",
+          "label_material": "不干胶",
+          "label_size": "50x30mm",
+          "label_type": "产品标签",
+          "product_name": "OHC设备",
+          "project_name": "OHC项目",
+          "version": "1.0"
+        }
+      },
+      "PPIndividualTestResultParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "test_item": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Test Item",
+            "description": "试验项目"
+          },
+          "test_result": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Test Result",
+            "description": "试验结果"
+          },
+          "test_date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Test Date",
+            "description": "试验日期"
+          },
+          "tester": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Tester",
+            "description": "试验人员"
+          },
+          "test_environment": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Test Environment",
+            "description": "试验环境"
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks",
+            "description": "备注"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "test_item",
+          "test_result",
+          "test_date",
+          "tester",
+          "test_environment"
+        ],
+        "title": "PPIndividualTestResultParameters",
+        "description": "PP个别试验结果书 参数",
+        "example": {
+          "author": "张三",
+          "date": "2025-01-22",
+          "project_name": "OHC项目",
+          "remarks": "性能指标达标",
+          "test_date": "2025-01-21",
+          "test_environment": "生产环境",
+          "test_item": "性能测试",
+          "test_result": "合格",
+          "tester": "王五",
+          "version": "1.0"
+        }
+      },
+      "PPIndividualTestSpecParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "test_item": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Test Item",
+            "description": "试验项目"
+          },
+          "test_purpose": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Test Purpose",
+            "description": "试验目的"
+          },
+          "test_method": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Test Method",
+            "description": "试验方法"
+          },
+          "acceptance_criteria": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Acceptance Criteria",
+            "description": "验收标准"
+          },
+          "test_equipment": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Equipment",
+            "description": "试验设备"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "test_item",
+          "test_purpose",
+          "test_method",
+          "acceptance_criteria"
+        ],
+        "title": "PPIndividualTestSpecParameters",
+        "description": "PP个别试验要项书 参数",
+        "example": {
+          "acceptance_criteria": "响应时间<2秒",
+          "author": "张三",
+          "date": "2025-01-22",
+          "project_name": "OHC项目",
+          "test_equipment": "性能测试工具",
+          "test_item": "性能测试",
+          "test_method": "压力测试",
+          "test_purpose": "验证系统性能指标",
+          "version": "1.0"
+        }
+      },
+      "PPVerificationPlanParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "verification_purpose": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Verification Purpose",
+            "description": "验证目的"
+          },
+          "verification_scope": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Verification Scope",
+            "description": "验证范围"
+          },
+          "verification_method": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Verification Method",
+            "description": "验证方法"
+          },
+          "verification_manager": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Verification Manager",
+            "description": "验证负责人"
+          },
+          "verification_schedule": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification Schedule",
+            "description": "验证计划"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "verification_purpose",
+          "verification_scope",
+          "verification_method",
+          "verification_manager"
+        ],
+        "title": "PPVerificationPlanParameters",
+        "description": "PP验证计划书 参数",
+        "example": {
+          "author": "张三",
+          "date": "2025-01-22",
+          "project_name": "OHC项目",
+          "verification_manager": "王五",
+          "verification_method": "压力测试",
+          "verification_purpose": "验证系统性能",
+          "verification_schedule": "1周内完成",
+          "verification_scope": "性能指标",
+          "version": "1.0"
+        }
+      },
+      "PPVerificationResultParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "verification_purpose": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Verification Purpose",
+            "description": "验证目的"
+          },
+          "verification_result": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Verification Result",
+            "description": "验证结果"
+          },
+          "verification_date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Verification Date",
+            "description": "验证日期"
+          },
+          "verification_manager": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Verification Manager",
+            "description": "验证负责人"
+          },
+          "performance_metrics": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Performance Metrics",
+            "description": "性能指标"
+          },
+          "recommendations": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommendations",
+            "description": "建议"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "verification_purpose",
+          "verification_result",
+          "verification_date",
+          "verification_manager"
+        ],
+        "title": "PPVerificationResultParameters",
+        "description": "PP验证结果书 参数",
+        "example": {
+          "author": "张三",
+          "date": "2025-01-22",
+          "performance_metrics": "响应时间<2秒",
+          "project_name": "OHC项目",
+          "recommendations": "建议优化数据库查询",
+          "verification_date": "2025-01-21",
+          "verification_manager": "王五",
+          "verification_purpose": "验证系统性能",
+          "verification_result": "通过",
+          "version": "1.0"
+        }
+      },
+      "PTFIndexParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "test_phase": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Test Phase",
+            "description": "测试阶段"
+          },
+          "test_environment": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Test Environment",
+            "description": "测试环境"
+          },
+          "test_manager": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Test Manager",
+            "description": "测试负责人"
+          },
+          "test_duration": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Duration",
+            "description": "测试周期"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "test_phase",
+          "test_environment",
+          "test_manager"
+        ],
+        "title": "PTFIndexParameters",
+        "description": "PTF INDEX 参数",
+        "example": {
+          "author": "张三",
+          "date": "2025-01-22",
+          "project_name": "OHC项目",
+          "test_duration": "2周",
+          "test_environment": "测试环境A",
+          "test_manager": "王五",
+          "test_phase": "系统测试",
+          "version": "1.0"
+        }
+      },
+      "ProductEnvironmentAssessmentParameters": {
+        "properties": {
+          "project_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "theme_no": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Theme No",
+            "description": "テーマ No"
+          },
+          "product_name": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Product Name",
+            "description": "商品型式名"
+          },
+          "trade_name": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Trade Name",
+            "description": "商品名"
+          },
+          "product_site": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Product Site",
+            "description": "生产地"
+          },
+          "sale_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sale Name",
+            "description": "販売名称"
+          },
+          "trading_country": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trading Country",
+            "description": "販売国"
+          },
+          "product_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Type",
+            "description": "商品型式"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_name",
+          "version",
+          "theme_no",
+          "product_name",
+          "trade_name",
+          "product_site"
+        ],
+        "title": "ProductEnvironmentAssessmentParameters",
+        "description": "产品环境评估要项书/结果书 参数",
+        "example": {
+          "author": "张三",
+          "date": "2025-01-22",
+          "product_name": "产品全生命周期",
+          "product_site": "LCA分析",
+          "product_type": "低环境影响",
+          "project_name": "OHC项目",
+          "sale_name": "李四",
+          "theme_no": "环境影响评估",
+          "trade_name": "产品全生命周期",
+          "trading_country": "符合环保要求",
+          "version": "1.0"
+        }
+      },
+      "ServiceConfigResponse": {
+        "properties": {
+          "storage_type": {
+            "type": "string",
+            "title": "Storage Type",
+            "description": "存储类型"
+          },
+          "template_base_path": {
+            "type": "string",
+            "title": "Template Base Path",
+            "description": "模板基础路径"
+          },
+          "supported_templates_count": {
+            "type": "integer",
+            "title": "Supported Templates Count",
+            "description": "支持的模板数量"
+          },
+          "app_name": {
+            "type": "string",
+            "title": "App Name",
+            "description": "应用名称"
+          },
+          "app_version": {
+            "type": "string",
+            "title": "App Version",
+            "description": "应用版本"
+          }
+        },
+        "type": "object",
+        "required": [
+          "storage_type",
+          "template_base_path",
+          "supported_templates_count",
+          "app_name",
+          "app_version"
+        ],
+        "title": "ServiceConfigResponse",
+        "description": "服务配置响应模型"
+      },
+      "TemplateInfoResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "模板名称"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name",
+            "description": "显示名称"
+          },
+          "available_formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Available Formats",
+            "description": "可用格式"
+          },
+          "filler_strategy": {
+            "type": "string",
+            "title": "Filler Strategy",
+            "description": "填充策略"
+          },
+          "features": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Features",
+            "description": "特性列表"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "display_name",
+          "available_formats",
+          "filler_strategy",
+          "features"
+        ],
+        "title": "TemplateInfoResponse",
+        "description": "模板信息响应模型"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

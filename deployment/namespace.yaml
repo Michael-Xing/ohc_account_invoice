@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ohc-account-invoice
+  labels:
+    name: ohc-account-invoice
+    app: ohc-account-invoice
+    version: v1.0.0
