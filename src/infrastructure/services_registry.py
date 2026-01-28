@@ -1,7 +1,7 @@
 """服务注册表，用于创建共享服务实例。"""
 import os
 from src.config import settings
-from src.infrastructure.template_service import TemplateService
+from src.domain.template_filler_service import TemplateService
 from src.infrastructure.storage_service import StorageServiceFactory
 
 # 在此处实例化应用级别的单例服务
