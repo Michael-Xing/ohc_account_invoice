@@ -28,13 +28,13 @@ def test_generate_document_e2e(monkeypatch, tmp_path):
         def get_supported_templates(self):
             return {"TEST": "Test Template"}
 
-        def get_template_info(self, name):
+        def get_template_info(self, name, language=None):
             return {"name": "TEST", "display_name": "Test Template", "available_formats": ["xlsx"]}
         
         def validate_template_name(self, name):
             return name == "TEST"
 
-        def generate_document(self, template_name, parameters, output_path):
+        def generate_document(self, template_name, parameters, output_path, language=None):
             # write a small xlsx-like content (not a real xlsx) so storage/read can proceed
             output_path.write_bytes(b"PK\\x03\\x04test")
             return True

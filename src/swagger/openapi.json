@@ -14,17 +14,39 @@
         "summary": "获取模板列表",
         "description": "获取所有支持的模板列表",
         "operationId": "list_templates_templates_get",
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
                 "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object",
-                  "title": "Response List Templates Templates Get"
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -48,6 +70,22 @@
             "schema": {
               "type": "string",
               "title": "Template Name"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
             }
           }
         ],
@@ -747,6 +785,132 @@
         }
       }
     },
+    "/generate/packaging-design-specification": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成包装设计仕样书",
+        "description": "生成包装设计仕样书",
+        "operationId": "generate_packaging_design_specification_generate_packaging_design_specification_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PackagingDesignSpecificationParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/user-manual-specification": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成使用说明书仕样书",
+        "description": "生成使用说明书仕样书",
+        "operationId": "generate_user_manual_specification_generate_user_manual_specification_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserManualSpecificationParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generate/project-plan": {
+      "post": {
+        "tags": [
+          "generate"
+        ],
+        "summary": "生成项目计划书",
+        "description": "生成项目计划书",
+        "operationId": "generate_project_plan_generate_project_plan_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectPlanParameters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -858,816 +1022,873 @@
       "BasicSpecificationParameters": {
         "properties": {
           "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Project Name",
-            "description": "项目名称"
-          },
-          "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "product_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Product Name",
-            "description": "产品名称"
-          },
-          "overview": {
-            "type": "string",
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Overview",
-            "description": "概述"
-          },
-          "technical_requirements": {
-            "type": "string",
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Technical Requirements",
-            "description": "技术要求"
-          },
-          "acceptance_criteria": {
-            "type": "string",
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Acceptance Criteria",
-            "description": "验收标准"
-          },
-          "compliance_standards": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 200
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Compliance Standards",
-            "description": "符合标准"
-          }
-        },
-        "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "product_name",
-          "overview",
-          "technical_requirements",
-          "acceptance_criteria"
-        ],
-        "title": "BasicSpecificationParameters",
-        "description": "基本规格书 参数",
-        "example": {
-          "acceptance_criteria": "功能完整，性能达标",
-          "author": "张三",
-          "compliance_standards": "ISO 9001",
-          "date": "2025-01-22",
-          "overview": "企业级管理系统",
-          "product_name": "OHC系统",
-          "project_name": "OHC项目",
-          "technical_requirements": "支持1000并发用户",
-          "version": "1.0"
-        }
-      },
-      "DHFIndexParameters": {
-        "properties": {
-          "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
             "title": "Project Name",
             "description": "项目名称"
           },
           "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Version",
             "description": "版本号"
           },
           "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Date",
             "description": "日期"
           },
           "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
           "document_type": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Document Type",
             "description": "文档类型"
           },
           "department": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Department",
             "description": "部门"
           },
-          "reviewer": {
+          "language": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 50
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Reviewer",
-            "description": "审核人"
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
           },
-          "approval_date": {
+          "overview": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 20
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Approval Date",
-            "description": "批准日期"
+            "title": "Overview"
+          },
+          "technical_requirements": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Technical Requirements"
+          },
+          "acceptance_criteria": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acceptance Criteria"
           }
         },
         "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "document_type",
-          "department"
-        ],
-        "title": "DHFIndexParameters",
-        "description": "制作文档・图纸一览 (DHF INDEX) 参数",
-        "example": {
-          "approval_date": "2025-01-23",
-          "author": "张三",
-          "date": "2025-01-22",
-          "department": "研发部",
-          "document_type": "设计文档",
-          "project_name": "OHC项目",
-          "reviewer": "李四",
-          "version": "1.0"
-        }
+        "title": "BasicSpecificationParameters"
+      },
+      "DHFIndexParameters": {
+        "properties": {
+          "project_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+          }
+        },
+        "type": "object",
+        "title": "DHFIndexParameters"
       },
       "ESIndividualTestResultParameters": {
         "properties": {
           "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Project Name",
-            "description": "项目名称"
-          },
-          "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "test_item": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Test Item",
-            "description": "试验项目"
-          },
-          "test_result": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Test Result",
-            "description": "试验结果"
-          },
-          "test_date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Test Date",
-            "description": "试验日期"
-          },
-          "tester": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Tester",
-            "description": "试验人员"
-          },
-          "remarks": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 500
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Remarks",
-            "description": "备注"
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+          },
+          "test_item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Item"
+          },
+          "test_result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Result"
+          },
+          "tester": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tester"
           }
         },
         "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "test_item",
-          "test_result",
-          "test_date",
-          "tester"
-        ],
-        "title": "ESIndividualTestResultParameters",
-        "description": "ES个别试验结果书 参数",
-        "example": {
-          "author": "张三",
-          "date": "2025-01-22",
-          "project_name": "OHC项目",
-          "remarks": "测试通过，无异常",
-          "test_date": "2025-01-21",
-          "test_item": "功能测试",
-          "test_result": "合格",
-          "tester": "李四",
-          "version": "1.0"
-        }
+        "title": "ESIndividualTestResultParameters"
       },
       "ESIndividualTestSpecParameters": {
         "properties": {
           "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Project Name",
-            "description": "项目名称"
-          },
-          "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "test_item": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Test Item",
-            "description": "试验项目"
-          },
-          "test_purpose": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Test Purpose",
-            "description": "试验目的"
-          },
-          "test_method": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Test Method",
-            "description": "试验方法"
-          },
-          "acceptance_criteria": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Acceptance Criteria",
-            "description": "验收标准"
-          },
-          "test_equipment": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 100
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Test Equipment",
-            "description": "试验设备"
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+          },
+          "test_item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Item"
           }
         },
         "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "test_item",
-          "test_purpose",
-          "test_method",
-          "acceptance_criteria"
-        ],
-        "title": "ESIndividualTestSpecParameters",
-        "description": "ES个别试验要项书 参数",
-        "example": {
-          "acceptance_criteria": "所有功能正常运行",
-          "author": "张三",
-          "date": "2025-01-22",
-          "project_name": "OHC项目",
-          "test_equipment": "测试服务器",
-          "test_item": "功能测试",
-          "test_method": "黑盒测试",
-          "test_purpose": "验证系统功能完整性",
-          "version": "1.0"
-        }
+        "title": "ESIndividualTestSpecParameters"
       },
       "ESVerificationPlanParameters": {
         "properties": {
           "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Project Name",
-            "description": "项目名称"
-          },
-          "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "verification_purpose": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Verification Purpose",
-            "description": "验证目的"
-          },
-          "verification_scope": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Verification Scope",
-            "description": "验证范围"
-          },
-          "verification_method": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Verification Method",
-            "description": "验证方法"
-          },
-          "verification_manager": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Verification Manager",
-            "description": "验证负责人"
-          },
-          "verification_schedule": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 200
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Verification Schedule",
-            "description": "验证计划"
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+          },
+          "verification_purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification Purpose"
           }
         },
         "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "verification_purpose",
-          "verification_scope",
-          "verification_method",
-          "verification_manager"
-        ],
-        "title": "ESVerificationPlanParameters",
-        "description": "ES验证计划书 参数",
-        "example": {
-          "author": "张三",
-          "date": "2025-01-22",
-          "project_name": "OHC项目",
-          "verification_manager": "李四",
-          "verification_method": "黑盒测试",
-          "verification_purpose": "验证系统功能完整性",
-          "verification_schedule": "2周内完成",
-          "verification_scope": "全功能模块",
-          "version": "1.0"
-        }
+        "title": "ESVerificationPlanParameters"
       },
       "ESVerificationResultParameters": {
         "properties": {
           "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Project Name",
             "description": "项目名称"
           },
           "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Version",
             "description": "版本号"
           },
           "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Date",
             "description": "日期"
           },
           "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
-          "verification_purpose": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Verification Purpose",
-            "description": "验证目的"
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
           },
           "verification_result": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Verification Result",
-            "description": "验证结果"
-          },
-          "verification_date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Verification Date",
-            "description": "验证日期"
-          },
-          "verification_manager": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Verification Manager",
-            "description": "验证负责人"
-          },
-          "issues_found": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 500
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Issues Found",
-            "description": "发现的问题"
-          },
-          "recommendations": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 500
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Recommendations",
-            "description": "建议"
+            "title": "Verification Result"
           }
         },
         "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "verification_purpose",
-          "verification_result",
-          "verification_date",
-          "verification_manager"
-        ],
-        "title": "ESVerificationResultParameters",
-        "description": "ES验证结果书 参数",
-        "example": {
-          "author": "张三",
-          "date": "2025-01-22",
-          "issues_found": "无重大问题",
-          "project_name": "OHC项目",
-          "recommendations": "建议定期维护",
-          "verification_date": "2025-01-21",
-          "verification_manager": "李四",
-          "verification_purpose": "验证系统功能完整性",
-          "verification_result": "通过",
-          "version": "1.0"
-        }
+        "title": "ESVerificationResultParameters"
       },
       "ExistingProductComparisonParameters": {
         "properties": {
           "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Project Name",
             "description": "项目名称"
           },
           "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Version",
             "description": "版本号"
           },
           "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Date",
             "description": "日期"
           },
           "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
-          "comparison_products": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Comparison Products",
-            "description": "对比产品"
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
           },
-          "comparison_criteria": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Comparison Criteria",
-            "description": "对比标准"
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+          },
+          "comparison_products": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparison Products"
           },
           "comparison_results": {
-            "type": "string",
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Comparison Results",
-            "description": "对比结果"
-          },
-          "advantages": {
-            "type": "string",
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Advantages",
-            "description": "优势"
-          },
-          "disadvantages": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 500
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Disadvantages",
-            "description": "劣势"
-          },
-          "recommendations": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 500
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Recommendations",
-            "description": "建议"
+            "title": "Comparison Results"
           }
         },
         "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "comparison_products",
-          "comparison_criteria",
-          "comparison_results",
-          "advantages"
-        ],
-        "title": "ExistingProductComparisonParameters",
-        "description": "与现有产品对比表 参数",
-        "example": {
-          "advantages": "功能完整，性能稳定",
-          "author": "张三",
-          "comparison_criteria": "功能、性能、价格",
-          "comparison_products": "产品A、产品B",
-          "comparison_results": "功能更全面，性能更优",
-          "date": "2025-01-22",
-          "disadvantages": "价格较高",
-          "project_name": "OHC项目",
-          "recommendations": "建议优化成本结构",
-          "version": "1.0"
-        }
+        "title": "ExistingProductComparisonParameters"
       },
       "FollowUpDRMinutesParameters": {
         "properties": {
           "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Project Name",
             "description": "项目名称"
           },
           "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Version",
             "description": "版本号"
           },
           "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Date",
             "description": "日期"
           },
           "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+          },
           "meeting_date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Meeting Date",
-            "description": "会议日期"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meeting Date"
           },
           "meeting_location": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Meeting Location",
-            "description": "会议地点"
-          },
-          "meeting_host": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Meeting Host",
-            "description": "主持人"
-          },
-          "attendees": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Attendees",
-            "description": "参会人员"
-          },
-          "meeting_topics": {
-            "type": "string",
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Meeting Topics",
-            "description": "会议议题"
-          },
-          "discussion_content": {
-            "type": "string",
-            "maxLength": 1000,
-            "minLength": 1,
-            "title": "Discussion Content",
-            "description": "讨论内容"
-          },
-          "resolutions": {
-            "type": "string",
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Resolutions",
-            "description": "决议事项"
-          },
-          "follow_up_actions": {
-            "type": "string",
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Follow Up Actions",
-            "description": "后续行动"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meeting Location"
           }
         },
         "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "meeting_date",
-          "meeting_location",
-          "meeting_host",
-          "attendees",
-          "meeting_topics",
-          "discussion_content",
-          "resolutions",
-          "follow_up_actions"
-        ],
-        "title": "FollowUpDRMinutesParameters",
-        "description": "跟进DR会议记录 参数",
-        "example": {
-          "attendees": "张三、李四、王五",
-          "author": "张三",
-          "date": "2025-01-22",
-          "discussion_content": "讨论了当前项目进度和遇到的问题",
-          "follow_up_actions": "下周完成测试用例编写",
-          "meeting_date": "2025-01-21",
-          "meeting_host": "李四",
-          "meeting_location": "会议室A",
-          "meeting_topics": "项目进度讨论",
-          "project_name": "OHC项目",
-          "resolutions": "决定增加测试人员",
-          "version": "1.0"
-        }
+        "title": "FollowUpDRMinutesParameters"
       },
       "GenerateDocumentRequest": {
         "properties": {
@@ -1681,6 +1902,18 @@
             "type": "object",
             "title": "Parameters",
             "description": "模板参数"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
           }
         },
         "type": "object",
@@ -1691,6 +1924,7 @@
         "title": "GenerateDocumentRequest",
         "description": "生成文档请求模型",
         "example": {
+          "language": "zh",
           "parameters": {
             "author": "张三",
             "date": "2025-01-22",
@@ -1847,725 +2081,942 @@
       "LabelingSpecificationParameters": {
         "properties": {
           "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Project Name",
-            "description": "项目名称"
-          },
-          "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "product_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Product Name",
-            "description": "产品名称"
-          },
-          "label_type": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Label Type",
-            "description": "标签类型"
-          },
-          "label_content": {
-            "type": "string",
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Label Content",
-            "description": "标签内容"
-          },
-          "label_size": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Label Size",
-            "description": "标签尺寸"
-          },
-          "label_material": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Label Material",
-            "description": "标签材料"
-          },
-          "compliance_requirements": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 200
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Compliance Requirements",
-            "description": "合规要求"
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+          },
+          "product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name"
           }
         },
         "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "product_name",
-          "label_type",
-          "label_content",
-          "label_size",
-          "label_material"
-        ],
-        "title": "LabelingSpecificationParameters",
-        "description": "标签规格书 参数",
-        "example": {
-          "author": "张三",
-          "compliance_requirements": "符合CE标准",
-          "date": "2025-01-22",
-          "label_content": "产品名称、型号、生产日期",
-          "label_material": "不干胶",
-          "label_size": "50x30mm",
-          "label_type": "产品标签",
-          "product_name": "OHC设备",
-          "project_name": "OHC项目",
-          "version": "1.0"
-        }
+        "title": "LabelingSpecificationParameters"
       },
       "PPIndividualTestResultParameters": {
         "properties": {
           "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Project Name",
-            "description": "项目名称"
-          },
-          "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "test_item": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Test Item",
-            "description": "试验项目"
-          },
-          "test_result": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Test Result",
-            "description": "试验结果"
-          },
-          "test_date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Test Date",
-            "description": "试验日期"
-          },
-          "tester": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Tester",
-            "description": "试验人员"
-          },
-          "test_environment": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Test Environment",
-            "description": "试验环境"
-          },
-          "remarks": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 500
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Remarks",
-            "description": "备注"
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+          },
+          "test_item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Item"
+          },
+          "test_result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Result"
           }
         },
         "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "test_item",
-          "test_result",
-          "test_date",
-          "tester",
-          "test_environment"
-        ],
-        "title": "PPIndividualTestResultParameters",
-        "description": "PP个别试验结果书 参数",
-        "example": {
-          "author": "张三",
-          "date": "2025-01-22",
-          "project_name": "OHC项目",
-          "remarks": "性能指标达标",
-          "test_date": "2025-01-21",
-          "test_environment": "生产环境",
-          "test_item": "性能测试",
-          "test_result": "合格",
-          "tester": "王五",
-          "version": "1.0"
-        }
+        "title": "PPIndividualTestResultParameters"
       },
       "PPIndividualTestSpecParameters": {
         "properties": {
           "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Project Name",
-            "description": "项目名称"
-          },
-          "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "test_item": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Test Item",
-            "description": "试验项目"
-          },
-          "test_purpose": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Test Purpose",
-            "description": "试验目的"
-          },
-          "test_method": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Test Method",
-            "description": "试验方法"
-          },
-          "acceptance_criteria": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Acceptance Criteria",
-            "description": "验收标准"
-          },
-          "test_equipment": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 100
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Test Equipment",
-            "description": "试验设备"
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+          },
+          "test_purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Purpose"
           }
         },
         "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "test_item",
-          "test_purpose",
-          "test_method",
-          "acceptance_criteria"
-        ],
-        "title": "PPIndividualTestSpecParameters",
-        "description": "PP个别试验要项书 参数",
-        "example": {
-          "acceptance_criteria": "响应时间<2秒",
-          "author": "张三",
-          "date": "2025-01-22",
-          "project_name": "OHC项目",
-          "test_equipment": "性能测试工具",
-          "test_item": "性能测试",
-          "test_method": "压力测试",
-          "test_purpose": "验证系统性能指标",
-          "version": "1.0"
-        }
+        "title": "PPIndividualTestSpecParameters"
       },
       "PPVerificationPlanParameters": {
         "properties": {
           "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Project Name",
-            "description": "项目名称"
-          },
-          "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "verification_purpose": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Verification Purpose",
-            "description": "验证目的"
-          },
-          "verification_scope": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Verification Scope",
-            "description": "验证范围"
-          },
-          "verification_method": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Verification Method",
-            "description": "验证方法"
-          },
-          "verification_manager": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Verification Manager",
-            "description": "验证负责人"
-          },
-          "verification_schedule": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 200
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Verification Schedule",
-            "description": "验证计划"
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+          },
+          "verification_purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification Purpose"
           }
         },
         "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "verification_purpose",
-          "verification_scope",
-          "verification_method",
-          "verification_manager"
-        ],
-        "title": "PPVerificationPlanParameters",
-        "description": "PP验证计划书 参数",
-        "example": {
-          "author": "张三",
-          "date": "2025-01-22",
-          "project_name": "OHC项目",
-          "verification_manager": "王五",
-          "verification_method": "压力测试",
-          "verification_purpose": "验证系统性能",
-          "verification_schedule": "1周内完成",
-          "verification_scope": "性能指标",
-          "version": "1.0"
-        }
+        "title": "PPVerificationPlanParameters"
       },
       "PPVerificationResultParameters": {
         "properties": {
           "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Project Name",
             "description": "项目名称"
           },
           "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Version",
             "description": "版本号"
           },
           "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Date",
             "description": "日期"
           },
           "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
-          "verification_purpose": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Verification Purpose",
-            "description": "验证目的"
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
           },
           "verification_result": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Verification Result",
-            "description": "验证结果"
-          },
-          "verification_date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Verification Date",
-            "description": "验证日期"
-          },
-          "verification_manager": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Verification Manager",
-            "description": "验证负责人"
-          },
-          "performance_metrics": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 500
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Performance Metrics",
-            "description": "性能指标"
-          },
-          "recommendations": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 500
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Recommendations",
-            "description": "建议"
+            "title": "Verification Result"
           }
         },
         "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "verification_purpose",
-          "verification_result",
-          "verification_date",
-          "verification_manager"
-        ],
-        "title": "PPVerificationResultParameters",
-        "description": "PP验证结果书 参数",
-        "example": {
-          "author": "张三",
-          "date": "2025-01-22",
-          "performance_metrics": "响应时间<2秒",
-          "project_name": "OHC项目",
-          "recommendations": "建议优化数据库查询",
-          "verification_date": "2025-01-21",
-          "verification_manager": "王五",
-          "verification_purpose": "验证系统性能",
-          "verification_result": "通过",
-          "version": "1.0"
-        }
+        "title": "PPVerificationResultParameters"
       },
       "PTFIndexParameters": {
         "properties": {
           "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Project Name",
-            "description": "项目名称"
-          },
-          "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "test_phase": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Test Phase",
-            "description": "测试阶段"
-          },
-          "test_environment": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Test Environment",
-            "description": "测试环境"
-          },
-          "test_manager": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Test Manager",
-            "description": "测试负责人"
-          },
-          "test_duration": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 50
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Test Duration",
-            "description": "测试周期"
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
           }
         },
         "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "test_phase",
-          "test_environment",
-          "test_manager"
-        ],
-        "title": "PTFIndexParameters",
-        "description": "PTF INDEX 参数",
-        "example": {
-          "author": "张三",
-          "date": "2025-01-22",
-          "project_name": "OHC项目",
-          "test_duration": "2周",
-          "test_environment": "测试环境A",
-          "test_manager": "王五",
-          "test_phase": "系统测试",
-          "version": "1.0"
-        }
+        "title": "PTFIndexParameters"
+      },
+      "PackagingDesignSpecificationParameters": {
+        "properties": {
+          "project_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+          },
+          "product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name"
+          },
+          "packaging_requirements": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Packaging Requirements"
+          }
+        },
+        "type": "object",
+        "title": "PackagingDesignSpecificationParameters"
       },
       "ProductEnvironmentAssessmentParameters": {
         "properties": {
           "project_name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Project Name",
             "description": "项目名称"
           },
           "version": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Version",
             "description": "版本号"
           },
           "date": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Date",
             "description": "日期"
           },
           "author": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
-          "theme_no": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Theme No",
-            "description": "テーマ No"
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
           },
           "product_name": {
-            "type": "string",
-            "maxLength": 1000,
-            "minLength": 1,
-            "title": "Product Name",
-            "description": "商品型式名"
-          },
-          "trade_name": {
-            "type": "string",
-            "maxLength": 1000,
-            "minLength": 1,
-            "title": "Trade Name",
-            "description": "商品名"
-          },
-          "product_site": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Product Site",
-            "description": "生产地"
-          },
-          "sale_name": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 1000
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Sale Name",
-            "description": "販売名称"
-          },
-          "trading_country": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 500
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Trading Country",
-            "description": "販売国"
-          },
-          "product_type": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 500
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Type",
-            "description": "商品型式"
+            "title": "Product Name"
           }
         },
         "type": "object",
-        "required": [
-          "project_name",
-          "version",
-          "theme_no",
-          "product_name",
-          "trade_name",
-          "product_site"
-        ],
-        "title": "ProductEnvironmentAssessmentParameters",
-        "description": "产品环境评估要项书/结果书 参数",
-        "example": {
-          "author": "张三",
-          "date": "2025-01-22",
-          "product_name": "产品全生命周期",
-          "product_site": "LCA分析",
-          "product_type": "低环境影响",
-          "project_name": "OHC项目",
-          "sale_name": "李四",
-          "theme_no": "环境影响评估",
-          "trade_name": "产品全生命周期",
-          "trading_country": "符合环保要求",
-          "version": "1.0"
-        }
+        "title": "ProductEnvironmentAssessmentParameters"
+      },
+      "ProjectPlanParameters": {
+        "properties": {
+          "project_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+          },
+          "project_scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Scope"
+          },
+          "project_timeline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Timeline"
+          }
+        },
+        "type": "object",
+        "title": "ProjectPlanParameters"
       },
       "ServiceConfigResponse": {
         "properties": {
@@ -2618,6 +3069,18 @@
             "title": "Display Name",
             "description": "显示名称"
           },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "模板描述"
+          },
           "available_formats": {
             "items": {
               "type": "string"
@@ -2638,6 +3101,29 @@
             "type": "array",
             "title": "Features",
             "description": "特性列表"
+          },
+          "available_languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Available Languages",
+            "description": "可用语言列表"
+          },
+          "display_names": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Names",
+            "description": "各语言的显示名称"
           }
         },
         "type": "object",
@@ -2650,6 +3136,119 @@
         ],
         "title": "TemplateInfoResponse",
         "description": "模板信息响应模型"
+      },
+      "UserManualSpecificationParameters": {
+        "properties": {
+          "project_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Name",
+            "description": "项目名称"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "description": "版本号"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "日期"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "文档类型"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department",
+            "description": "部门"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+          },
+          "product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name"
+          },
+          "manual_requirements": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Requirements"
+          }
+        },
+        "type": "object",
+        "title": "UserManualSpecificationParameters"
       },
       "ValidationError": {
         "properties": {

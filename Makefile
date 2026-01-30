@@ -146,7 +146,7 @@ docker-run:
 		--name $(PROJECT_NAME) \
 		-p 8000:8000 \
 		-v $(PWD)/$(LOCAL_STORAGE_PATH):/app/$(LOCAL_STORAGE_PATH) \
-		--env-file .env \
+		-v $(PWD)/config:/app/config \
 		$(LATEST_IMAGE_NAME)
 
 # 停止Docker容器

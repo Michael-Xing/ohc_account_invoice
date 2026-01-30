@@ -1,20 +1,23 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 import re
 
 from src.infrastructure.services_registry import template_service
 from src.config import settings
 
 
-def generate_output_filename(template_name: str, parameters: Dict[str, Any]) -> str:
+def generate_output_filename(template_name: str, parameters: Dict[str, Any], language: Optional[str] = None) -> str:
     """
-    Generate output filename: project_version_template_datetime.ext
+    Generate output filename: <项目编号>-<模版文件名>-AI_<版本号>-<日期时间>.<文档后缀>
+    
+    格式: <project_id>-<template_display_name>-AI_<version>-<datetime>.<ext>
     """
-    template_info = template_service.get_template_info(template_name)
+    template_info = template_service.get_template_info(template_name, language)
     if not template_info:
         raise ValueError(f"模板 '{template_name}' 不存在")
 
+    # 确定文件扩展名
     available_formats = template_info.get("available_formats", [])
     if "xlsx" in available_formats:
         extension = "xlsx"
@@ -23,26 +26,27 @@ def generate_output_filename(template_name: str, parameters: Dict[str, Any]) -> 
     else:
         extension = "xlsx"
 
-    filename_parts = []
-
-    project_name = parameters.get("project_name") or parameters.get("project_id")
-    if project_name:
-        clean_project = re.sub(r'[^\w\-_\.\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]', '_', str(project_name))
-        filename_parts.append(clean_project)
+    # 获取项目编号
+    project_id = parameters.get("project_id") or parameters.get("project_name")
+    if project_id:
+        # 清理项目编号，只保留允许的字符
+        clean_project_id = re.sub(r'[^\w\-\.\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]', '-', str(project_id))
     else:
-        filename_parts.append("UNKNOWN_PROJECT")
+        clean_project_id = "UNKNOWN_PROJECT"
 
+    # 获取模板显示名称
+    template_display_name = template_info.get("display_name", template_name)
+    # 清理模板名称，只保留允许的字符
+    clean_template_name = re.sub(r'[^\w\-\.\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]', '-', str(template_display_name))
+
+    # 获取版本号
     version = parameters.get("version") or parameters.get("ver")
     if version:
-        clean_version = re.sub(r'[^\w\-_\.]', '_', str(version))
-        filename_parts.append(clean_version)
+        clean_version = re.sub(r'[^\w\-\.]', '-', str(version))
     else:
-        filename_parts.append("v1.0")
+        clean_version = "v1.0"
 
-    template_display_name = template_info.get("display_name", template_name)
-    clean_template_name = re.sub(r'[^\w\-_\.\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]', '_', str(template_display_name))
-    filename_parts.append(clean_template_name)
-
+    # 获取日期时间
     date_value = parameters.get("date") or parameters.get("created_date")
     if date_value:
         try:
@@ -64,29 +68,32 @@ def generate_output_filename(template_name: str, parameters: Dict[str, Any]) -> 
                     except ValueError:
                         continue
                 if parsed_date:
-                    date_time_str = parsed_date.strftime("%Y%m%d_%H%M%S")
-                    filename_parts.append(date_time_str)
+                    date_time_str = parsed_date.strftime("%Y%m%d-%H%M%S")
                 else:
-                    filename_parts.append(datetime.now().strftime("%Y%m%d_%H%M%S"))
+                    date_time_str = datetime.now().strftime("%Y%m%d-%H%M%S")
             else:
-                filename_parts.append(datetime.now().strftime("%Y%m%d_%H%M%S"))
+                date_time_str = datetime.now().strftime("%Y%m%d-%H%M%S")
         except Exception:
-            filename_parts.append(datetime.now().strftime("%Y%m%d_%H%M%S"))
+            date_time_str = datetime.now().strftime("%Y%m%d-%H%M%S")
     else:
-        filename_parts.append(datetime.now().strftime("%Y%m%d_%H%M%S"))
+        date_time_str = datetime.now().strftime("%Y%m%d-%H%M%S")
 
-    filename = "_".join(filename_parts)
+    # 组装文件名: <项目编号>-<模版文件名>-AI_<版本号>-<日期时间>
+    filename = f"{clean_project_id}-{clean_template_name}-AI_{clean_version}-{date_time_str}"
+    
+    # 检查文件名长度限制
     max_length = settings.filename_max_length
     if len(filename) > max_length:
-        if len(filename_parts) >= 4:
-            template_part = filename_parts[2]
-            if len(template_part) > 20:
-                template_part = template_part[:20]
-            filename_parts[2] = template_part
-            filename = "_".join(filename_parts)
-            if len(filename) > max_length:
-                essential_parts = [filename_parts[0], filename_parts[1], filename_parts[3]]
-                filename = "_".join(essential_parts)
+        # 如果超长，优先缩短模板名称
+        max_template_length = max_length - len(clean_project_id) - len(clean_version) - len(date_time_str) - 10  # 10是分隔符和AI_的长度
+        if max_template_length > 0 and len(clean_template_name) > max_template_length:
+            clean_template_name = clean_template_name[:max_template_length]
+            filename = f"{clean_project_id}-{clean_template_name}-AI_{clean_version}-{date_time_str}"
+        
+        # 如果还是超长，进一步缩短
+        if len(filename) > max_length:
+            # 保留最核心的部分：项目编号、版本号、日期时间
+            filename = f"{clean_project_id[:20]}-AI_{clean_version}-{date_time_str}"
 
     return f"{filename}.{extension}"
 

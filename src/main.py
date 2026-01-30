@@ -63,10 +63,12 @@ except Exception:
 
 if __name__ == "__main__":
     import uvicorn
+    # uvicorn.run() 不支持 debug 参数，使用 log_level 来控制日志级别
+    log_level = "debug" if settings.debug else "info"
     uvicorn.run(
-        "main:app",
+        "src.main:app",
         host=settings.host,
         port=settings.port,
         reload=settings.reload,
-        debug=settings.debug
+        log_level=log_level
     )

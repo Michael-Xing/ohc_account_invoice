@@ -9,6 +9,7 @@ class BaseTemplateParameters(BaseModel):
     author: Optional[str] = Field(default="OHC账票AI助手", description="作者")
     document_type: Optional[str] = Field(default=None, description="文档类型")
     department: Optional[str] = Field(default=None, description="部门")
+    language: Optional[str] = Field(default=None, description="语言代码 (zh/ja/en)，如果不指定则使用默认模板")
 
 
 class DHFIndexParameters(BaseTemplateParameters):
@@ -70,11 +71,35 @@ class LabelingSpecificationParameters(BaseTemplateParameters):
 
 
 class ProductEnvironmentAssessmentParameters(BaseTemplateParameters):
-    product_name: Optional[str] = None
+    """产品环境评估要项书/结果书参数"""
+    theme_no: str = Field(..., description="项目NO，拼接到B5单元格内容后面")
+    theme_name: Optional[str] = Field(default=None, description="商品类别（已废弃，不再使用）")
+    product_model: str = Field(..., description="商品型号，根据'/'分割，填充到22行的D～H列合并单元格")
+    product_model_name: str = Field(..., description="商品型号名，拼接到B7单元格内容后面")
+    product_name: str = Field(..., description="商品名，拼接到I5单元格内容后面")
+    production_area: str = Field(..., description="生产地，拼接到I7单元格内容后面")
+    sales_name: str = Field(..., description="贩卖名称，根据'/'分割，填充到22行的I～J列合并单元格")
+    target_area: str = Field(..., description="贩卖国家，填充到22行的K～M列合并单元格")
+    remarks: Optional[str] = Field(default=None, description="备注（可选）")
+    eta_schedule: Optional[str] = Field(default=None, description="ETA预定日志（可选）")
 
 
 class ExistingProductComparisonParameters(BaseTemplateParameters):
     comparison_products: Optional[str] = None
     comparison_results: Optional[str] = None
 
+
+class PackagingDesignSpecificationParameters(BaseTemplateParameters):
+    product_name: Optional[str] = None
+    packaging_requirements: Optional[str] = None
+
+
+class UserManualSpecificationParameters(BaseTemplateParameters):
+    product_name: Optional[str] = None
+    manual_requirements: Optional[str] = None
+
+
+class ProjectPlanParameters(BaseTemplateParameters):
+    project_scope: Optional[str] = None
+    project_timeline: Optional[str] = None
 

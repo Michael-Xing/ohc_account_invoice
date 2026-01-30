@@ -50,9 +50,18 @@ class MinIOStorageService(StorageService):
 
     def save_file(self, file_path: Path, file_name: str, project_id: str = None, version: str = None) -> Tuple[bool, Optional[str], str]:
         try:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            # 检查文件名是否已经包含时间戳（格式：YYYYMMDD-HHMMSS 或 YYYYMMDD_HHMMSS）
+            import re
             name, ext = os.path.splitext(file_name)
-            unique_name = f"{name}_{timestamp}{ext}"
+            # 检查是否已经包含时间戳格式（YYYYMMDD-HHMMSS 或 YYYYMMDD_HHMMSS）
+            timestamp_pattern = r'\d{8}[-_]\d{6}$'
+            if re.search(timestamp_pattern, name):
+                # 文件名已经包含时间戳，直接使用
+                unique_name = file_name
+            else:
+                # 文件名不包含时间戳，添加时间戳
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                unique_name = f"{name}_{timestamp}{ext}"
 
             if project_id and version:
                 object_key = f"{project_id}/{version}/{unique_name}"
@@ -83,7 +92,15 @@ class StorageServiceFactory:
     @staticmethod
     def create_storage_service() -> StorageService:
         stype = getattr(settings, "storage_type", None)
-        stype_val = str(stype).lower() if stype is not None else "minio"
+        # 处理枚举类型：如果是枚举，使用 .value 获取字符串值；否则直接转换为字符串
+        if stype is None:
+            stype_val = "minio"
+        elif hasattr(stype, "value"):
+            # 枚举类型，使用 .value 获取实际值
+            stype_val = str(stype.value).lower()
+        else:
+            stype_val = str(stype).lower()
+        
         if stype_val == "local":
             return LocalStorageService()
         if stype_val in ("s3", "aws"):
@@ -137,9 +154,18 @@ class S3StorageService(StorageService):
     def save_file(self, file_path: Path, file_name: str, project_id: str = None, version: str = None) -> Tuple[bool, Optional[str], str]:
         try:
             import time
-            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            import re
+            # 检查文件名是否已经包含时间戳（格式：YYYYMMDD-HHMMSS 或 YYYYMMDD_HHMMSS）
             name, ext = os.path.splitext(file_name)
-            unique_name = f"{name}_{timestamp}{ext}"
+            # 检查是否已经包含时间戳格式（YYYYMMDD-HHMMSS 或 YYYYMMDD_HHMMSS）
+            timestamp_pattern = r'\d{8}[-_]\d{6}$'
+            if re.search(timestamp_pattern, name):
+                # 文件名已经包含时间戳，直接使用
+                unique_name = file_name
+            else:
+                # 文件名不包含时间戳，添加时间戳
+                timestamp = time.strftime("%Y%m%d_%H%M%S")
+                unique_name = f"{name}_{timestamp}{ext}"
             if project_id and version:
                 key = f"{project_id}/{version}/{unique_name}"
             elif project_id:
