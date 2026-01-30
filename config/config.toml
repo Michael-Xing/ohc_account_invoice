@@ -1,0 +1,41 @@
+# OHC账票生成服务配置文件
+
+[app]
+name = "OHC账票生成服务"
+version = "1.0.0"
+description = "OHC账票生成API服务"
+host = "0.0.0.0"
+port = 8000
+debug = false
+reload = false
+
+[storage]
+type = "local"  # 可选值: minio, local, s3
+
+[storage.minio]
+endpoint = "10.33.3.18:30808"  # MinIO服务端点，例如: localhost:9000
+access_key = "dpA8VUedoYF1hTCps15f"  # MinIO访问密钥
+secret_key = "vT5ykel89yoC0qaEw7Wrh56KxnlR6S1HiobB14v5"  # MinIO秘密密钥
+bucket_name = "ohc"  # MinIO存储桶名称
+secure = false  # 是否使用HTTPS连接MinIO
+
+[storage.local]
+path = "generated_files"  # 本地存储基础路径
+
+[storage.s3]
+access_key_id = ""  # AWS访问密钥ID
+secret_access_key = ""  # AWS秘密访问密钥
+bucket_name = ""  # S3存储桶名称
+region = "us-east-1"  # AWS区域
+
+[templates]
+base_path = "static/templates"  # 模板基础路径
+
+[files]
+include_timestamp = true  # 文件名是否包含时间戳
+max_length = 200  # 文件名最大长度
+
+[monitoring]
+# Sentry配置（可选）
+sentry_dsn = ""  # Sentry DSN
+sentry_environment = ""  # Sentry环境名称

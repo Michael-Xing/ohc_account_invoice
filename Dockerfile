@@ -28,9 +28,9 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# 复制应用代码和模板文件
+# 复制应用代码、模板文件和配置文件
 COPY src/ ./src/
-COPY config_example.env ./.env.example
+COPY config/ ./config/
 
 # 创建必要的目录
 RUN mkdir -p ./generated_files

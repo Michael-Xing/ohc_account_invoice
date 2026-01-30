@@ -16,6 +16,7 @@ dependencies = [
     "python-docx>=1.1.0",
     "minio>=7.2.0",
     "boto3>=1.28.0",
+    "tomli>=2.0.0; python_version < '3.11'",  # Python 3.11+ 使用内置 tomllib
     # jinja2 removed (not used)
     # python-multipart removed (no file-upload endpoints)
 ]

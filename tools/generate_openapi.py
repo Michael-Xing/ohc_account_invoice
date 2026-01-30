@@ -18,14 +18,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 try:
-    # Provide minimal env defaults to avoid reading blocked .env in CI/local runs.
+    # Skip infrastructure initialization for OpenAPI generation
     os.environ.setdefault("SKIP_INFRA_INIT", "1")
-    os.environ.setdefault("STORAGE_TYPE", "minio")
-    os.environ.setdefault("MINIO_ENDPOINT", "localhost:9000")
-    os.environ.setdefault("MINIO_ACCESS_KEY", "minioadmin")
-    os.environ.setdefault("MINIO_SECRET_KEY", "minioadmin")
-    os.environ.setdefault("MINIO_BUCKET_NAME", "ohc-documents")
-    os.environ.setdefault("MINIO_SECURE", "false")
+    # 配置现在从 config/config.toml 文件加载，不再需要设置环境变量
 
     from src.main import app  # import the FastAPI app
 except Exception as exc:

@@ -56,41 +56,43 @@ uv pip install -e ".[dev]"
 pip install -e .
 ```
 
-### 配置环境变量
+### 配置文件
 
-复制环境变量示例文件：
+编辑 `config/config.toml` 文件，示例如下（支持三种存储类型：`minio`、`local`、`s3`）：
 
-```bash
-cp .env.example .env
+```toml
+[storage]
+type = "minio"  # 可选值: minio, local, s3
+
+[storage.minio]
+endpoint = "localhost:9000"
+access_key = "minioadmin"
+secret_key = "minioadmin"
+bucket_name = "ohc-documents"
+secure = false
+
+[storage.local]
+path = "generated_files"
+
+[storage.s3]
+access_key_id = "your_aws_key"
+secret_access_key = "your_aws_secret"
+bucket_name = "ohc-documents"
+region = "us-east-1"
+
+[app]
+host = "0.0.0.0"
+port = 8000
+debug = false
 ```
 
-编辑 `.env` 文件，示例如下（支持三种存储类型：`minio`、`local`、`s3`）：
+配置文件查找优先级：
+1. `config/config.toml`（当前工作目录）
+2. `config.toml`（当前工作目录）
+3. `config/config.toml`（项目根目录）
+4. `config.toml`（项目根目录）
 
-```bash
-# 存储类型: minio | local | s3
-STORAGE_TYPE=minio
-
-# 本地存储（当 STORAGE_TYPE=local 时生效）
-LOCAL_STORAGE_PATH=generated_files
-
-# MinIO 配置（当 STORAGE_TYPE=minio 时必填）
-MINIO_ENDPOINT=localhost:9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
-MINIO_BUCKET_NAME=ohc-documents
-MINIO_SECURE=false
-
-# S3 配置（当 STORAGE_TYPE=s3 时必填）
-AWS_ACCESS_KEY_ID=your_aws_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret
-AWS_BUCKET_NAME=ohc-documents
-AWS_REGION=us-east-1
-
-# 应用配置
-APP_HOST=0.0.0.0
-APP_PORT=8000
-DEBUG=false
-```
+也可以通过环境变量 `CONFIG_FILE` 指定自定义配置文件路径。
 
 ### 本地开发运行
 
@@ -639,14 +641,14 @@ FILENAME_MAX_LENGTH=200
 
 ### 在 CI / 非完整基础设施环境下运行
 
-在某些 CI 或受限环境中，系统可能无法访问本地 `.env` 文件或外部依赖（如 MinIO）。为保证自动化生成 OpenAPI、运行单元测试或收集代码静态信息时不会因外部服务未准备好而失败，项目支持以下环境变量开关：
+在某些 CI 或受限环境中，系统可能无法访问本地配置文件或外部依赖（如 MinIO）。为保证自动化生成 OpenAPI、运行单元测试或收集代码静态信息时不会因外部服务未准备好而失败，项目支持以下环境变量开关：
 
 - `SKIP_INFRA_INIT=1`  
   - 含义：跳过基础设施（MinIO 等）初始化，服务将不会在导入时尝试连接或实例化外部存储客户端。适用于 CI、静态分析或仅运行单元测试的场景。  
   - 在 CI 中我们已将该变量设置在 `CI` workflow，以确保 lint/tests 在没有 MinIO 的环境下可以通过。
 
-- `SKIP_DOTENV=1`  
-  - 含义：跳过加载 `.env` 文件（pydantic Settings 的 env_file 将被设置为 None），用于当工作目录下的 `.env` 不可读取或不希望被自动加载时。
+- `CONFIG_FILE=/path/to/config.toml`  
+  - 含义：指定自定义配置文件路径，用于覆盖默认的配置文件查找逻辑。如果不设置，系统会自动查找 `config/config.toml` 或 `config.toml`。
 
 示例（本地生成 OpenAPI 时推荐）：
 

@@ -24,7 +24,7 @@ async def get_service_config():
     return ServiceConfigResponse(
         storage_type=settings.storage_type if not hasattr(settings, "storage_type") else settings.storage_type.value,
         template_base_path=settings.template_base_path,
-        supported_templates_count=len(template_service.get_supported_templates()),
+        supported_templates_count=len(template_service.get_supported_templates(None)),
         app_name=settings.app_name,
         app_version=settings.app_version
     )
@@ -32,7 +32,15 @@ async def get_service_config():
 
 @router.get("/download/{filename}", summary="下载文件", description="下载生成的文件（仅本地存储时可用）")
 async def download_file(filename: str):
-    if settings.storage_type != "local":
+    # 处理枚举类型：如果是枚举，使用 .value 获取字符串值；否则直接转换为字符串
+    storage_type_val = None
+    if hasattr(settings, "storage_type") and settings.storage_type is not None:
+        if hasattr(settings.storage_type, "value"):
+            storage_type_val = str(settings.storage_type.value).lower()
+        else:
+            storage_type_val = str(settings.storage_type).lower()
+    
+    if storage_type_val != "local":
         raise HTTPException(status_code=400, detail="文件下载仅支持本地存储模式")
 
     file_path = settings.get_local_storage_path() / filename
