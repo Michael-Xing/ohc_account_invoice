@@ -14,7 +14,7 @@ def test_generate_document_success_remote(monkeypatch, tmp_path):
     def validate(name):
         return True
 
-    def gen_doc(template_name, parameters, output_path):
+    def gen_doc(template_name, parameters, output_path, language=None):
         output_path.write_bytes(b"ok")
         return True
 
@@ -40,7 +40,7 @@ def test_generate_document_success_local(monkeypatch, tmp_path):
     def validate(name):
         return True
 
-    def gen_doc(template_name, parameters, output_path):
+    def gen_doc(template_name, parameters, output_path, language=None):
         output_path.write_bytes(b"ok")
         return True
 
@@ -64,6 +64,6 @@ def test_generate_document_success_local(monkeypatch, tmp_path):
 
     res = gs.generate_document_internal("DHF_INDEX", {"project_name": "P", "version": "v1"})
     assert res["success"] is True
-    assert res["file_content"] is not None
+    assert res["file_url"] is not None
 
 
