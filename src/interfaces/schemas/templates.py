@@ -13,14 +13,21 @@ class BaseTemplateParameters(BaseModel):
 
 
 class DHFIndexParameters(BaseTemplateParameters):
-    pass
-
+    """文件･图纸一览（`static/templates/excel/zh/文件･图纸一览.xlsx`）参数"""
+    theme_no: str = Field(..., description="项目NO，填入C3单元格")
+    theme_name: str = Field(..., description="项目名称，填入C4单元格")
+    product_model_name: str = Field(..., description="商品型式名，填入C5单元格")
+    sales_name: str = Field(..., description="贩卖名称，填入C6单元格")
+    stage: str = Field(..., description="设计阶段，填入C6单元格")
 
 class PTFIndexParameters(BaseTemplateParameters):
+    """PTF INDEX（`static/templates/excel/zh/PTF INDEX.xlsx`）参数"""
     pass
 
 
 class ESIndividualTestSpecParameters(BaseTemplateParameters):
+    """个别试验要项书（`static/templates/excel/zh/个别试验要项书.xlsx`）参数"""
+
     test_item: Optional[str] = None
 
 
@@ -67,8 +74,10 @@ class FollowUpDRMinutesParameters(BaseTemplateParameters):
 
 
 class LabelingSpecificationParameters(BaseTemplateParameters):
-    product_name: Optional[str] = None
-
+    """标签仕样书-仕样确认书（`static/templates/excel/zh/标签仕样书-仕样确认书.xlsx`）参数"""
+    theme_no: str = Field(..., description="项目NO，填入D5单元格")
+    theme_name: str = Field(..., description="项目名称，填入K5单元格")
+    product_model_name: str = Field(..., description="商品型式名，填入D7单元格")
 
 class ProductEnvironmentAssessmentParameters(BaseTemplateParameters):
     """产品环境评估要项书/结果书参数"""
@@ -90,13 +99,22 @@ class ExistingProductComparisonParameters(BaseTemplateParameters):
 
 
 class PackagingDesignSpecificationParameters(BaseTemplateParameters):
-    product_name: Optional[str] = None
-    packaging_requirements: Optional[str] = None
+    """包装设计仕样书（`static/templates/excel/zh/包装设计仕样书.xlsx`）参数"""
+    theme_no: str = Field(..., description="项目NO，填入C21单元格")
+    theme_name: str = Field(..., description="项目名称，填入E21单元格")
+    product_model_name: str = Field(..., description="商品型式名，填入L21单元格")
+    sales_name: str = Field(..., description="贩卖名称，填入C23单元格")
 
 
 class UserManualSpecificationParameters(BaseTemplateParameters):
-    product_name: Optional[str] = None
-    manual_requirements: Optional[str] = None
+    """使用说明书仕样书（`static/templates/excel/zh/使用说明书仕样书.xlsx`）参数"""
+    theme_no: str = Field(..., description="项目NO，填入B19单元格")
+    theme_name: str = Field(..., description="项目名称，填入D19单元格")
+    product_model_name: str = Field(..., description="商品型式名，填入J19单元格")
+    sales_name: str = Field(..., description="贩卖名称，填入B21单元格")
+    file_type: str = Field(..., description="文件类型，按需填写")
+    name: str = Field(..., description="名称，按需填写")
+    version: str = Field(..., description="版本，按需填写")
 
 
 class ProjectPlanParameters(BaseTemplateParameters):
