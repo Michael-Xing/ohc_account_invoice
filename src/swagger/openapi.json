@@ -1115,7 +1115,8 @@
                 "type": "null"
               }
             ],
-            "title": "Overview"
+            "title": "Overview",
+            "description": "概述"
           },
           "technical_requirements": {
             "anyOf": [
@@ -1126,7 +1127,8 @@
                 "type": "null"
               }
             ],
-            "title": "Technical Requirements"
+            "title": "Technical Requirements",
+            "description": "技术要求"
           },
           "acceptance_criteria": {
             "anyOf": [
@@ -1137,11 +1139,13 @@
                 "type": "null"
               }
             ],
-            "title": "Acceptance Criteria"
+            "title": "Acceptance Criteria",
+            "description": "验收标准"
           }
         },
         "type": "object",
-        "title": "BasicSpecificationParameters"
+        "title": "BasicSpecificationParameters",
+        "description": "基本规格书参数"
       },
       "DHFIndexParameters": {
         "properties": {
@@ -1229,10 +1233,58 @@
             ],
             "title": "Language",
             "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+          },
+          "theme_no": {
+            "type": "string",
+            "title": "Theme No",
+            "description": "项目NO，填充到C3单元格"
+          },
+          "theme_name": {
+            "type": "string",
+            "title": "Theme Name",
+            "description": "商品类别，填充到C4单元格"
+          },
+          "product_model": {
+            "type": "string",
+            "title": "Product Model",
+            "description": "商品型号，根据'/'分割，填充到C5单元格"
+          },
+          "sales_name": {
+            "type": "string",
+            "title": "Sales Name",
+            "description": "贩卖名称，根据'/'分割，填充到C6单元格"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage",
+            "description": "阶段，拼接到C7单元格内容的后面"
+          },
+          "product_name": {
+            "type": "string",
+            "title": "Product Name",
+            "description": "商品名"
+          },
+          "file_list": {
+            "items": {
+              "$ref": "#/components/schemas/FileListItem"
+            },
+            "type": "array",
+            "title": "File List",
+            "description": "文件列表"
           }
         },
         "type": "object",
-        "title": "DHFIndexParameters"
+        "required": [
+          "theme_no",
+          "theme_name",
+          "product_model",
+          "sales_name",
+          "stage",
+          "product_name",
+          "file_list"
+        ],
+        "title": "DHFIndexParameters",
+        "description": "DHF INDEX参数"
       },
       "ESIndividualTestResultParameters": {
         "properties": {
@@ -1330,7 +1382,8 @@
                 "type": "null"
               }
             ],
-            "title": "Test Item"
+            "title": "Test Item",
+            "description": "试验项目"
           },
           "test_result": {
             "anyOf": [
@@ -1341,7 +1394,8 @@
                 "type": "null"
               }
             ],
-            "title": "Test Result"
+            "title": "Test Result",
+            "description": "试验结果"
           },
           "tester": {
             "anyOf": [
@@ -1352,11 +1406,13 @@
                 "type": "null"
               }
             ],
-            "title": "Tester"
+            "title": "Tester",
+            "description": "试验者"
           }
         },
         "type": "object",
-        "title": "ESIndividualTestResultParameters"
+        "title": "ESIndividualTestResultParameters",
+        "description": "ES个别试验结果书参数"
       },
       "ESIndividualTestSpecParameters": {
         "properties": {
@@ -1454,11 +1510,13 @@
                 "type": "null"
               }
             ],
-            "title": "Test Item"
+            "title": "Test Item",
+            "description": "试验项目"
           }
         },
         "type": "object",
-        "title": "ESIndividualTestSpecParameters"
+        "title": "ESIndividualTestSpecParameters",
+        "description": "ES个别试验要项书参数"
       },
       "ESVerificationPlanParameters": {
         "properties": {
@@ -1556,11 +1614,13 @@
                 "type": "null"
               }
             ],
-            "title": "Verification Purpose"
+            "title": "Verification Purpose",
+            "description": "验证目的"
           }
         },
         "type": "object",
-        "title": "ESVerificationPlanParameters"
+        "title": "ESVerificationPlanParameters",
+        "description": "ES验证计划书参数"
       },
       "ESVerificationResultParameters": {
         "properties": {
@@ -1658,11 +1718,13 @@
                 "type": "null"
               }
             ],
-            "title": "Verification Result"
+            "title": "Verification Result",
+            "description": "验证结果"
           }
         },
         "type": "object",
-        "title": "ESVerificationResultParameters"
+        "title": "ESVerificationResultParameters",
+        "description": "ES验证结果书参数"
       },
       "ExistingProductComparisonParameters": {
         "properties": {
@@ -1760,7 +1822,8 @@
                 "type": "null"
               }
             ],
-            "title": "Comparison Products"
+            "title": "Comparison Products",
+            "description": "对比产品"
           },
           "comparison_results": {
             "anyOf": [
@@ -1771,11 +1834,40 @@
                 "type": "null"
               }
             ],
-            "title": "Comparison Results"
+            "title": "Comparison Results",
+            "description": "对比结果"
           }
         },
         "type": "object",
-        "title": "ExistingProductComparisonParameters"
+        "title": "ExistingProductComparisonParameters",
+        "description": "与现有产品对比表参数"
+      },
+      "FileListItem": {
+        "properties": {
+          "number": {
+            "type": "string",
+            "title": "Number",
+            "description": "文件编号"
+          },
+          "file_name": {
+            "type": "string",
+            "title": "File Name",
+            "description": "文件名称"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage",
+            "description": "阶段"
+          }
+        },
+        "type": "object",
+        "required": [
+          "number",
+          "file_name",
+          "stage"
+        ],
+        "title": "FileListItem",
+        "description": "文件列表项"
       },
       "FollowUpDRMinutesParameters": {
         "properties": {
@@ -1873,7 +1965,8 @@
                 "type": "null"
               }
             ],
-            "title": "Meeting Date"
+            "title": "Meeting Date",
+            "description": "会议日期"
           },
           "meeting_location": {
             "anyOf": [
@@ -1884,11 +1977,13 @@
                 "type": "null"
               }
             ],
-            "title": "Meeting Location"
+            "title": "Meeting Location",
+            "description": "会议地点"
           }
         },
         "type": "object",
-        "title": "FollowUpDRMinutesParameters"
+        "title": "FollowUpDRMinutesParameters",
+        "description": "跟进DR会议记录参数"
       },
       "GenerateDocumentRequest": {
         "properties": {
@@ -1970,19 +2065,7 @@
               }
             ],
             "title": "File Url",
-            "description": "文件下载链接（远程存储时）"
-          },
-          "file_content": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "File Content",
-            "description": "文件内容（Base64编码，本地存储时）"
+            "description": "文件下载链接（远程存储时）或本地文件路径（本地存储时）"
           },
           "storage_type": {
             "anyOf": [
@@ -2029,8 +2112,8 @@
         "title": "GenerateDocumentResponse",
         "description": "生成文档响应模型",
         "example": {
-          "file_content": "UEsDBBQAAAAIAA...",
           "file_name": "OHC项目_v1.0_20250122_DHF_INDEX.xlsx",
+          "file_url": "/path/to/file.xlsx",
           "message": "文档生成成功",
           "project_id": "OHC项目",
           "storage_type": "local",
@@ -2174,11 +2257,13 @@
                 "type": "null"
               }
             ],
-            "title": "Product Name"
+            "title": "Product Name",
+            "description": "产品名称"
           }
         },
         "type": "object",
-        "title": "LabelingSpecificationParameters"
+        "title": "LabelingSpecificationParameters",
+        "description": "标签规格书参数"
       },
       "PPIndividualTestResultParameters": {
         "properties": {
@@ -2276,7 +2361,8 @@
                 "type": "null"
               }
             ],
-            "title": "Test Item"
+            "title": "Test Item",
+            "description": "试验项目"
           },
           "test_result": {
             "anyOf": [
@@ -2287,11 +2373,13 @@
                 "type": "null"
               }
             ],
-            "title": "Test Result"
+            "title": "Test Result",
+            "description": "试验结果"
           }
         },
         "type": "object",
-        "title": "PPIndividualTestResultParameters"
+        "title": "PPIndividualTestResultParameters",
+        "description": "PP个别试验结果书参数"
       },
       "PPIndividualTestSpecParameters": {
         "properties": {
@@ -2389,11 +2477,13 @@
                 "type": "null"
               }
             ],
-            "title": "Test Purpose"
+            "title": "Test Purpose",
+            "description": "试验目的"
           }
         },
         "type": "object",
-        "title": "PPIndividualTestSpecParameters"
+        "title": "PPIndividualTestSpecParameters",
+        "description": "PP个别试验要项书参数"
       },
       "PPVerificationPlanParameters": {
         "properties": {
@@ -2491,11 +2581,13 @@
                 "type": "null"
               }
             ],
-            "title": "Verification Purpose"
+            "title": "Verification Purpose",
+            "description": "验证目的"
           }
         },
         "type": "object",
-        "title": "PPVerificationPlanParameters"
+        "title": "PPVerificationPlanParameters",
+        "description": "PP验证计划书参数"
       },
       "PPVerificationResultParameters": {
         "properties": {
@@ -2593,11 +2685,13 @@
                 "type": "null"
               }
             ],
-            "title": "Verification Result"
+            "title": "Verification Result",
+            "description": "验证结果"
           }
         },
         "type": "object",
-        "title": "PPVerificationResultParameters"
+        "title": "PPVerificationResultParameters",
+        "description": "PP验证结果书参数"
       },
       "PTFIndexParameters": {
         "properties": {
@@ -2688,7 +2782,8 @@
           }
         },
         "type": "object",
-        "title": "PTFIndexParameters"
+        "title": "PTFIndexParameters",
+        "description": "PTF INDEX参数"
       },
       "PackagingDesignSpecificationParameters": {
         "properties": {
@@ -2786,7 +2881,8 @@
                 "type": "null"
               }
             ],
-            "title": "Product Name"
+            "title": "Product Name",
+            "description": "产品名称"
           },
           "packaging_requirements": {
             "anyOf": [
@@ -2797,11 +2893,13 @@
                 "type": "null"
               }
             ],
-            "title": "Packaging Requirements"
+            "title": "Packaging Requirements",
+            "description": "包装要求"
           }
         },
         "type": "object",
-        "title": "PackagingDesignSpecificationParameters"
+        "title": "PackagingDesignSpecificationParameters",
+        "description": "包装设计仕样书参数"
       },
       "ProductEnvironmentAssessmentParameters": {
         "properties": {
@@ -2890,7 +2988,12 @@
             "title": "Language",
             "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
           },
-          "product_name": {
+          "theme_no": {
+            "type": "string",
+            "title": "Theme No",
+            "description": "项目NO，拼接到B5单元格内容后面"
+          },
+          "theme_name": {
             "anyOf": [
               {
                 "type": "string"
@@ -2899,11 +3002,76 @@
                 "type": "null"
               }
             ],
-            "title": "Product Name"
+            "title": "Theme Name",
+            "description": "商品类别（已废弃，不再使用）"
+          },
+          "product_model": {
+            "type": "string",
+            "title": "Product Model",
+            "description": "商品型号，根据'/'分割，填充到22行的D～H列合并单元格"
+          },
+          "product_model_name": {
+            "type": "string",
+            "title": "Product Model Name",
+            "description": "商品型号名，拼接到B7单元格内容后面"
+          },
+          "product_name": {
+            "type": "string",
+            "title": "Product Name",
+            "description": "商品名，拼接到I5单元格内容后面"
+          },
+          "production_area": {
+            "type": "string",
+            "title": "Production Area",
+            "description": "生产地，拼接到I7单元格内容后面"
+          },
+          "sales_name": {
+            "type": "string",
+            "title": "Sales Name",
+            "description": "贩卖名称，根据'/'分割，填充到22行的I～J列合并单元格"
+          },
+          "target_area": {
+            "type": "string",
+            "title": "Target Area",
+            "description": "贩卖国家，填充到22行的K～M列合并单元格"
+          },
+          "remarks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remarks",
+            "description": "备注（可选）"
+          },
+          "eta_schedule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eta Schedule",
+            "description": "ETA预定日志（可选）"
           }
         },
         "type": "object",
-        "title": "ProductEnvironmentAssessmentParameters"
+        "required": [
+          "theme_no",
+          "product_model",
+          "product_model_name",
+          "product_name",
+          "production_area",
+          "sales_name",
+          "target_area"
+        ],
+        "title": "ProductEnvironmentAssessmentParameters",
+        "description": "产品环境评估要项书/结果书参数"
       },
       "ProjectPlanParameters": {
         "properties": {
@@ -3001,7 +3169,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Scope"
+            "title": "Project Scope",
+            "description": "项目范围"
           },
           "project_timeline": {
             "anyOf": [
@@ -3012,11 +3181,13 @@
                 "type": "null"
               }
             ],
-            "title": "Project Timeline"
+            "title": "Project Timeline",
+            "description": "项目时间线"
           }
         },
         "type": "object",
-        "title": "ProjectPlanParameters"
+        "title": "ProjectPlanParameters",
+        "description": "项目计划书参数"
       },
       "ServiceConfigResponse": {
         "properties": {
@@ -3233,7 +3404,8 @@
                 "type": "null"
               }
             ],
-            "title": "Product Name"
+            "title": "Product Name",
+            "description": "产品名称"
           },
           "manual_requirements": {
             "anyOf": [
@@ -3244,11 +3416,13 @@
                 "type": "null"
               }
             ],
-            "title": "Manual Requirements"
+            "title": "Manual Requirements",
+            "description": "说明书要求"
           }
         },
         "type": "object",
-        "title": "UserManualSpecificationParameters"
+        "title": "UserManualSpecificationParameters",
+        "description": "使用说明书仕样书参数"
       },
       "ValidationError": {
         "properties": {

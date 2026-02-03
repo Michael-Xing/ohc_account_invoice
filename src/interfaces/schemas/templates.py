@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field
 
 
@@ -12,62 +12,88 @@ class BaseTemplateParameters(BaseModel):
     language: Optional[str] = Field(default=None, description="语言代码 (zh/ja/en)，如果不指定则使用默认模板")
 
 
+class FileListItem(BaseModel):
+    """文件列表项"""
+    number: str = Field(..., description="文件编号")
+    file_name: str = Field(..., description="文件名称")
+    stage: str = Field(..., description="阶段")
+
+
 class DHFIndexParameters(BaseTemplateParameters):
-    pass
+    """DHF INDEX参数"""
+    theme_no: str = Field(..., description="项目NO，填充到C3单元格")
+    theme_name: str = Field(..., description="商品类别，填充到C4单元格")
+    product_model: str = Field(..., description="商品型号，根据'/'分割，填充到C5单元格")
+    sales_name: str = Field(..., description="贩卖名称，根据'/'分割，填充到C6单元格")
+    stage: str = Field(..., description="阶段，拼接到C7单元格内容的后面")
+    product_name: str = Field(..., description="商品名")
+    file_list: List[FileListItem] = Field(..., description="文件列表")
 
 
 class PTFIndexParameters(BaseTemplateParameters):
+    """PTF INDEX参数"""
     pass
 
 
 class ESIndividualTestSpecParameters(BaseTemplateParameters):
-    test_item: Optional[str] = None
+    """ES个别试验要项书参数"""
+    test_item: Optional[str] = Field(default=None, description="试验项目")
 
 
 class ESIndividualTestResultParameters(BaseTemplateParameters):
-    test_item: Optional[str] = None
-    test_result: Optional[str] = None
-    tester: Optional[str] = None
+    """ES个别试验结果书参数"""
+    test_item: Optional[str] = Field(default=None, description="试验项目")
+    test_result: Optional[str] = Field(default=None, description="试验结果")
+    tester: Optional[str] = Field(default=None, description="试验者")
 
 
 class PPIndividualTestResultParameters(BaseTemplateParameters):
-    test_item: Optional[str] = None
-    test_result: Optional[str] = None
+    """PP个别试验结果书参数"""
+    test_item: Optional[str] = Field(default=None, description="试验项目")
+    test_result: Optional[str] = Field(default=None, description="试验结果")
 
 
 class ESVerificationPlanParameters(BaseTemplateParameters):
-    verification_purpose: Optional[str] = None
+    """ES验证计划书参数"""
+    verification_purpose: Optional[str] = Field(default=None, description="验证目的")
 
 
 class ESVerificationResultParameters(BaseTemplateParameters):
-    verification_result: Optional[str] = None
+    """ES验证结果书参数"""
+    verification_result: Optional[str] = Field(default=None, description="验证结果")
 
 
 class PPVerificationPlanParameters(BaseTemplateParameters):
-    verification_purpose: Optional[str] = None
+    """PP验证计划书参数"""
+    verification_purpose: Optional[str] = Field(default=None, description="验证目的")
 
 
 class PPVerificationResultParameters(BaseTemplateParameters):
-    verification_result: Optional[str] = None
+    """PP验证结果书参数"""
+    verification_result: Optional[str] = Field(default=None, description="验证结果")
 
 
 class BasicSpecificationParameters(BaseTemplateParameters):
-    overview: Optional[str] = None
-    technical_requirements: Optional[str] = None
-    acceptance_criteria: Optional[str] = None
+    """基本规格书参数"""
+    overview: Optional[str] = Field(default=None, description="概述")
+    technical_requirements: Optional[str] = Field(default=None, description="技术要求")
+    acceptance_criteria: Optional[str] = Field(default=None, description="验收标准")
 
 
 class PPIndividualTestSpecParameters(BaseTemplateParameters):
-    test_purpose: Optional[str] = None
+    """PP个别试验要项书参数"""
+    test_purpose: Optional[str] = Field(default=None, description="试验目的")
 
 
 class FollowUpDRMinutesParameters(BaseTemplateParameters):
-    meeting_date: Optional[str] = None
-    meeting_location: Optional[str] = None
+    """跟进DR会议记录参数"""
+    meeting_date: Optional[str] = Field(default=None, description="会议日期")
+    meeting_location: Optional[str] = Field(default=None, description="会议地点")
 
 
 class LabelingSpecificationParameters(BaseTemplateParameters):
-    product_name: Optional[str] = None
+    """标签规格书参数"""
+    product_name: Optional[str] = Field(default=None, description="产品名称")
 
 
 class ProductEnvironmentAssessmentParameters(BaseTemplateParameters):
@@ -85,21 +111,25 @@ class ProductEnvironmentAssessmentParameters(BaseTemplateParameters):
 
 
 class ExistingProductComparisonParameters(BaseTemplateParameters):
-    comparison_products: Optional[str] = None
-    comparison_results: Optional[str] = None
+    """与现有产品对比表参数"""
+    comparison_products: Optional[str] = Field(default=None, description="对比产品")
+    comparison_results: Optional[str] = Field(default=None, description="对比结果")
 
 
 class PackagingDesignSpecificationParameters(BaseTemplateParameters):
-    product_name: Optional[str] = None
-    packaging_requirements: Optional[str] = None
+    """包装设计仕样书参数"""
+    product_name: Optional[str] = Field(default=None, description="产品名称")
+    packaging_requirements: Optional[str] = Field(default=None, description="包装要求")
 
 
 class UserManualSpecificationParameters(BaseTemplateParameters):
-    product_name: Optional[str] = None
-    manual_requirements: Optional[str] = None
+    """使用说明书仕样书参数"""
+    product_name: Optional[str] = Field(default=None, description="产品名称")
+    manual_requirements: Optional[str] = Field(default=None, description="说明书要求")
 
 
 class ProjectPlanParameters(BaseTemplateParameters):
-    project_scope: Optional[str] = None
-    project_timeline: Optional[str] = None
+    """项目计划书参数"""
+    project_scope: Optional[str] = Field(default=None, description="项目范围")
+    project_timeline: Optional[str] = Field(default=None, description="项目时间线")
 
