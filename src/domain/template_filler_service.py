@@ -14,6 +14,9 @@ from src.infrastructure.template_service import TemplateFillerStrategy, ExcelTem
 from src.domain.fillers.dhf_index_filler import DHFIndexFiller
 from src.domain.fillers.product_environment_assessment_filler import ProductEnvironmentAssessmentFiller
 from src.domain.fillers.basic_specification_filler import BasicSpecificationFiller
+from src.domain.fillers.labeling_specification_filter import LabelingSpecificationFiller
+from src.domain.fillers.packaging_design_specification_filler import PackagingDesignSpecificationFiller
+from src.domain.fillers.user_manual_specification_filler import UserManualSpecificationFiller
 
 # ... 其他填充器为简洁起见省略；原始实现已保留在代码库中 ...
 
@@ -165,6 +168,9 @@ class TemplateService:
         "DHF_INDEX": DHFIndexFiller(),
         "PRODUCT_ENVIRONMENT_ASSESSMENT": ProductEnvironmentAssessmentFiller(),
         "BASIC_SPECIFICATION": BasicSpecificationFiller(),
+        "LABELING_SPECIFICATION": LabelingSpecificationFiller(),
+        "PACKAGING_DESIGN_SPECIFICATION": PackagingDesignSpecificationFiller(),
+        "USER_MANUAL_SPECIFICATION": UserManualSpecificationFiller(),
         # 其他模板使用默认策略
     }
 

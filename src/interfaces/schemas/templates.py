@@ -31,7 +31,7 @@ class DHFIndexParameters(BaseTemplateParameters):
 
 
 class PTFIndexParameters(BaseTemplateParameters):
-    """PTF INDEX参数"""
+    """PTF INDEX（`static/templates/excel/zh/PTF INDEX.xlsx`）参数"""
     pass
 
 
@@ -189,9 +189,10 @@ class FollowUpDRMinutesParameters(BaseTemplateParameters):
 
 
 class LabelingSpecificationParameters(BaseTemplateParameters):
-    """标签规格书参数"""
-    product_name: Optional[str] = Field(default=None, description="产品名称")
-
+    """标签仕样书-仕样确认书参数"""
+    theme_no: str = Field(..., description="项目NO，填入D5单元格")
+    theme_name: str = Field(..., description="项目名称，填入K5单元格")
+    product_model_name: str = Field(..., description="商品型式名，填入D7单元格")
 
 class ProductEnvironmentAssessmentParameters(BaseTemplateParameters):
     """产品环境评估要项书/结果书参数"""
@@ -215,14 +216,21 @@ class ExistingProductComparisonParameters(BaseTemplateParameters):
 
 class PackagingDesignSpecificationParameters(BaseTemplateParameters):
     """包装设计仕样书参数"""
-    product_name: Optional[str] = Field(default=None, description="产品名称")
-    packaging_requirements: Optional[str] = Field(default=None, description="包装要求")
+    theme_no: str = Field(..., description="项目NO，填入C21单元格")
+    theme_name: str = Field(..., description="项目名称，填入E21单元格")
+    product_model_name: str = Field(..., description="商品型式名，填入L21单元格")
+    sales_name: str = Field(..., description="贩卖名称，填入C23单元格")
 
 
 class UserManualSpecificationParameters(BaseTemplateParameters):
     """使用说明书仕样书参数"""
-    product_name: Optional[str] = Field(default=None, description="产品名称")
-    manual_requirements: Optional[str] = Field(default=None, description="说明书要求")
+    theme_no: str = Field(..., description="项目NO，填入B19单元格")
+    theme_name: str = Field(..., description="项目名称，填入D19单元格")
+    product_model_name: str = Field(..., description="商品型式名，填入J19单元格")
+    sales_name: str = Field(..., description="贩卖名称，填入B21单元格")
+    file_type: str = Field(..., description="文件类型，按需填写")
+    name: str = Field(..., description="名称，按需填写")
+    version: str = Field(..., description="版本，按需填写")
 
 
 class ProjectPlanParameters(BaseTemplateParameters):
