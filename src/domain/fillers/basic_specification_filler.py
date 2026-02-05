@@ -4,8 +4,8 @@ from typing import Any, Dict, List, Tuple
 import io
 import re
 import tempfile
+import urllib.request
 
-import requests
 from docx import Document
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
@@ -826,9 +826,19 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
     def _download_image(self, url: str) -> bytes:
         """下载图片内容，失败时返回空字节串"""
         try:
-            resp = requests.get(url, timeout=10)
-            if resp.status_code == 200:
-                return resp.content
+            req = urllib.request.Request(
+                url,
+                headers={
+                    # Some hosts block requests without UA
+                    "User-Agent": "ohc-account-invoice/1.0 (+python urllib)",
+                },
+                method="GET",
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                status = getattr(resp, "status", None)
+                if status is not None and int(status) != 200:
+                    return b""
+                return resp.read()
         except Exception:
             return b""
         return b""
