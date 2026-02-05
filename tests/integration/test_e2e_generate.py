@@ -48,7 +48,7 @@ def test_generate_document_e2e(monkeypatch, tmp_path):
     payload = {
         "template_name": "TEST",
         "parameters": {
-            "project_name": "E2E Project",
+            "project_number": "E2E Project",
             "version": "1.0",
             "date": "2026-01-01",
             "author": "E2E Tester",

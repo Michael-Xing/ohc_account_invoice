@@ -13,7 +13,7 @@ class GenerateDocumentRequest(BaseModel):
             "example": {
                 "template_name": "DHF_INDEX",
                 "parameters": {
-                    "project_name": "OHC项目",
+                    "project_number": "OHC项目",
                     "version": "1.0",
                     "date": "2025-01-22",
                     "author": "张三",

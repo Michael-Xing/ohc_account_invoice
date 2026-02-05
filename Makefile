@@ -5,9 +5,12 @@
 # 项目信息
 PROJECT_NAME = ohc-account-invoice
 VERSION = 1.0.0
-REGISTRY = release.daocloud.io/dak
+GIT_COUNT = $(shell git rev-list --all --count)
+GIT_HASH = $(shell git rev-parse --short HEAD)
+RELEASE_TAG = $(VERSION).$(GIT_COUNT).$(GIT_HASH)
+REGISTRY = release.daocloud.io/aigc
 IMAGE_NAME = $(if $(REGISTRY),$(REGISTRY)/$(PROJECT_NAME),$(PROJECT_NAME))
-FULL_IMAGE_NAME = $(IMAGE_NAME):$(VERSION)
+FULL_IMAGE_NAME = $(IMAGE_NAME):$(RELEASE_TAG)
 LATEST_IMAGE_NAME = $(IMAGE_NAME):latest
 STORAGE_TYPE = minio
 LOCAL_STORAGE_PATH = generated_files
@@ -35,7 +38,7 @@ help:
 	@echo ""
 	@echo "环境变量:"
 	@echo "  REGISTRY        - Docker镜像仓库地址 (可选)"
-	@echo "  VERSION         - 镜像版本 (默认: $(VERSION))"
+	@echo "  VERSION         - 镜像版本 (默认: $(RELEASE_TAG))"
 
 # 安装依赖
 install:

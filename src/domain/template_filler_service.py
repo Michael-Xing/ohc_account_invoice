@@ -9,11 +9,12 @@ from docx import Document
 from openpyxl import load_workbook
 
 from src.config import settings
-from src.domain.fillers.labeling_specification_filter import LabelingSpecificationFiller
-from src.infrastructure.template_service import TemplateFillerStrategy,ExcelTemplateFiller, WordTemplateFiller
+from src.infrastructure.template_service import TemplateFillerStrategy, ExcelTemplateFiller, WordTemplateFiller
 
 from src.domain.fillers.dhf_index_filler import DHFIndexFiller
 from src.domain.fillers.product_environment_assessment_filler import ProductEnvironmentAssessmentFiller
+from src.domain.fillers.basic_specification_filler import BasicSpecificationFiller
+from src.domain.fillers.labeling_specification_filter import LabelingSpecificationFiller
 from src.domain.fillers.packaging_design_specification_filler import PackagingDesignSpecificationFiller
 from src.domain.fillers.user_manual_specification_filler import UserManualSpecificationFiller
 
@@ -166,10 +167,11 @@ class TemplateService:
     TEMPLATE_FILLER_MAPPING = {
         "DHF_INDEX": DHFIndexFiller(),
         "PRODUCT_ENVIRONMENT_ASSESSMENT": ProductEnvironmentAssessmentFiller(),
-        "LABELING_SPECIFICATION":LabelingSpecificationFiller(),
+        "BASIC_SPECIFICATION": BasicSpecificationFiller(),
+        "LABELING_SPECIFICATION": LabelingSpecificationFiller(),
         "PACKAGING_DESIGN_SPECIFICATION": PackagingDesignSpecificationFiller(),
         "USER_MANUAL_SPECIFICATION": UserManualSpecificationFiller(),
-        # other mappings retained...
+        # 其他模板使用默认策略
     }
 
     def __init__(self):

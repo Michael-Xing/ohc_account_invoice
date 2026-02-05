@@ -27,7 +27,7 @@ def generate_output_filename(template_name: str, parameters: Dict[str, Any], lan
         extension = "xlsx"
 
     # 获取项目编号
-    project_id = parameters.get("project_id") or parameters.get("project_name")
+    project_id = parameters.get("project_id") or parameters.get("project_number")
     if project_id:
         # 清理项目编号，只保留允许的字符
         clean_project_id = re.sub(r'[^\w\-\.\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]', '-', str(project_id))
