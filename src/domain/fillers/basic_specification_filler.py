@@ -125,12 +125,12 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                             markdown_text = str(self._get_param(parameters, key) or "").strip()
                             if markdown_text:
                                 self._clear_cell(cell)
-                                self._insert_markdown_table_into_cell(cell, markdown_text, merge_same_column=True)
+                                self._insert_markdown_table_into_cell(cell, markdown_text, merge_same_column=False)
                         elif key == "performance_table":
                             markdown_text = str(self._get_param(parameters, key) or "").strip()
                             if markdown_text:
                                 self._clear_cell(cell)
-                                self._insert_markdown_table_into_cell(cell, markdown_text, merge_same_column=True)
+                                self._insert_markdown_table_into_cell(cell, markdown_text, merge_same_column=False)
                         elif key == self.PRODUCT_MODEL_TABLE_FIELD:
                             rows = parameters.get(self.PRODUCT_MODEL_TABLE_FIELD) or []
                             if rows:
@@ -209,10 +209,10 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                     else:
                         value = self._get_param(parameters, key)
                         markdown_text = str(value or "").strip()
-                        if markdown_text:
-                            # 功能模块、性能说明需要列合并
-                            merge_same = key in {"function_block_table", "performance_table"}
-                            self._insert_markdown_table_at_block(doc, parent, insert_idx, markdown_text, merge_same)
+                    if markdown_text:
+                        # 不再进行列合并
+                        merge_same = False
+                        self._insert_markdown_table_at_block(doc, parent, insert_idx, markdown_text, merge_same)
                     break  # 处理完这个段落，跳出循环
                 elif key in self.IMAGE_LIST_FIELDS:
                     # 3）图片列表字段：在段落位置插入图片（无论是否独占一行）
@@ -577,7 +577,10 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                 image_stream_for_insert.close()  # 关闭流
                 
                 elements_to_insert.append(paragraph._element)
-                print(f"成功插入图片: {url}, 尺寸: {target_width_cm:.2f}cm x {target_height_cm:.2f}cm")
+                if target_height_cm is not None:
+                    print(f"成功插入图片: {url}, 尺寸: {target_width_cm:.2f}cm x {target_height_cm:.2f}cm")
+                else:
+                    print(f"成功插入图片: {url}, 尺寸: {target_width_cm:.2f}cm x 自动")
             except Exception as e:
                 # 单张图片失败不中断整体处理
                 import traceback
