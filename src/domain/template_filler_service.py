@@ -9,10 +9,11 @@ from docx import Document
 from openpyxl import load_workbook
 
 from src.config import settings
-from src.infrastructure.template_service import TemplateFillerStrategy,ExcelTemplateFiller, WordTemplateFiller
+from src.infrastructure.template_service import TemplateFillerStrategy, ExcelTemplateFiller, WordTemplateFiller
 
 from src.domain.fillers.dhf_index_filler import DHFIndexFiller
 from src.domain.fillers.product_environment_assessment_filler import ProductEnvironmentAssessmentFiller
+from src.domain.fillers.basic_specification_filler import BasicSpecificationFiller
 
 # ... 其他填充器为简洁起见省略；原始实现已保留在代码库中 ...
 
@@ -163,7 +164,8 @@ class TemplateService:
     TEMPLATE_FILLER_MAPPING = {
         "DHF_INDEX": DHFIndexFiller(),
         "PRODUCT_ENVIRONMENT_ASSESSMENT": ProductEnvironmentAssessmentFiller(),
-        # other mappings retained...
+        "BASIC_SPECIFICATION": BasicSpecificationFiller(),
+        # 其他模板使用默认策略
     }
 
     def __init__(self):

@@ -1019,9 +1019,28 @@
   },
   "components": {
     "schemas": {
+      "BasicSpecificationMaintenanceAndDisposal": {
+        "properties": {
+          "maintenance": {
+            "type": "string",
+            "title": "Maintenance",
+            "description": "维护保存",
+            "default": ""
+          },
+          "disposal": {
+            "type": "string",
+            "title": "Disposal",
+            "description": "废弃处理",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "BasicSpecificationMaintenanceAndDisposal",
+        "description": "基本规格书-保存维护和废弃处理"
+      },
       "BasicSpecificationParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -1030,8 +1049,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -1106,50 +1125,259 @@
             "title": "Language",
             "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
           },
-          "overview": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Overview",
-            "description": "概述"
+          "product_model": {
+            "type": "string",
+            "title": "Product Model",
+            "description": "商品型号，使用'/'分割，多值用于生成机种表和其他位置",
+            "default": ""
           },
-          "technical_requirements": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Technical Requirements",
-            "description": "技术要求"
+          "sales_name": {
+            "type": "string",
+            "title": "Sales Name",
+            "description": "贩卖名称，使用'/'分割，多值用于生成机种表和其他位置",
+            "default": ""
           },
-          "acceptance_criteria": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Acceptance Criteria",
-            "description": "验收标准"
+          "theme_no": {
+            "type": "string",
+            "title": "Theme No",
+            "description": "项目NO",
+            "default": ""
+          },
+          "production_area": {
+            "type": "string",
+            "title": "Production Area",
+            "description": "生产地",
+            "default": ""
+          },
+          "definition_term_table": {
+            "type": "string",
+            "title": "Definition Term Table",
+            "description": "术语定义，Markdown表格，需转换为Word表格",
+            "default": ""
+          },
+          "use_purpose": {
+            "type": "string",
+            "title": "Use Purpose",
+            "description": "使用目的，支持Markdown语法",
+            "default": ""
+          },
+          "intended_patients": {
+            "type": "string",
+            "title": "Intended Patients",
+            "description": "对象患者，支持Markdown语法",
+            "default": ""
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment",
+            "description": "适用环境，支持Markdown语法",
+            "default": ""
+          },
+          "use_type": {
+            "type": "string",
+            "title": "Use Type",
+            "description": "使用种类/医疗目的，支持Markdown语法",
+            "default": ""
+          },
+          "component_table": {
+            "type": "string",
+            "title": "Component Table",
+            "description": "机能构成，Markdown表格，需转换为Word表格",
+            "default": ""
+          },
+          "appearance_image": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Appearance Image",
+            "description": "外观图URL列表，将下载并按顺序插入到同一占位符位置"
+          },
+          "dimensions_and_weight": {
+            "type": "string",
+            "title": "Dimensions And Weight",
+            "description": "尺寸及重量，支持Markdown语法",
+            "default": ""
+          },
+          "regulations_and_standards": {
+            "type": "string",
+            "title": "Regulations And Standards",
+            "description": "政策法规，支持Markdown语法",
+            "default": ""
+          },
+          "service_environment_conditions": {
+            "$ref": "#/components/schemas/BasicSpecificationServiceEnvironmentConditions",
+            "description": "使用环境及条件"
+          },
+          "main_unit": {
+            "type": "string",
+            "title": "Main Unit",
+            "description": "材料主题，支持Markdown语法",
+            "default": ""
+          },
+          "accessories": {
+            "type": "string",
+            "title": "Accessories",
+            "description": "附属品，支持Markdown语法",
+            "default": ""
+          },
+          "safety_protection_info": {
+            "$ref": "#/components/schemas/BasicSpecificationSafetyProtectionInfo",
+            "description": "安全保护信息"
+          },
+          "various_settings": {
+            "$ref": "#/components/schemas/BasicSpecificationVariousSettings",
+            "description": "各种设置"
+          },
+          "labeling": {
+            "type": "string",
+            "title": "Labeling",
+            "description": "标签，支持Markdown语法",
+            "default": ""
+          },
+          "packaging": {
+            "type": "string",
+            "title": "Packaging",
+            "description": "打包说明，支持Markdown语法",
+            "default": ""
+          },
+          "maintenance_and_disposal": {
+            "$ref": "#/components/schemas/BasicSpecificationMaintenanceAndDisposal",
+            "description": "保存维护和废弃处理"
+          },
+          "function_table": {
+            "type": "string",
+            "title": "Function Table",
+            "description": "功能说明，Markdown表格，需转换为Word表格",
+            "default": ""
+          },
+          "function_block_image": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Function Block Image",
+            "description": "功能块图URL列表，将下载并按顺序插入到同一占位符位置"
+          },
+          "function_block_table": {
+            "type": "string",
+            "title": "Function Block Table",
+            "description": "功能模块，Markdown表格，需转换为Word表格并按列合并相同内容",
+            "default": ""
+          },
+          "performance_table": {
+            "type": "string",
+            "title": "Performance Table",
+            "description": "性能说明，Markdown表格，需转换为Word表格并按列合并相同内容",
+            "default": ""
           }
         },
         "type": "object",
         "title": "BasicSpecificationParameters",
         "description": "基本规格书参数"
       },
+      "BasicSpecificationSafetyProtectionInfo": {
+        "properties": {
+          "definitions_of_basic_safety": {
+            "type": "string",
+            "title": "Definitions Of Basic Safety",
+            "description": "安全本质性能的定义(IEC60601-1中的基本性能)",
+            "default": ""
+          },
+          "device_classification": {
+            "type": "string",
+            "title": "Device Classification",
+            "description": "安全设备分类",
+            "default": ""
+          },
+          "equipment_safety_protection_and_warnings": {
+            "type": "string",
+            "title": "Equipment Safety Protection And Warnings",
+            "description": "对机器安全的保护和警告简述",
+            "default": ""
+          },
+          "safety_protection": {
+            "type": "string",
+            "title": "Safety Protection",
+            "description": "安全防护",
+            "default": ""
+          },
+          "safety_warning": {
+            "type": "string",
+            "title": "Safety Warning",
+            "description": "安全警告",
+            "default": ""
+          },
+          "biological_alarms": {
+            "type": "string",
+            "title": "Biological Alarms",
+            "description": "生理学警报",
+            "default": ""
+          },
+          "technical_alarms": {
+            "type": "string",
+            "title": "Technical Alarms",
+            "description": "技术警报",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "BasicSpecificationSafetyProtectionInfo",
+        "description": "基本规格书-安全保护信息"
+      },
+      "BasicSpecificationServiceEnvironmentConditions": {
+        "properties": {
+          "power_supply": {
+            "type": "string",
+            "title": "Power Supply",
+            "description": "电源",
+            "default": ""
+          },
+          "use_temperature_humidity_range": {
+            "type": "string",
+            "title": "Use Temperature Humidity Range",
+            "description": "使用湿度范围",
+            "default": ""
+          },
+          "storage_and_transport_conditions": {
+            "type": "string",
+            "title": "Storage And Transport Conditions",
+            "description": "存储和运输环境",
+            "default": ""
+          },
+          "durability": {
+            "type": "string",
+            "title": "Durability",
+            "description": "耐久性",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "BasicSpecificationServiceEnvironmentConditions",
+        "description": "基本规格书-使用环境及条件"
+      },
+      "BasicSpecificationVariousSettings": {
+        "properties": {
+          "default_equipment_setting": {
+            "type": "string",
+            "title": "Default Equipment Setting",
+            "description": "默认出场设置",
+            "default": ""
+          },
+          "date_time_settings": {
+            "type": "string",
+            "title": "Date Time Settings",
+            "description": "时间和日期设置",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "BasicSpecificationVariousSettings",
+        "description": "基本规格书-各种设置"
+      },
       "DHFIndexParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -1158,8 +1386,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -1288,7 +1516,7 @@
       },
       "ESIndividualTestResultParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -1297,8 +1525,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -1416,7 +1644,7 @@
       },
       "ESIndividualTestSpecParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -1425,8 +1653,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -1520,7 +1748,7 @@
       },
       "ESVerificationPlanParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -1529,8 +1757,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -1624,7 +1852,7 @@
       },
       "ESVerificationResultParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -1633,8 +1861,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -1728,7 +1956,7 @@
       },
       "ExistingProductComparisonParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -1737,8 +1965,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -1871,7 +2099,7 @@
       },
       "FollowUpDRMinutesParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -1880,8 +2108,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -2025,7 +2253,7 @@
             "date": "2025-01-22",
             "department": "研发部",
             "document_type": "设计文档",
-            "project_name": "OHC项目",
+            "project_number": "OHC项目",
             "version": "1.0"
           },
           "template_name": "DHF_INDEX"
@@ -2163,7 +2391,7 @@
       },
       "LabelingSpecificationParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -2172,8 +2400,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -2267,7 +2495,7 @@
       },
       "PPIndividualTestResultParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -2276,8 +2504,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -2383,7 +2611,7 @@
       },
       "PPIndividualTestSpecParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -2392,8 +2620,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -2487,7 +2715,7 @@
       },
       "PPVerificationPlanParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -2496,8 +2724,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -2591,7 +2819,7 @@
       },
       "PPVerificationResultParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -2600,8 +2828,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -2695,7 +2923,7 @@
       },
       "PTFIndexParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -2704,8 +2932,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -2787,7 +3015,7 @@
       },
       "PackagingDesignSpecificationParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -2796,8 +3024,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -2903,7 +3131,7 @@
       },
       "ProductEnvironmentAssessmentParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -2912,8 +3140,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -3075,7 +3303,7 @@
       },
       "ProjectPlanParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -3084,8 +3312,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [
@@ -3310,7 +3538,7 @@
       },
       "UserManualSpecificationParameters": {
         "properties": {
-          "project_name": {
+          "project_number": {
             "anyOf": [
               {
                 "type": "string"
@@ -3319,8 +3547,8 @@
                 "type": "null"
               }
             ],
-            "title": "Project Name",
-            "description": "项目名称"
+            "title": "Project Number",
+            "description": "项目编号"
           },
           "version": {
             "anyOf": [

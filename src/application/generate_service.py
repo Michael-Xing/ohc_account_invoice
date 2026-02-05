@@ -43,7 +43,7 @@ def generate_document_internal(template_name: str, parameters: Dict[str, Any], l
             raise TemplateGenerationError("文档生成失败，请检查模板和参数")
 
         # Extract project/version
-        project_id = parameters.get("project_name") or parameters.get("project_id")
+        project_id = parameters.get("project_number") or parameters.get("project_id")
         version = parameters.get("version") or parameters.get("ver")
 
         # Store file

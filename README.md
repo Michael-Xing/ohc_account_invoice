@@ -139,7 +139,7 @@ curl -X POST "http://localhost:8000/generate" \
   -d '{
     "template_name": "DHF_INDEX",
     "parameters": {
-      "project_name": "OHC项目",
+      "project_number": "OHC项目",
       "version": "1.0",
       "document_type": "设计文档",
       "department": "研发部"
@@ -150,7 +150,7 @@ curl -X POST "http://localhost:8000/generate" \
 curl -X POST "http://localhost:8000/generate/dhf-index" \
   -H "Content-Type: application/json" \
   -d '{
-    "project_name": "OHC项目",
+    "project_number": "OHC项目",
     "version": "1.0",
     "date": "2025-01-22",
     "author": "张三",
@@ -304,7 +304,7 @@ print(f"支持的模板: {templates}")
 generate_data = {
     "template_name": "DHF_INDEX",
     "parameters": {
-        "project_name": "OHC项目",
+        "project_number": "OHC项目",
         "date": "2025-01-22",
         "author": "张三",
         "version": "1.0",
@@ -318,7 +318,7 @@ print(f"生成结果: {result}")
 
 # 3. 使用专门接口生成文档
 dhf_data = {
-    "project_name": "OHC项目",
+    "project_number": "OHC项目",
     "date": "2025-01-22",
     "author": "张三",
     "version": "1.0",
@@ -351,7 +351,7 @@ console.log('支持的模板:', templates);
 const generateData = {
     template_name: "DHF_INDEX",
     parameters: {
-        project_name: "OHC项目",
+        project_number: "OHC项目",
         date: "2025-01-22",
         author: "张三",
         version: "1.0",
@@ -371,7 +371,7 @@ console.log('生成结果:', result);
 
 // 3. 使用专门接口生成文档
 const dhfData = {
-    project_name: "OHC项目",
+    project_number: "OHC项目",
     date: "2025-01-22",
     author: "张三",
     version: "1.0",
@@ -407,7 +407,7 @@ console.log('生成结果:', dhfResult);
 curl -X POST "http://localhost:8000/generate/dhf-index" \
   -H "Content-Type: application/json" \
   -d '{
-    "project_name": "OHC项目",
+    "project_number": "OHC项目",
     "version": "1.0",
     "document_type": "设计文档",
     "department": "研发部"
@@ -421,7 +421,7 @@ curl -X POST "http://localhost:8000/generate/dhf-index" \
 curl -X POST "http://localhost:8000/generate/dhf-index" \
   -H "Content-Type: application/json" \
   -d '{
-    "project_name": "OHC项目",
+    "project_number": "OHC项目",
     "version": "1.0",
     "date": "2025-01-22 15:30:45",
     "author": "张三",
@@ -512,13 +512,13 @@ curl -X POST "http://localhost:8000/generate/dhf-index" \
 #### 使用示例
 
 ```text
-原始文本: "项目名称：{project_name}，版本：{{version}}，日期：{date}"
-替换后: "项目名称：OHC项目，版本：1.0，日期：2025-01-22"
+原始文本: "项目编号：{project_number}，版本：{{version}}，日期：{date}"
+替换后: "项目编号：OHC项目，版本：1.0，日期：2025-01-22"
 
-原始文本: "项目：{project_name}（版本{version}）"
+原始文本: "项目：{project_number}（版本{version}）"
 替换后: "项目：OHC项目（版本1.0）"
 
-原始文本: "项目：{{project_name}}，不存在的参数：{{non_existent}}"
+原始文本: "项目：{{project_number}}，不存在的参数：{{non_existent}}"
 替换后: "项目：OHC项目，不存在的参数：{{non_existent}}"
 ```
 
@@ -547,7 +547,7 @@ curl -X POST "http://localhost:8000/generate/dhf-index" \
 ```text
 输入参数:
 {
-  "project_name": "OHC测试项目",
+  "project_number": "OHC测试项目",
   "version": "1.0",
   "date": "2025-01-22 15:30:45"
 }
