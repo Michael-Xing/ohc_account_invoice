@@ -26,8 +26,11 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
             workbook = load_workbook(template_path)
             worksheet = workbook.active
 
+            # 从模板路径中提取语言
+            language = self._extract_language_from_path(template_path)
+
             # 填充字段
-            self._fill_fields(worksheet, parameters)
+            self._fill_fields(worksheet, parameters, language)
 
             # 替换其他占位符
             for row in worksheet.iter_rows():
@@ -43,7 +46,16 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
             traceback.print_exc()
             return False
 
-    def _fill_fields(self, worksheet, parameters: Dict[str, Any]):
+    def _extract_language_from_path(self, template_path: Path) -> str:
+        """从模板路径中提取语言代码"""
+        parts = template_path.parts
+        # 路径格式通常是: .../excel/zh/文件名.xlsx 或 .../excel/ja/文件名.xlsx
+        for part in parts:
+            if part in ['zh', 'ja', 'en']:
+                return part
+        return 'zh'  # 默认返回中文
+
+    def _fill_fields(self, worksheet, parameters: Dict[str, Any], language: str = 'zh'):
         """填充字段到指定单元格"""
         # theme_no 填入 C21 单元格
         if 'theme_no' in parameters and parameters['theme_no']:
@@ -60,4 +72,32 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
         # sales_name 填入 C23 单元格
         if 'sales_name' in parameters and parameters['sales_name']:
             worksheet['C23'].value = str(parameters['sales_name'])
+
+        texts = []
+        # 根据语言填充文档类型列表到 B27 列往下
+        if language == 'ja':
+            texts = [
+                '製品要件書',
+                '要求仕様書',
+                '製品設計仕様書',
+                'リスクコントロール仕様書',
+                'ユーザビリティ仕様書',
+                '課題分析·対策書',
+                '製品アセスメント要項書'
+            ]
+        elif language == 'zh':
+            texts = [
+                '产品要件书',
+                '要求仕样书',
+                '产品设计仕样书',
+                '风险控制仕样书',
+                '可用性仕样书',
+                '课题分析/对策结果书',
+                '产品环境评估要项书'
+            ]
+
+        # 从 B27 开始填充
+        for idx, text in enumerate(texts):
+            row = 27 + idx
+            worksheet[f'B{row}'].value = text
 

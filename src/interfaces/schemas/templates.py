@@ -193,6 +193,13 @@ class LabelingSpecificationParameters(BaseTemplateParameters):
     theme_no: str = Field(..., description="项目NO，填入D5单元格")
     theme_name: str = Field(..., description="项目名称，填入K5单元格")
     product_model_name: str = Field(..., description="商品型式名，填入D7单元格")
+    product_model: str = Field(..., description="商品型式，填充到E17单元格")
+    product_name: str = Field(..., description="商品名，拼接到I8单元格内容后面")
+    sales_name: str = Field(..., description="贩卖名称，填充到E19单元格")
+    production_area: str = Field(..., description="生产地，如果=OMD则填固定值到E22，否则空白")
+    ohc_target: str = Field(..., description="是否是OHC 向け，如果=True则填固定值到E24，否则空白")
+    sales_channel: str = Field(..., description="販売チャネル，填固定值到E26，贩卖渠道只有“医療機関”时→ 400-889-0089,多种贩卖渠道时→ 400-770-9988")
+
 
 class ProductEnvironmentAssessmentParameters(BaseTemplateParameters):
     """产品环境评估要项书/结果书参数"""
@@ -220,6 +227,7 @@ class PackagingDesignSpecificationParameters(BaseTemplateParameters):
     theme_name: str = Field(..., description="项目名称，填入E21单元格")
     product_model_name: str = Field(..., description="商品型式名，填入L21单元格")
     sales_name: str = Field(..., description="贩卖名称，填入C23单元格")
+
 
 
 class UserManualSpecificationParameters(BaseTemplateParameters):
