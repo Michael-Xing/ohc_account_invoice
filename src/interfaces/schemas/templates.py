@@ -125,8 +125,8 @@ class BasicSpecificationParameters(BaseTemplateParameters):
     # 机能构成（Markdown表格）
     component_table: str = Field(default="", description="机能构成，Markdown表格，需转换为Word表格")  # 机能构成表格
 
-    # 外观图片列表
-    appearance_image: List[str] = Field(default_factory=list, description="外观图URL列表，将下载并按顺序插入到同一占位符位置")  # 外观图片URL列表
+    # 外观图片列表（字符串形式，例如 "['image_url1', 'image_url2']"，在使用时会转换为列表）
+    appearance_image: str = Field(default="", description="外观图URL列表字符串，将下载并按顺序插入到同一占位符位置")  # 外观图片URL列表
 
     # 其他规格信息
     dimensions_and_weight: str = Field(default="", description="尺寸及重量，支持Markdown语法")  # 尺寸及重量
@@ -167,8 +167,8 @@ class BasicSpecificationParameters(BaseTemplateParameters):
     # 功能说明（Markdown表格）
     function_table: str = Field(default="", description="功能说明，Markdown表格，需转换为Word表格")  # 功能说明表格
 
-    # 功能块结构图
-    function_block_image: List[str] = Field(default_factory=list, description="功能块图URL列表，将下载并按顺序插入到同一占位符位置")  # 功能块图URL列表
+    # 功能块结构图（字符串形式，例如 "['image_url1', 'image_url2']"，在使用时会转换为列表）
+    function_block_image: str = Field(default="", description="功能块图URL列表字符串，将下载并按顺序插入到同一占位符位置")  # 功能块图URL列表
 
     # 功能模块（Markdown表格，列项相同内容需要合并单元格）
     function_block_table: str = Field(default="", description="功能模块，Markdown表格，需转换为Word表格并按列合并相同内容")  # 功能模块表格
