@@ -1,7 +1,8 @@
 """包装设计仕样书填充器"""
 
+import re
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 from openpyxl import load_workbook
 
 from src.infrastructure.template_service import ExcelTemplateFiller
@@ -73,31 +74,18 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
         if 'sales_name' in parameters and parameters['sales_name']:
             worksheet['C23'].value = str(parameters['sales_name'])
 
-        texts = []
-        # 根据语言填充文档类型列表到 B27 列往下
-        if language == 'ja':
-            texts = [
-                '製品要件書',
-                '要求仕様書',
-                '製品設計仕様書',
-                'リスクコントロール仕様書',
-                'ユーザビリティ仕様書',
-                '課題分析·対策書',
-                '製品アセスメント要項書'
-            ]
-        elif language == 'zh':
-            texts = [
-                '产品要件书',
-                '要求仕样书',
-                '产品设计仕样书',
-                '风险控制仕样书',
-                '可用性仕样书',
-                '课题分析/对策结果书',
-                '产品环境评估要项书'
-            ]
+        related_file_numbers: List[Dict[str, Any]] = parameters.get('related_file_numbers', [])
+        if related_file_numbers:
+            mapping = {item['short_name']: item for item in related_file_numbers}
+            row = 27
+            while True:
+                cell_value = worksheet.cell(row=row, column=2).value  # B列
+                if cell_value is None or str(cell_value).strip() == '':
+                    break
+                key = str(cell_value).strip()
+                if key in mapping:
+                    worksheet.cell(row=row, column=5).value = str(mapping[key]['file_number'])  # E列
+                row += 1
 
-        # 从 B27 开始填充
-        for idx, text in enumerate(texts):
-            row = 27 + idx
-            worksheet[f'B{row}'].value = text
+
 

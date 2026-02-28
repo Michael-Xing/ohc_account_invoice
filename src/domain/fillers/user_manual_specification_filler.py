@@ -1,11 +1,11 @@
 """使用说明书仕样书填充器"""
 
+import re
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 from openpyxl import load_workbook
 
 from src.infrastructure.template_service import ExcelTemplateFiller
-
 
 class UserManualSpecificationFiller(ExcelTemplateFiller):
     """使用说明书仕样书填充器"""
@@ -61,27 +61,18 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
         if 'sales_name' in parameters and parameters['sales_name']:
             worksheet['B21'].value = str(parameters['sales_name'])
 
-        # 根据 file_type 填充 name 和 version
-        file_type = parameters.get('file_type', '').strip()
-        name = parameters.get('name', '')
-        version = parameters.get('version', '')
+        related_file_numbers: List[Dict[str, Any]] = parameters.get('related_file_numbers', [])
+        if related_file_numbers:
+            mapping = {item['short_name']: item for item in related_file_numbers}
+            row = 25
+            while True:
+                cell_value = worksheet.cell(row=row, column=1).value  # A列
+                if cell_value is None or str(cell_value).strip() == '':
+                    break
+                key = str(cell_value).strip()
+                if key in mapping:
+                    worksheet.cell(row=row, column=4).value = str(mapping[key]['file_number'])  # D列
+                    worksheet.cell(row=row, column=7).value = str(mapping[key]['version'])  # G列
+                row += 1
 
-        if file_type == 'product_design_specification':
-            # name 填入 D27, version 填入 G27
-            if name:
-                worksheet['D27'].value = str(name)
-            if version:
-                worksheet['G27'].value = str(version)
-        elif file_type == 'requirement_specification':
-            # name 填入 D26, version 填入 G26
-            if name:
-                worksheet['D26'].value = str(name)
-            if version:
-                worksheet['G26'].value = str(version)
-        elif file_type == 'product_requirement':
-            # name 填入 D25, version 填入 G25
-            if name:
-                worksheet['D25'].value = str(name)
-            if version:
-                worksheet['G25'].value = str(version)
 

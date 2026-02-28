@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import BaseModel, Field
 
 
@@ -221,14 +221,23 @@ class ExistingProductComparisonParameters(BaseTemplateParameters):
     comparison_results: Optional[str] = Field(default=None, description="对比结果")
 
 
+class RelatedFileItem(BaseModel):
+    """关联文件项"""
+    short_name: str = Field(..., description="简称，用于匹配Excel中的关联文件名称")
+    file_number: str = Field(..., description="文件编号")
+    version: str = Field(..., description="版本号")
+
+
 class PackagingDesignSpecificationParameters(BaseTemplateParameters):
     """包装设计仕样书参数"""
     theme_no: str = Field(..., description="项目NO，填入C21单元格")
     theme_name: str = Field(..., description="项目名称，填入E21单元格")
     product_model_name: str = Field(..., description="商品型式名，填入L21单元格")
     sales_name: str = Field(..., description="贩卖名称，填入C23单元格")
-
-
+    related_file_numbers: List[RelatedFileItem] = Field(
+        default_factory=list,
+        description="关联文件列表，short_name匹配B27列起向下Excel中的值，file_number填入E列，version填入F列",
+    )
 
 class UserManualSpecificationParameters(BaseTemplateParameters):
     """使用说明书仕样书参数"""
@@ -236,13 +245,16 @@ class UserManualSpecificationParameters(BaseTemplateParameters):
     theme_name: str = Field(..., description="项目名称，填入D19单元格")
     product_model_name: str = Field(..., description="商品型式名，填入J19单元格")
     sales_name: str = Field(..., description="贩卖名称，填入B21单元格")
-    file_type: str = Field(..., description="文件类型，按需填写")
-    name: str = Field(..., description="名称，按需填写")
-    version: str = Field(..., description="版本，按需填写")
-
+    related_file_numbers: List[RelatedFileItem] = Field(
+        default_factory=list,
+        description="关联文件列表，short_name匹配A25列起向下Excel中的值，file_number填入D列，version填入E列",
+    )
 
 class ProjectPlanParameters(BaseTemplateParameters):
     """项目计划书参数"""
     project_scope: Optional[str] = Field(default=None, description="项目范围")
     project_timeline: Optional[str] = Field(default=None, description="项目时间线")
 
+    theme_no: str = Field(..., description="项目NO")
+    theme_name: str = Field(..., description="项目名称")
+    product_model_name: str = Field(..., description="商品型式名")
