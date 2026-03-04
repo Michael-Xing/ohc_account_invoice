@@ -221,7 +221,7 @@ class ExistingProductComparisonParameters(BaseTemplateParameters):
     comparison_results: Optional[str] = Field(default=None, description="对比结果")
 
 
-class RelatedFileItem(BaseModel):
+class RelatedFileInfo(BaseModel):
     """关联文件项"""
     short_name: str = Field(..., description="简称，用于匹配Excel中的关联文件名称")
     file_number: str = Field(..., description="文件编号")
@@ -234,9 +234,9 @@ class PackagingDesignSpecificationParameters(BaseTemplateParameters):
     theme_name: str = Field(..., description="项目名称，填入E21单元格")
     product_model_name: str = Field(..., description="商品型式名，填入L21单元格")
     sales_name: str = Field(..., description="贩卖名称，填入C23单元格")
-    related_file_numbers: List[RelatedFileItem] = Field(
+    related_file_info: List[RelatedFileInfo] = Field(
         default_factory=list,
-        description="关联文件列表，short_name匹配B27列起向下Excel中的值，file_number填入E列，version填入F列",
+        description="关联文件列表",
     )
 
 class UserManualSpecificationParameters(BaseTemplateParameters):
@@ -245,9 +245,9 @@ class UserManualSpecificationParameters(BaseTemplateParameters):
     theme_name: str = Field(..., description="项目名称，填入D19单元格")
     product_model_name: str = Field(..., description="商品型式名，填入J19单元格")
     sales_name: str = Field(..., description="贩卖名称，填入B21单元格")
-    related_file_numbers: List[RelatedFileItem] = Field(
+    related_file_info: List[RelatedFileInfo] = Field(
         default_factory=list,
-        description="关联文件列表，short_name匹配A25列起向下Excel中的值，file_number填入D列，version填入E列",
+        description="关联文件列表",
     )
 
 class ProjectPlanParameters(BaseTemplateParameters):

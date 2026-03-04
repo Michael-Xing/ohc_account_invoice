@@ -1,11 +1,14 @@
 """使用说明书仕样书填充器"""
 
+import logging
 import re
 from pathlib import Path
 from typing import Dict, Any, List
 from openpyxl import load_workbook
 
 from src.infrastructure.template_service import ExcelTemplateFiller
+
+logger = logging.getLogger(__name__)
 
 class UserManualSpecificationFiller(ExcelTemplateFiller):
     """使用说明书仕样书填充器"""
@@ -22,6 +25,8 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
         Returns:
             bool: 是否成功
         """
+        non_empty_fields = [k for k, v in parameters.items() if v]
+        logger.info("[UserManualSpecificationFiller] 填充字段: %s", non_empty_fields)
         try:
             workbook = load_workbook(template_path)
             worksheet = workbook.active
@@ -38,9 +43,7 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
             workbook.save(output_path)
             return True
         except Exception as e:
-            print(f"使用说明书仕样书模板填充失败: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            logger.error("使用说明书仕样书模板填充失败: %s", str(e), exc_info=True)
             return False
 
     def _fill_fields(self, worksheet, parameters: Dict[str, Any]):
@@ -61,9 +64,9 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
         if 'sales_name' in parameters and parameters['sales_name']:
             worksheet['B21'].value = str(parameters['sales_name'])
 
-        related_file_numbers: List[Dict[str, Any]] = parameters.get('related_file_numbers', [])
-        if related_file_numbers:
-            mapping = {item['short_name']: item for item in related_file_numbers}
+        related_file_info: List[Dict[str, Any]] = parameters.get('related_file_info', [])
+        if related_file_info:
+            mapping = {item['short_name']: item for item in related_file_info}
             row = 25
             while True:
                 cell_value = worksheet.cell(row=row, column=1).value  # A列
