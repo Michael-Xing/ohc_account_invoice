@@ -226,13 +226,13 @@ class DHFIndexFiller(ExcelTemplateFiller):
             for file_item in file_list:
                 # 处理file_item可能是字典或对象的情况
                 if isinstance(file_item, dict):
-                    file_name = str(file_item.get('file_name', ''))
-                    number = str(file_item.get('number', ''))
+                    file_name = str(file_item.get('short_name', ''))
+                    number = str(file_item.get('file_number', ''))
                     stage = str(file_item.get('stage', ''))
                 else:
                     # 假设是对象，尝试获取属性
-                    file_name = str(getattr(file_item, 'file_name', ''))
-                    number = str(getattr(file_item, 'number', ''))
+                    file_name = str(getattr(file_item, 'short_name', ''))
+                    number = str(getattr(file_item, 'file_number', ''))
                     stage = str(getattr(file_item, 'stage', ''))
                 
                 if not file_name:

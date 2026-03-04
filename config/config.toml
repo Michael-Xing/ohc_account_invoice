@@ -10,7 +10,7 @@ debug = false
 reload = false
 
 [storage]
-type = "local"  # 可选值: minio, local, s3
+type = "minio"  # 可选值: minio, local, s3
 
 [storage.minio]
 endpoint = "10.33.3.18:30808"  # MinIO服务端点，例如: localhost:9000
