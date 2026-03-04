@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -14,6 +15,8 @@ from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor, Cm, Inches
 
 from src.infrastructure.template_service import TemplateFillerStrategy
+
+logger = logging.getLogger(__name__)
 
 
 class BasicSpecificationFiller(TemplateFillerStrategy):
@@ -48,6 +51,8 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
 
     def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
         """填充基本规格书模板"""
+        non_empty_fields = [k for k, v in parameters.items() if v]
+        logger.info("[BasicSpecificationFiller] 填充字段: %s", non_empty_fields)
         try:
             # 预处理参数：构造商品型号表数据
             self._build_product_model_table(parameters)
@@ -69,10 +74,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
             doc.save(output_path)
             return True
         except Exception as e:
-            print(f"基本规格书模板填充失败: {str(e)}")
-            import traceback
-
-            traceback.print_exc()
+            logger.error("基本规格书模板填充失败: %s", str(e), exc_info=True)
             return False
 
     def _build_product_model_table(self, parameters: Dict[str, Any]) -> None:

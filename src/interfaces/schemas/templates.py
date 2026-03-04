@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import BaseModel, Field
 
 
@@ -193,6 +193,13 @@ class LabelingSpecificationParameters(BaseTemplateParameters):
     theme_no: str = Field(..., description="项目NO，填入D5单元格")
     theme_name: str = Field(..., description="项目名称，填入K5单元格")
     product_model_name: str = Field(..., description="商品型式名，填入D7单元格")
+    product_model: str = Field(..., description="商品型式，填充到E17单元格")
+    product_name: str = Field(..., description="商品名，拼接到I8单元格内容后面")
+    sales_name: str = Field(..., description="贩卖名称，填充到E19单元格")
+    production_area: str = Field(..., description="生产地，如果=OMD则填固定值到E22，否则空白")
+    ohc_target: str = Field(..., description="是否是OHC 向け，如果=True则填固定值到E24，否则空白")
+    sales_channel: str = Field(..., description="販売チャネル，填固定值到E26，贩卖渠道只有“医療機関”时→ 400-889-0089,多种贩卖渠道时→ 400-770-9988")
+
 
 class ProductEnvironmentAssessmentParameters(BaseTemplateParameters):
     """产品环境评估要项书/结果书参数"""
@@ -214,13 +221,23 @@ class ExistingProductComparisonParameters(BaseTemplateParameters):
     comparison_results: Optional[str] = Field(default=None, description="对比结果")
 
 
+class RelatedFileInfo(BaseModel):
+    """关联文件项"""
+    short_name: str = Field(..., description="简称，用于匹配Excel中的关联文件名称")
+    file_number: str = Field(..., description="文件编号")
+    version: str = Field(..., description="版本号")
+
+
 class PackagingDesignSpecificationParameters(BaseTemplateParameters):
     """包装设计仕样书参数"""
     theme_no: str = Field(..., description="项目NO，填入C21单元格")
     theme_name: str = Field(..., description="项目名称，填入E21单元格")
     product_model_name: str = Field(..., description="商品型式名，填入L21单元格")
     sales_name: str = Field(..., description="贩卖名称，填入C23单元格")
-
+    related_file_info: List[RelatedFileInfo] = Field(
+        default_factory=list,
+        description="关联文件列表",
+    )
 
 class UserManualSpecificationParameters(BaseTemplateParameters):
     """使用说明书仕样书参数"""
@@ -228,13 +245,16 @@ class UserManualSpecificationParameters(BaseTemplateParameters):
     theme_name: str = Field(..., description="项目名称，填入D19单元格")
     product_model_name: str = Field(..., description="商品型式名，填入J19单元格")
     sales_name: str = Field(..., description="贩卖名称，填入B21单元格")
-    file_type: str = Field(..., description="文件类型，按需填写")
-    name: str = Field(..., description="名称，按需填写")
-    version: str = Field(..., description="版本，按需填写")
-
+    related_file_info: List[RelatedFileInfo] = Field(
+        default_factory=list,
+        description="关联文件列表",
+    )
 
 class ProjectPlanParameters(BaseTemplateParameters):
     """项目计划书参数"""
     project_scope: Optional[str] = Field(default=None, description="项目范围")
     project_timeline: Optional[str] = Field(default=None, description="项目时间线")
 
+    theme_no: str = Field(..., description="项目NO")
+    theme_name: str = Field(..., description="项目名称")
+    product_model_name: str = Field(..., description="商品型式名")

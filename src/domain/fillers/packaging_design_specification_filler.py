@@ -1,10 +1,14 @@
 """包装设计仕样书填充器"""
 
+import logging
+import re
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 from openpyxl import load_workbook
 
 from src.infrastructure.template_service import ExcelTemplateFiller
+
+logger = logging.getLogger(__name__)
 
 
 class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
@@ -22,12 +26,17 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
         Returns:
             bool: 是否成功
         """
+        non_empty_fields = [k for k, v in parameters.items() if v]
+        logger.info("[PackagingDesignSpecificationFiller] 填充字段: %s", non_empty_fields)
         try:
             workbook = load_workbook(template_path)
             worksheet = workbook.active
 
+            # 从模板路径中提取语言
+            language = self._extract_language_from_path(template_path)
+
             # 填充字段
-            self._fill_fields(worksheet, parameters)
+            self._fill_fields(worksheet, parameters, language)
 
             # 替换其他占位符
             for row in worksheet.iter_rows():
@@ -38,12 +47,19 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
             workbook.save(output_path)
             return True
         except Exception as e:
-            print(f"包装设计仕样书模板填充失败: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            logger.error("包装设计仕样书模板填充失败: %s", str(e), exc_info=True)
             return False
 
-    def _fill_fields(self, worksheet, parameters: Dict[str, Any]):
+    def _extract_language_from_path(self, template_path: Path) -> str:
+        """从模板路径中提取语言代码"""
+        parts = template_path.parts
+        # 路径格式通常是: .../excel/zh/文件名.xlsx 或 .../excel/ja/文件名.xlsx
+        for part in parts:
+            if part in ['zh', 'ja', 'en']:
+                return part
+        return 'zh'  # 默认返回中文
+
+    def _fill_fields(self, worksheet, parameters: Dict[str, Any], language: str = 'zh'):
         """填充字段到指定单元格"""
         # theme_no 填入 C21 单元格
         if 'theme_no' in parameters and parameters['theme_no']:
@@ -60,4 +76,19 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
         # sales_name 填入 C23 单元格
         if 'sales_name' in parameters and parameters['sales_name']:
             worksheet['C23'].value = str(parameters['sales_name'])
+
+        related_file_info: List[Dict[str, Any]] = parameters.get('related_file_info', [])
+        if related_file_info:
+            mapping = {item['short_name']: item for item in related_file_info}
+            row = 27
+            while True:
+                cell_value = worksheet.cell(row=row, column=2).value  # B列
+                if cell_value is None or str(cell_value).strip() == '':
+                    break
+                key = str(cell_value).strip()
+                if key in mapping:
+                    worksheet.cell(row=row, column=5).value = str(mapping[key]['file_number'])  # E列
+                row += 1
+
+
 
