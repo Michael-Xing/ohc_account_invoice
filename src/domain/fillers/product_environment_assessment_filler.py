@@ -1,5 +1,6 @@
 """产品环境评估要项书/结果书填充器"""
 
+import logging
 from pathlib import Path
 from typing import Dict, Any, List
 from openpyxl import load_workbook
@@ -7,6 +8,8 @@ from openpyxl.styles import Font, Alignment, Border, PatternFill, Side
 from openpyxl.utils import get_column_letter, range_boundaries
 
 from src.infrastructure.template_service import ExcelTemplateFiller
+
+logger = logging.getLogger(__name__)
 
 
 class ProductEnvironmentAssessmentFiller(ExcelTemplateFiller):
@@ -24,6 +27,8 @@ class ProductEnvironmentAssessmentFiller(ExcelTemplateFiller):
         Returns:
             bool: 是否成功
         """
+        non_empty_fields = [k for k, v in parameters.items() if v]
+        logger.info("[ProductEnvironmentAssessmentFiller] 填充字段: %s", non_empty_fields)
         try:
             workbook = load_workbook(template_path)
             worksheet = workbook.active
@@ -43,9 +48,7 @@ class ProductEnvironmentAssessmentFiller(ExcelTemplateFiller):
             workbook.save(output_path)
             return True
         except Exception as e:
-            print(f"产品环境评估模板填充失败: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            logger.error("产品环境评估模板填充失败: %s", str(e), exc_info=True)
             return False
     
     def _fill_simple_fields(self, worksheet, parameters: Dict[str, Any]):
