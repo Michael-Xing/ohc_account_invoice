@@ -219,20 +219,20 @@ class FollowUpDRMinutesParameters(BaseTemplateParameters):
 
 class LabelingSpecificationParameters(BaseTemplateParameters):
     """标签仕样书-仕样确认书参数"""
-    theme_no: str = Field(..., description="项目NO，填入D5单元格")
-    theme_name: str = Field(..., description="项目名称，填入K5单元格")
-    product_model_name: str = Field(..., description="商品型式名，填入D7单元格")
+    theme_no: str = Field(default="", description="项目NO，填入D5单元格")
+    theme_name: str = Field(default="", description="项目名称，填入K5单元格")
+    product_model_name: str = Field(default="", description="商品型式名，填入D7单元格")
 
 class ProductEnvironmentAssessmentParameters(BaseTemplateParameters):
     """产品环境评估要项书/结果书参数"""
-    theme_no: str = Field(..., description="项目NO，拼接到B5单元格内容后面")
+    theme_no: str = Field(default="", description="项目NO，拼接到B5单元格内容后面")
     theme_name: str = Field(default="", description="商品类别（已废弃，不再使用）")
-    product_model: str = Field(..., description="商品型号，根据'/'分割，填充到22行的D～H列合并单元格")
-    product_model_name: str = Field(..., description="商品型号名，拼接到B7单元格内容后面")
-    product_name: str = Field(..., description="商品名，拼接到I5单元格内容后面")
-    production_area: str = Field(..., description="生产地，拼接到I7单元格内容后面")
-    sales_name: str = Field(..., description="贩卖名称，根据'/'分割，填充到22行的I～J列合并单元格")
-    target_area: str = Field(..., description="贩卖国家，填充到22行的K～M列合并单元格")
+    product_model: str = Field(default="", description="商品型号，根据'/'分割，填充到22行的D～H列合并单元格")
+    product_model_name: str = Field(default="", description="商品型号名，拼接到B7单元格内容后面")
+    product_name: str = Field(default="", description="商品名，拼接到I5单元格内容后面")
+    production_area: str = Field(default="", description="生产地，拼接到I7单元格内容后面")
+    sales_name: str = Field(default="", description="贩卖名称，根据'/'分割，填充到22行的I～J列合并单元格")
+    target_area: str = Field(default="", description="贩卖国家，填充到22行的K～M列合并单元格")
     remarks: str = Field(default="", description="备注（可选）")
     eta_schedule: str = Field(default="", description="ETA预定日志（可选）")
 
@@ -245,21 +245,21 @@ class ExistingProductComparisonParameters(BaseTemplateParameters):
 
 class PackagingDesignSpecificationParameters(BaseTemplateParameters):
     """包装设计仕样书参数"""
-    theme_no: str = Field(..., description="项目NO，填入C21单元格")
-    theme_name: str = Field(..., description="项目名称，填入E21单元格")
-    product_model_name: str = Field(..., description="商品型式名，填入L21单元格")
-    sales_name: str = Field(..., description="贩卖名称，填入C23单元格")
+    theme_no: str = Field(default="", description="项目NO，填入C21单元格")
+    theme_name: str = Field(default="", description="项目名称，填入E21单元格")
+    product_model_name: str = Field(default="", description="商品型式名，填入L21单元格")
+    sales_name: str = Field(default="", description="贩卖名称，填入C23单元格")
 
 
 class UserManualSpecificationParameters(BaseTemplateParameters):
     """使用说明书仕样书参数"""
-    theme_no: str = Field(..., description="项目NO，填入B19单元格")
-    theme_name: str = Field(..., description="项目名称，填入D19单元格")
-    product_model_name: str = Field(..., description="商品型式名，填入J19单元格")
-    sales_name: str = Field(..., description="贩卖名称，填入B21单元格")
-    file_type: str = Field(..., description="文件类型，按需填写")
-    name: str = Field(..., description="名称，按需填写")
-    version: str = Field(..., description="版本，按需填写")
+    theme_no: str = Field(default="", description="项目NO，填入B19单元格")
+    theme_name: str = Field(default="", description="项目名称，填入D19单元格")
+    product_model_name: str = Field(default="", description="商品型式名，填入J19单元格")
+    sales_name: str = Field(default="", description="贩卖名称，填入B21单元格")
+    file_type: str = Field(default="", description="文件类型，按需填写")
+    name: str = Field(default="", description="名称，按需填写")
+    version: str = Field(default="", description="版本，按需填写")
 
 
 class ProjectPlanParameters(BaseTemplateParameters):
