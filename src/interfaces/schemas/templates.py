@@ -225,7 +225,9 @@ class LabelingSpecificationParameters(BaseTemplateParameters):
     product_model: str = Field(default="", description="商品型式，填充到E17单元格")
     product_name: str = Field(default="", description="商品名，拼接到I8单元格内容后面")
     sales_name: str = Field(default="", description="贩卖名称，填充到E19单元格")
-    production_area: str = Field(default="", description="生产地，如果=OMD则填固定值到E22，否则空白")
+    # production_area: str = Field(default="", description="生产地代码，如 OMD/OHZ/OHV")
+    address: str = Field(default="", description="生产地地址，填充到G17")
+    country: str = Field(default="", description="生产国，拼接'制造'后填入G18")
     ohc_target: str = Field(default="", description="是否是OHC 向け，如果=True则填固定值到E24，否则空白")
     sales_channel: str = Field(default="", description="販売チャネル，填固定值到E26，贩卖渠道只有“医療機関”时→ 400-889-0089,多种贩卖渠道时→ 400-770-9988")
 

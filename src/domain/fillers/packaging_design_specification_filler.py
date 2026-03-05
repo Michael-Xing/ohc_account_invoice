@@ -63,19 +63,19 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
         """填充字段到指定单元格"""
         # theme_no 填入 C21 单元格
         if 'theme_no' in parameters and parameters['theme_no']:
-            worksheet['C21'].value = str(parameters['theme_no'])
+            self._set_worksheet_cell_with_fill(worksheet, 'C21', parameters['theme_no'])
 
         # theme_name 填入 E21 单元格
         if 'theme_name' in parameters and parameters['theme_name']:
-            worksheet['E21'].value = str(parameters['theme_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'E21', parameters['theme_name'])
 
         # product_model_name 填入 L21 单元格
         if 'product_model_name' in parameters and parameters['product_model_name']:
-            worksheet['L21'].value = str(parameters['product_model_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'L21', parameters['product_model_name'])
 
         # sales_name 填入 C23 单元格
         if 'sales_name' in parameters and parameters['sales_name']:
-            worksheet['C23'].value = str(parameters['sales_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'C23', parameters['sales_name'])
 
         related_file_info: List[Dict[str, Any]] = parameters.get('related_file_info', [])
         if related_file_info:
@@ -87,7 +87,7 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
                     break
                 key = str(cell_value).strip()
                 if key in mapping:
-                    worksheet.cell(row=row, column=5).value = str(mapping[key]['file_number'])  # E列
+                    self._set_cell_with_fill_by_position(worksheet, row, 5, mapping[key]['file_number'])  # E列
                 row += 1
 
 

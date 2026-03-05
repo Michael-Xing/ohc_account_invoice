@@ -50,19 +50,19 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
         """填充字段到指定单元格"""
         # theme_no 填入 B19 单元格
         if 'theme_no' in parameters and parameters['theme_no']:
-            worksheet['B19'].value = str(parameters['theme_no'])
+            self._set_worksheet_cell_with_fill(worksheet, 'B19', parameters['theme_no'])
 
         # theme_name 填入 D19 单元格
         if 'theme_name' in parameters and parameters['theme_name']:
-            worksheet['D19'].value = str(parameters['theme_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'D19', parameters['theme_name'])
 
         # product_model_name 填入 J19 单元格
         if 'product_model_name' in parameters and parameters['product_model_name']:
-            worksheet['J19'].value = str(parameters['product_model_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'J19', parameters['product_model_name'])
 
         # sales_name 填入 B21 单元格
         if 'sales_name' in parameters and parameters['sales_name']:
-            worksheet['B21'].value = str(parameters['sales_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'B21', parameters['sales_name'])
 
         related_file_info: List[Dict[str, Any]] = parameters.get('related_file_info', [])
         if related_file_info:
@@ -74,8 +74,8 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
                     break
                 key = str(cell_value).strip()
                 if key in mapping:
-                    worksheet.cell(row=row, column=4).value = str(mapping[key]['file_number'])  # D列
-                    worksheet.cell(row=row, column=7).value = str(mapping[key]['version'])  # G列
+                    self._set_cell_with_fill_by_position(worksheet, row, 4, mapping[key]['file_number'])  # D列
+                    self._set_cell_with_fill_by_position(worksheet, row, 7, mapping[key]['version'])  # G列
                 row += 1
 
 
