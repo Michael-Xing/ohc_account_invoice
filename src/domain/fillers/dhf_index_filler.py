@@ -13,6 +13,13 @@ logger = logging.getLogger(__name__)
 
 class DHFIndexFiller(ExcelTemplateFiller):
     """DHF INDEX填充器"""
+
+    # 该填充器写入/替换过的单元格，统一高亮背景色（ARGB）
+    _FILLED_BG_COLOR = "FF739FD7"  # RGB(115,159,215)
+
+    def _apply_filled_background(self, cell) -> None:
+        """将单元格背景色设置为填充高亮色。"""
+        cell.fill = PatternFill(fill_type="solid", fgColor=self._FILLED_BG_COLOR)
     
     def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
         """
@@ -40,10 +47,22 @@ class DHFIndexFiller(ExcelTemplateFiller):
             self._fill_file_list(worksheet, parameters)
             
             # 替换其他占位符
+            processed_cells = set()
             for row in worksheet.iter_rows():
                 for cell in row:
-                    if cell.value and isinstance(cell.value, str):
-                        cell.value = self._replace_placeholders(cell.value, parameters)
+                    # 合并单元格：统一落到左上角单元格处理，并且避免重复处理同一个左上角单元格
+                    target_cell = self._get_merged_cell_top_left(worksheet, cell.row, cell.column)
+                    cell_key = (target_cell.row, target_cell.column)
+                    if cell_key in processed_cells:
+                        continue
+                    processed_cells.add(cell_key)
+
+                    if target_cell.value and isinstance(target_cell.value, str):
+                        original_value = target_cell.value
+                        new_value = self._replace_placeholders(original_value, parameters)
+                        if new_value != original_value:
+                            target_cell.value = new_value
+                            self._apply_filled_background(target_cell)
             
             # 保存工作簿
             workbook.save(output_path)
@@ -57,11 +76,15 @@ class DHFIndexFiller(ExcelTemplateFiller):
         """填充基本信息到C3-C7单元格"""
         # theme_no: 填充到C3单元格
         if 'theme_no' in parameters and parameters['theme_no']:
-            worksheet['C3'] = str(parameters['theme_no'])
+            cell_c3 = worksheet['C3']
+            cell_c3.value = str(parameters['theme_no'])
+            self._apply_filled_background(cell_c3)
         
         # theme_name: 填充到C4单元格
         if 'theme_name' in parameters and parameters['theme_name']:
-            worksheet['C4'] = str(parameters['theme_name'])
+            cell_c4 = worksheet['C4']
+            cell_c4.value = str(parameters['theme_name'])
+            self._apply_filled_background(cell_c4)
         
         # product_model: 根据"/"分割，填充到C5单元格
         if 'product_model' in parameters and parameters['product_model']:
@@ -70,6 +93,7 @@ class DHFIndexFiller(ExcelTemplateFiller):
             product_model_list = [item.strip() for item in product_model.split('/') if item.strip()]
             cell_c5 = worksheet['C5']
             cell_c5.value = '\n'.join(product_model_list)
+            self._apply_filled_background(cell_c5)
             # 设置单元格为自动换行，保留原有对齐方式的其他属性
             if cell_c5.alignment:
                 cell_c5.alignment = Alignment(
@@ -90,6 +114,7 @@ class DHFIndexFiller(ExcelTemplateFiller):
             sales_name_list = [item.strip() for item in sales_name.split('/') if item.strip()]
             cell_c6 = worksheet['C6']
             cell_c6.value = '\n'.join(sales_name_list)
+            self._apply_filled_background(cell_c6)
             # 设置单元格为自动换行，保留原有对齐方式的其他属性
             if cell_c6.alignment:
                 cell_c6.alignment = Alignment(
@@ -108,6 +133,7 @@ class DHFIndexFiller(ExcelTemplateFiller):
             cell_c7 = worksheet['C7']
             original_value = cell_c7.value or ''
             cell_c7.value = str(original_value) + str(parameters['stage'])
+            self._apply_filled_background(cell_c7)
 
     def _get_merged_cell_top_left(self, worksheet, row, col):
         """
@@ -255,6 +281,12 @@ class DHFIndexFiller(ExcelTemplateFiller):
                     # 复制B列的样式到G列和H列
                     self._copy_cell_style(cell_b_actual, cell_g)
                     self._copy_cell_style(cell_b_actual, cell_h)
+
+                    # 标记该填充器写入过的单元格背景色
+                    if number:
+                        self._apply_filled_background(cell_g)
+                    if stage:
+                        self._apply_filled_background(cell_h)
                     
                     # 找到匹配后，跳出内层循环，继续下一行
                     break
