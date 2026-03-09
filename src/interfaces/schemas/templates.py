@@ -66,7 +66,15 @@ class PTFIndexParameters(BaseTemplateParameters):
 
 class ESIndividualTestSpecParameters(BaseTemplateParameters):
     """ES个别试验要项书参数"""
-    test_item: str = Field(default="", description="试验项目")
+    # NOTE: `IndividualTestSpecFiller` expects these 8 keys.
+    test_name: str = Field(default="", description="试验名称/试验项目（模板 D3）")
+    test_number: str = Field(default="", description="试验编号（模板 K3）")
+    theme_no: str = Field(default="", description="主题No（模板 D5）")
+    product_model: str = Field(default="", description="产品型号（模板 K5）")
+    meas_temperature: str = Field(default="", description="测定温度（模板 L8）")
+    meas_humidity: str = Field(default="", description="测定湿度（模板 N8）")
+    test_purpose: str = Field(default="", description="试验目的（模板 C37）")
+    test_conditions: str = Field(default="", description="试验条件（模板 C44）")
 
 
 class ESIndividualTestResultParameters(BaseTemplateParameters):
@@ -208,7 +216,14 @@ class BasicSpecificationParameters(BaseTemplateParameters):
 
 class PPIndividualTestSpecParameters(BaseTemplateParameters):
     """PP个别试验要项书参数"""
-    test_purpose: str = Field(default="", description="试验目的")
+    test_name: str = Field(default="", description="试验名称/试验项目（模板 D3）")
+    test_number: str = Field(default="", description="试验编号（模板 K3）")
+    theme_no: str = Field(default="", description="主题No（模板 D5）")
+    product_model: str = Field(default="", description="产品型号（模板 K5）")
+    meas_temperature: str = Field(default="", description="测定温度（模板 L8）")
+    meas_humidity: str = Field(default="", description="测定湿度（模板 N8）")
+    test_purpose: str = Field(default="", description="试验目的（模板 C37）")
+    test_conditions: str = Field(default="", description="试验条件（模板 C44）")
 
 
 class FollowUpDRMinutesParameters(BaseTemplateParameters):

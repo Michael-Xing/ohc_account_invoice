@@ -17,6 +17,7 @@ from src.domain.fillers.basic_specification_filler import BasicSpecificationFill
 from src.domain.fillers.labeling_specification_filter import LabelingSpecificationFiller
 from src.domain.fillers.packaging_design_specification_filler import PackagingDesignSpecificationFiller
 from src.domain.fillers.user_manual_specification_filler import UserManualSpecificationFiller
+from src.domain.fillers.individual_test_spec_filler import IndividualTestSpecFiller
 
 # ... 其他填充器为简洁起见省略；原始实现已保留在代码库中 ...
 
@@ -171,6 +172,9 @@ class TemplateService:
         "LABELING_SPECIFICATION": LabelingSpecificationFiller(),
         "PACKAGING_DESIGN_SPECIFICATION": PackagingDesignSpecificationFiller(),
         "USER_MANUAL_SPECIFICATION": UserManualSpecificationFiller(),
+        # 个别试验要项书（ES/PP）共用同一套 Excel 布局，使用同一个专用填充器
+        "ES_INDIVIDUAL_TEST_SPEC": IndividualTestSpecFiller(),
+        "PP_INDIVIDUAL_TEST_SPEC": IndividualTestSpecFiller(),
         # 其他模板使用默认策略
     }
 
