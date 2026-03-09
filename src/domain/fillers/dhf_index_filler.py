@@ -1,4 +1,5 @@
 import logging
+import re
 from pathlib import Path
 from typing import Dict, Any, List
 
@@ -305,8 +306,26 @@ class DHFIndexFiller(ExcelTemplateFiller):
         
         file_list = parameters['file_list']
         
-        # 按short_name分组，聚合同名文件
-        # 使用字典，key为short_name，value为列表，每个元素是(file_number, stage)元组
+        def _normalize_name(name: str) -> str:
+            """归一化名称：去除首尾空白，并将连续空白折叠为单个空格。"""
+            if not name:
+                return ""
+            # 兼容全角空格等
+            name = name.replace("\u3000", " ")
+            name = re.sub(r"\s+", " ", name).strip()
+            return name
+
+        def _extract_b_title(cell_text: str) -> str:
+            """提取B列括号前的标题文本（兼容中英文括号）。"""
+            if not cell_text:
+                return ""
+            cell_text = str(cell_text)
+            # 只取第一个中文/英文左括号之前的部分
+            title = re.split(r"[（(]", cell_text, maxsplit=1)[0]
+            return _normalize_name(title)
+
+        # 按“别名(由short_name按|拆分)”分组聚合
+        # key为拆分后的单个名称，value为列表，每个元素是(file_number, stage)元组
         file_groups: Dict[str, List[tuple]] = {}
         
         for file_item in file_list:
@@ -323,11 +342,18 @@ class DHFIndexFiller(ExcelTemplateFiller):
             
             if not file_name:
                 continue
-            
-            # 将同名文件的(file_number, stage)对收集到一起
-            if file_name not in file_groups:
-                file_groups[file_name] = []
-            file_groups[file_name].append((number, stage))
+
+            # short_name支持用“|”分隔多个名字；任意一个名字命中B列括号前内容即视为匹配
+            # 例如：short_name="个装箱图纸|包装箱图纸" 可命中 "个装箱图纸(备注信息)" / "包装箱图纸（备注）"
+            aliases = [_normalize_name(x) for x in str(file_name).split("|")]
+            aliases = [x for x in aliases if x]
+            if not aliases:
+                continue
+
+            for alias in aliases:
+                if alias not in file_groups:
+                    file_groups[alias] = []
+                file_groups[alias].append((number, stage))
         
         # 遍历B29～B196单元格，进行关键词匹配
         for row_num in range(29, 197):  # B29到B196
@@ -335,79 +361,78 @@ class DHFIndexFiller(ExcelTemplateFiller):
             # 获取B列的实际单元格（如果是合并单元格，获取左上角的单元格）
             cell_b_actual = self._get_merged_cell_top_left(worksheet, row_num, 2)
             cell_b_value = str(cell_b_actual.value) if cell_b_actual.value else ''
+            b_title = _extract_b_title(cell_b_value)
+            if not b_title:
+                continue
             
-            # 遍历file_groups，查找匹配的file_name
-            for file_name, number_stage_pairs in file_groups.items():
-                # 关键词匹配：检查file_name是否在B列单元格内容中，或B列单元格内容是否包含file_name
-                # 这里使用包含匹配（双向）
-                if file_name in cell_b_value or cell_b_value in file_name:
-                    # 匹配成功，聚合同名文件的file_number和stage
-                    # 分别用换行符连接，保持对应关系
-                    # 确保同一条记录的file_number和stage在拼接后的字符串位置顺序一致
-                    numbers = []
-                    stages = []
-                    for number, stage in number_stage_pairs:
-                        # 即使值为空也添加，保持位置对应关系
-                        numbers.append(number if number else '')
-                        stages.append(stage if stage else '')
-                    
-                    # 用换行符连接，过滤掉末尾的空行
-                    aggregated_number = '\n'.join(numbers).rstrip('\n') if numbers else ''
-                    aggregated_stage = '\n'.join(stages).rstrip('\n') if stages else ''
-                    
-                    # 获取G列和H列的左上角单元格（如果是合并单元格）
-                    cell_g = self._get_merged_cell_top_left(worksheet, row_num, 7)  # G列
-                    cell_h = self._get_merged_cell_top_left(worksheet, row_num, 8)  # H列
-                    
-                    # 填充聚合后的值
-                    if aggregated_number:
-                        cell_g.value = aggregated_number
-                    if aggregated_stage:
-                        cell_h.value = aggregated_stage
-                    
-                    # 复制B列的样式到G列和H列
-                    self._copy_cell_style(cell_b_actual, cell_g)
-                    self._copy_cell_style(cell_b_actual, cell_h)
+            number_stage_pairs = file_groups.get(b_title)
+            if not number_stage_pairs:
+                continue
 
-                    # 标记该填充器写入过的单元格背景色
-                    if aggregated_number:
-                        self._apply_filled_background(cell_g)
-                    if aggregated_stage:
-                        self._apply_filled_background(cell_h)
-                    
-                    # 设置自动换行，以便正确显示多行内容
-                    if cell_g.alignment:
-                        cell_g.alignment = Alignment(
-                            horizontal=cell_g.alignment.horizontal,
-                            vertical=cell_g.alignment.vertical,
-                            text_rotation=cell_g.alignment.text_rotation,
-                            wrap_text=True,
-                            shrink_to_fit=cell_g.alignment.shrink_to_fit,
-                            indent=cell_g.alignment.indent
-                        )
-                    else:
-                        cell_g.alignment = Alignment(wrap_text=True)
-                    
-                    if cell_h.alignment:
-                        cell_h.alignment = Alignment(
-                            horizontal=cell_h.alignment.horizontal,
-                            vertical=cell_h.alignment.vertical,
-                            text_rotation=cell_h.alignment.text_rotation,
-                            wrap_text=True,
-                            shrink_to_fit=cell_h.alignment.shrink_to_fit,
-                            indent=cell_h.alignment.indent
-                        )
-                    else:
-                        cell_h.alignment = Alignment(wrap_text=True)
-                    
-                    # 根据文本长度自适应调整行高
-                    # 分别计算G列和H列需要的行高，取较大值
-                    if aggregated_number:
-                        self._adjust_row_height_for_text(worksheet, row_num, aggregated_number, column=7)  # G列
-                    if aggregated_stage:
-                        self._adjust_row_height_for_text(worksheet, row_num, aggregated_stage, column=8)  # H列
-                    
-                    # 找到匹配后，跳出内层循环，继续下一行
-                    break
+            # 匹配成功，聚合同名文件的file_number和stage
+            # 分别用换行符连接，保持对应关系
+            # 确保同一条记录的file_number和stage在拼接后的字符串位置顺序一致
+            numbers = []
+            stages = []
+            for number, stage in number_stage_pairs:
+                # 即使值为空也添加，保持位置对应关系（用于多行对齐）
+                numbers.append(number if number else '')
+                stages.append(stage if stage else '')
+            
+            # 用换行符连接（保留空行占位，确保对齐，不做rstrip）
+            aggregated_number = '\n'.join(numbers) if numbers else ''
+            aggregated_stage = '\n'.join(stages) if stages else ''
+            
+            # 获取G列和H列的左上角单元格（如果是合并单元格）
+            cell_g = self._get_merged_cell_top_left(worksheet, row_num, 7)  # G列
+            cell_h = self._get_merged_cell_top_left(worksheet, row_num, 8)  # H列
+            
+            # 填充聚合后的值
+            if aggregated_number:
+                cell_g.value = aggregated_number
+            if aggregated_stage:
+                cell_h.value = aggregated_stage
+            
+            # 复制B列的样式到G列和H列
+            self._copy_cell_style(cell_b_actual, cell_g)
+            self._copy_cell_style(cell_b_actual, cell_h)
+
+            # 标记该填充器写入过的单元格背景色
+            if aggregated_number:
+                self._apply_filled_background(cell_g)
+            if aggregated_stage:
+                self._apply_filled_background(cell_h)
+            
+            # 设置自动换行，以便正确显示多行内容
+            if cell_g.alignment:
+                cell_g.alignment = Alignment(
+                    horizontal=cell_g.alignment.horizontal,
+                    vertical=cell_g.alignment.vertical,
+                    text_rotation=cell_g.alignment.text_rotation,
+                    wrap_text=True,
+                    shrink_to_fit=cell_g.alignment.shrink_to_fit,
+                    indent=cell_g.alignment.indent
+                )
+            else:
+                cell_g.alignment = Alignment(wrap_text=True)
+            
+            if cell_h.alignment:
+                cell_h.alignment = Alignment(
+                    horizontal=cell_h.alignment.horizontal,
+                    vertical=cell_h.alignment.vertical,
+                    text_rotation=cell_h.alignment.text_rotation,
+                    wrap_text=True,
+                    shrink_to_fit=cell_h.alignment.shrink_to_fit,
+                    indent=cell_h.alignment.indent
+                )
+            else:
+                cell_h.alignment = Alignment(wrap_text=True)
+            
+            # 根据文本长度自适应调整行高
+            # 分别计算G列和H列需要的行高，取较大值
+            if aggregated_number:
+                self._adjust_row_height_for_text(worksheet, row_num, aggregated_number, column=7)  # G列
+            if aggregated_stage:
+                self._adjust_row_height_for_text(worksheet, row_num, aggregated_stage, column=8)  # H列
 
 
