@@ -61,9 +61,9 @@ class LabelingSpecificationFiller(ExcelTemplateFiller):
         if 'theme_no' in parameters and parameters['theme_no']:
             self._set_worksheet_cell_with_fill(worksheet, 'D5', parameters['theme_no'])
 
-        # theme_name 填入 K5 单元格
+        # theme_name 填入 M5 单元格
         if 'theme_name' in parameters and parameters['theme_name']:
-            self._set_worksheet_cell_with_fill(worksheet, 'K5', parameters['theme_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'M5', parameters['theme_name'])
 
         # product_model_name 填入 D7 单元格
         if 'product_model_name' in parameters and parameters['product_model_name']:

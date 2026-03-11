@@ -16,7 +16,9 @@ from src.domain.fillers.product_environment_assessment_filler import ProductEnvi
 from src.domain.fillers.basic_specification_filler import BasicSpecificationFiller
 from src.domain.fillers.labeling_specification_filter import LabelingSpecificationFiller
 from src.domain.fillers.packaging_design_specification_filler import PackagingDesignSpecificationFiller
+from src.domain.fillers.project_plan_filler import ProjectPlanFiller
 from src.domain.fillers.user_manual_specification_filler import UserManualSpecificationFiller
+from src.domain.fillers.verification_plan_filler import VerificationPlanFiller
 
 # ... 其他填充器为简洁起见省略；原始实现已保留在代码库中 ...
 
@@ -168,9 +170,12 @@ class TemplateService:
         "DHF_INDEX": DHFIndexFiller(),
         "PRODUCT_ENVIRONMENT_ASSESSMENT": ProductEnvironmentAssessmentFiller(),
         "BASIC_SPECIFICATION": BasicSpecificationFiller(),
+        "ES_VERIFICATION_PLAN": VerificationPlanFiller(),
+        "PP_VERIFICATION_PLAN": VerificationPlanFiller(),
         "LABELING_SPECIFICATION": LabelingSpecificationFiller(),
         "PACKAGING_DESIGN_SPECIFICATION": PackagingDesignSpecificationFiller(),
         "USER_MANUAL_SPECIFICATION": UserManualSpecificationFiller(),
+        "PROJECT_PLAN": ProjectPlanFiller(),
         # 其他模板使用默认策略
     }
 

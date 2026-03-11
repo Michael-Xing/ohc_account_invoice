@@ -84,7 +84,15 @@ class PPIndividualTestResultParameters(BaseTemplateParameters):
 
 class ESVerificationPlanParameters(BaseTemplateParameters):
     """ES验证计划书参数"""
-    verification_purpose: str = Field(default="", description="验证目的")
+    theme_no: str = Field(default="", description="项目NO")
+    theme_name: str = Field(default="", description="项目名称")
+    sales_name: str = Field(default="", description="贩卖名称")
+    product_model_name: str = Field(default="", description="商品型式名")
+    environment_temperature: str = Field(default="", description="环境温度")
+    relative_humidity: str = Field(default="", description="相对湿度")
+    test_voltage: str = Field(default="", description="试验电压")
+    test_names: List[str] = Field(default_factory=list, description="试验名称列表，按表格列向下填充")
+    # verification_purpose: str = Field(default="", description="验证目的")
 
 
 class ESVerificationResultParameters(BaseTemplateParameters):
@@ -94,7 +102,15 @@ class ESVerificationResultParameters(BaseTemplateParameters):
 
 class PPVerificationPlanParameters(BaseTemplateParameters):
     """PP验证计划书参数"""
-    verification_purpose: str = Field(default="", description="验证目的")
+    theme_no: str = Field(default="", description="项目NO")
+    theme_name: str = Field(default="", description="项目名称")
+    sales_name: str = Field(default="", description="贩卖名称")
+    product_model_name: str = Field(default="", description="商品型式名")
+    environment_temperature: str = Field(default="", description="环境温度")
+    relative_humidity: str = Field(default="", description="相对湿度")
+    test_voltage: str = Field(default="", description="试验电压")
+    test_names: List[str] = Field(default_factory=list, description="试验名称列表，按表格列向下填充")
+    # verification_purpose: str = Field(default="", description="验证目的")
 
 
 class PPVerificationResultParameters(BaseTemplateParameters):
@@ -220,7 +236,7 @@ class FollowUpDRMinutesParameters(BaseTemplateParameters):
 class LabelingSpecificationParameters(BaseTemplateParameters):
     """标签仕样书-仕样确认书参数"""
     theme_no: str = Field(default="", description="项目NO，填入D5单元格")
-    theme_name: str = Field(default="", description="项目名称，填入K5单元格")
+    theme_name: str = Field(default="", description="项目名称，填入M5单元格")
     product_model_name: str = Field(default="", description="商品型式名，填入D7单元格")
     product_model: str = Field(default="", description="商品型式，填充到E17单元格")
     product_name: str = Field(default="", description="商品名，拼接到I8单元格内容后面")
@@ -276,9 +292,30 @@ class UserManualSpecificationParameters(BaseTemplateParameters):
 
 class ProjectPlanParameters(BaseTemplateParameters):
     """项目计划书参数"""
-    project_scope: str = Field(default="", description="项目范围")
-    project_timeline: str = Field(default="", description="项目时间线")
-
     theme_no: str = Field(default="", description="项目NO")
     theme_name: str = Field(default="", description="项目名称")
     product_model_name: str = Field(default="", description="商品型式名")
+    product_target: str = Field(default="", description="产品目标")
+    differentiation: str = Field(default="", description="差异化")
+    design: str = Field(default="", description="设计一览")
+    design_strategy: str = Field(default="", description="设计战略")
+    applicable_procedures: str = Field(default="", description="适用程序")
+    creation_plan: str = Field(default="", description="设计成果物作成计划")
+    departments_and_members: str = Field(default="", description="DR参划部门及成员")
+    execution_plan: str = Field(default="", description="执行计划")
+    software_development_plan: str = Field(default="", description="软件开发计划")
+    engineering_design_plan: str = Field(default="", description="工程设计计划")
+    customer_service_plan: str = Field(default="", description="客户服务计划")
+    specification_application_plan: str = Field(default="", description="规格申请计划")
+    risk_management_plan: str = Field(default="", description="风险管理计划")
+    verify: str = Field(default="", description="验证")
+    appropriateness_confirmation: str = Field(default="", description="适当性确认")
+    examine: str = Field(default="", description="审查")
+    references: str = Field(default="", description="参考")
+    security: str = Field(default="", description="安全")
+
+    function: List[str] = Field(default_factory=list, description="功能列表，按表格列向下填充")
+    responsibility: List[str] = Field(default_factory=list, description="责任列表，按表格列向下填充")
+    management_object: List[str] = Field(default_factory=list, description="管理对象列表，按表格列向下填充")
+    department: List[str] = Field(default_factory=list, description="部门列表，按表格列向下填充")
+    department_input: List[str] = Field(default_factory=list, description="部门输入列表，按表格列向下填充")

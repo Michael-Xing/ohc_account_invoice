@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from docx import Document
+from docx.shared import RGBColor
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 
@@ -42,6 +43,10 @@ class TemplateFillerStrategy(ABC):
         text = re.sub(r'\{([^}]+)\}', replace_single_brace, text)
         
         return text
+
+
+#: Excel/Word 统一使用的“已填充”主题蓝色（RGB 115,159,215）
+WORD_FILLED_TEXT_COLOR = RGBColor(0x73, 0x9F, 0xD7)
 
 
 class ExcelTemplateFiller(TemplateFillerStrategy):
