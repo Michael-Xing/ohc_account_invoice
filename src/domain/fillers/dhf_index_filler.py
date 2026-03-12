@@ -307,22 +307,21 @@ class DHFIndexFiller(ExcelTemplateFiller):
         file_list = parameters['file_list']
         
         def _normalize_name(name: str) -> str:
-            """归一化名称：去除首尾空白，并将连续空白折叠为单个空格。"""
+            """归一化名称：去除首尾空白/空字符，并将连续空白折叠为单个空格。"""
             if not name:
                 return ""
             # 兼容全角空格等
             name = name.replace("\u3000", " ")
+            # 兼容零宽空格/BOM 等不可见“空字符”
+            name = name.replace("\u200b", "").replace("\ufeff", "")
             name = re.sub(r"\s+", " ", name).strip()
             return name
 
         def _extract_b_title(cell_text: str) -> str:
-            """提取B列括号前的标题文本（兼容中英文括号）。"""
+            """提取B列用于匹配的文本：去掉首尾空白和空字符后做全量匹配。"""
             if not cell_text:
                 return ""
-            cell_text = str(cell_text)
-            # 只取第一个中文/英文左括号之前的部分
-            title = re.split(r"[（(]", cell_text, maxsplit=1)[0]
-            return _normalize_name(title)
+            return _normalize_name(str(cell_text))
 
         # 按“别名(由short_name按|拆分)”分组聚合
         # key为拆分后的单个名称，value为列表，每个元素是(file_number, stage)元组
