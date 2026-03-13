@@ -1,7 +1,7 @@
 """标签仕样书-仕样确认书填充器"""
 
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict, Optional
 from openpyxl import load_workbook
 
 from src.infrastructure.template_service import ExcelTemplateFiller
@@ -10,7 +10,13 @@ from src.infrastructure.template_service import ExcelTemplateFiller
 class LabelingSpecificationFiller(ExcelTemplateFiller):
     """标签仕样书-仕样确认书填充器"""
 
-    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+    def fill_template(
+        self,
+        template_path: Path,
+        parameters: Dict[str, Any],
+        output_path: Path,
+        language: Optional[str] = None,
+    ) -> bool:
         """
         填充标签仕样书-仕样确认书模板
 
@@ -23,14 +29,16 @@ class LabelingSpecificationFiller(ExcelTemplateFiller):
             bool: 是否成功
         """
         try:
+            # 优先使用外部传入语言，否则从模板路径提取
+            resolved_language = (language or self._extract_language_from_path(template_path)).strip().lower() or "zh"
+            # 设置语言（用于空值兜底）
+            self._set_language(resolved_language)
+            
             workbook = load_workbook(template_path)
             worksheet = workbook.active
 
-            # 从模板路径中提取语言
-            language = self._extract_language_from_path(template_path)
-
             # 填充字段
-            self._fill_fields(worksheet, parameters, language)
+            self._fill_fields(worksheet, parameters, resolved_language)
 
             # 替换其他占位符
             for row in worksheet.iter_rows():
@@ -56,30 +64,45 @@ class LabelingSpecificationFiller(ExcelTemplateFiller):
         return 'zh'  # 默认返回中文
 
     def _fill_fields(self, worksheet, parameters: Dict[str, Any], language: str = 'zh'):
-        """填充字段到指定单元格"""
+        """填充字段到指定单元格，空值时使用语言对应的兜底文本"""
+        # 获取空值兜底文本
+        missing_text = self._missing_text()
+        
         # theme_no 填入 D5 单元格
         if 'theme_no' in parameters and parameters['theme_no']:
             worksheet['D5'].value = str(parameters['theme_no'])
+        else:
+            worksheet['D5'].value = missing_text
 
         # theme_name 填入 K5 单元格
         if 'theme_name' in parameters and parameters['theme_name']:
             worksheet['K5'].value = str(parameters['theme_name'])
+        else:
+            worksheet['K5'].value = missing_text
 
         # product_model_name 填入 D7 单元格
         if 'product_model_name' in parameters and parameters['product_model_name']:
             worksheet['D7'].value = str(parameters['product_model_name'])
+        else:
+            worksheet['D7'].value = missing_text
 
         # product_model_name 填入 G12 单元格 (商品型式名)
         if 'product_model' in parameters and parameters['product_model']:
             worksheet['G12'].value = str(parameters['product_model'])
+        else:
+            worksheet['G12'].value = missing_text
 
         # product_name 填入 G13 单元格 (販売名称)
         if 'product_name' in parameters and parameters['product_name']:
             worksheet['G13'].value = str(parameters['product_name'])
+        else:
+            worksheet['G13'].value = missing_text
 
         # sales_name 填入 G14 单元格 （販売形式）
         if 'sales_name' in parameters and parameters['sales_name']:
             worksheet['G14'].value = str(parameters['sales_name'])
+        else:
+            worksheet['G14'].value = missing_text
 
         worksheet['G15'].value = "Intellisense"
         worksheet['G16'].value = "OMRON"

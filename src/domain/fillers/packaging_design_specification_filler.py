@@ -3,7 +3,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List, Optional
 from openpyxl import load_workbook
 
 from src.infrastructure.template_service import ExcelTemplateFiller
@@ -14,7 +14,13 @@ logger = logging.getLogger(__name__)
 class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
     """包装设计仕样书填充器"""
 
-    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+    def fill_template(
+        self,
+        template_path: Path,
+        parameters: Dict[str, Any],
+        output_path: Path,
+        language: Optional[str] = None,
+    ) -> bool:
         """
         填充包装设计仕样书模板
 
@@ -32,8 +38,8 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
             workbook = load_workbook(template_path)
             worksheet = workbook.active
 
-            # 从模板路径中提取语言
-            language = self._extract_language_from_path(template_path)
+            # 优先使用外部传入语言，否则从模板路径提取
+            language = (language or self._extract_language_from_path(template_path)).strip().lower() or "zh"
 
             # 填充字段
             self._fill_fields(worksheet, parameters, language)

@@ -3,7 +3,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List, Optional
 from openpyxl import load_workbook
 
 from src.infrastructure.template_service import ExcelTemplateFiller
@@ -13,7 +13,13 @@ logger = logging.getLogger(__name__)
 class UserManualSpecificationFiller(ExcelTemplateFiller):
     """使用说明书仕样书填充器"""
 
-    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+    def fill_template(
+        self,
+        template_path: Path,
+        parameters: Dict[str, Any],
+        output_path: Path,
+        language: Optional[str] = None,
+    ) -> bool:
         """
         填充使用说明书仕样书模板
 

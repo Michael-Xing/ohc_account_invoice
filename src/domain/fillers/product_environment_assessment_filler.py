@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List, Optional
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment, Border, PatternFill, Side
 from openpyxl.utils import get_column_letter, range_boundaries
@@ -19,7 +19,13 @@ class ProductEnvironmentAssessmentFiller(ExcelTemplateFiller):
     _FILLED_CELL_BG_COLOR = "FF739FD7"  # openpyxl 使用 ARGB
     _FILLED_CELL_FILL = PatternFill(fill_type="solid", fgColor=_FILLED_CELL_BG_COLOR)
     
-    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+    def fill_template(
+        self,
+        template_path: Path,
+        parameters: Dict[str, Any],
+        output_path: Path,
+        language: Optional[str] = None,
+    ) -> bool:
         """
         填充产品环境评估要项书/结果书模板
         

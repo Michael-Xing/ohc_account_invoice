@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Alignment
@@ -27,7 +27,13 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         """将单元格背景色设置为填充高亮色。"""
         cell.fill = PatternFill(fill_type="solid", fgColor=self._FILLED_BG_COLOR)
 
-    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+    def fill_template(
+        self,
+        template_path: Path,
+        parameters: Dict[str, Any],
+        output_path: Path,
+        language: Optional[str] = None,
+    ) -> bool:
         try:
             workbook = load_workbook(template_path)
             worksheet = workbook.active

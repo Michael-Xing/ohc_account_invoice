@@ -1,7 +1,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List, Optional
 
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Font, Border, PatternFill, Protection, Side
@@ -85,7 +85,13 @@ class DHFIndexFiller(ExcelTemplateFiller):
         if not current_height or current_height < row_height:
             worksheet.row_dimensions[row].height = row_height
     
-    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+    def fill_template(
+        self,
+        template_path: Path,
+        parameters: Dict[str, Any],
+        output_path: Path,
+        language: Optional[str] = None,
+    ) -> bool:
         """
         填充DHF INDEX模板
         
