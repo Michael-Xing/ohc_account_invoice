@@ -106,6 +106,9 @@ class DHFIndexFiller(ExcelTemplateFiller):
         non_empty_fields = [k for k, v in parameters.items() if v]
         logger.info("[DHFIndexFiller] 填充字段: %s", non_empty_fields)
         try:
+            # 设置语言（用于空值兜底）
+            self._set_language(language)
+
             # 加载模板文件
             workbook = load_workbook(template_path, data_only=False, keep_vba=False)
             worksheet = workbook.active
@@ -144,18 +147,31 @@ class DHFIndexFiller(ExcelTemplateFiller):
 
     def _fill_basic_info(self, worksheet, parameters: Dict[str, Any]):
         """填充基本信息到C3-C7单元格"""
+        # 获取空值兜底文本
+        missing_text = self._missing_text()
+
         # theme_no: 填充到C3单元格
         if 'theme_no' in parameters and parameters['theme_no']:
             cell_c3 = worksheet['C3']
             cell_c3.value = str(parameters['theme_no'])
             self._apply_filled_background(cell_c3)
-        
+        else:
+            # 空值时填充默认值
+            cell_c3 = worksheet['C3']
+            cell_c3.value = missing_text
+            self._apply_filled_background(cell_c3)
+
         # theme_name: 填充到C4单元格
         if 'theme_name' in parameters and parameters['theme_name']:
             cell_c4 = worksheet['C4']
             cell_c4.value = str(parameters['theme_name'])
             self._apply_filled_background(cell_c4)
-        
+        else:
+            # 空值时填充默认值
+            cell_c4 = worksheet['C4']
+            cell_c4.value = missing_text
+            self._apply_filled_background(cell_c4)
+
         # product_model: 填充到C5单元格，保留原始值，自适应行高
         if 'product_model' in parameters and parameters['product_model']:
             product_model = str(parameters['product_model'])
@@ -176,7 +192,12 @@ class DHFIndexFiller(ExcelTemplateFiller):
                 cell_c5.alignment = Alignment(wrap_text=True)
             # 根据文本长度自适应调整行高
             self._adjust_row_height_for_text(worksheet, cell_c5.row, product_model)
-        
+        else:
+            # 空值时填充默认值
+            cell_c5 = worksheet['C5']
+            cell_c5.value = missing_text
+            self._apply_filled_background(cell_c5)
+
         # sales_name: 填充到C6单元格，保留原始值，自适应行高
         if 'sales_name' in parameters and parameters['sales_name']:
             sales_name = str(parameters['sales_name'])
@@ -197,7 +218,12 @@ class DHFIndexFiller(ExcelTemplateFiller):
                 cell_c6.alignment = Alignment(wrap_text=True)
             # 根据文本长度自适应调整行高
             self._adjust_row_height_for_text(worksheet, cell_c6.row, sales_name)
-        
+        else:
+            # 空值时填充默认值
+            cell_c6 = worksheet['C6']
+            cell_c6.value = missing_text
+            self._apply_filled_background(cell_c6)
+
         # stage: 拼接到C7单元格内容的后面
         if 'stage' in parameters and parameters['stage']:
             cell_c7 = worksheet['C7']

@@ -237,6 +237,7 @@ class LabelingSpecificationParameters(BaseTemplateParameters):
     theme_no: str = Field(default="", description="项目NO，填入D5单元格")
     theme_name: str = Field(default="", description="项目名称，填入K5单元格")
     product_model_name: str = Field(default="", description="商品型式名，填入D7单元格")
+    representative_model: str = Field(default="", description="代表型号，填入G11单元格")
     product_model: str = Field(default="", description="商品型式，填充到E17单元格")
     product_name: str = Field(default="", description="商品名，拼接到I8单元格内容后面")
     sales_name: str = Field(default="", description="贩卖名称，填充到E19单元格")

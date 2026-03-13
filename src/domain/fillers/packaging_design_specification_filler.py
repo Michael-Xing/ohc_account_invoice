@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
 
 from src.infrastructure.template_service import ExcelTemplateFiller
 
@@ -13,6 +14,13 @@ logger = logging.getLogger(__name__)
 
 class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
     """包装设计仕样书填充器"""
+
+    # 填充器写入/修改过的单元格背景色：RGB(115,159,215) -> HEX 0x739FD7
+    _FILLED_BG_COLOR = "FF739FD7"  # ARGB format
+
+    def _apply_filled_background(self, cell) -> None:
+        """将单元格背景色设置为填充高亮色"""
+        cell.fill = PatternFill(fill_type="solid", fgColor=self._FILLED_BG_COLOR)
 
     def fill_template(
         self,
@@ -40,6 +48,8 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
 
             # 优先使用外部传入语言，否则从模板路径提取
             language = (language or self._extract_language_from_path(template_path)).strip().lower() or "zh"
+            # 设置语言（用于空值兜底）
+            self._set_language(language)
 
             # 填充字段
             self._fill_fields(worksheet, parameters, language)
@@ -67,21 +77,40 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
 
     def _fill_fields(self, worksheet, parameters: Dict[str, Any], language: str = 'zh'):
         """填充字段到指定单元格"""
+        # 获取空值兜底文本
+        missing_text = self._missing_text()
+
         # theme_no 填入 C21 单元格
         if 'theme_no' in parameters and parameters['theme_no']:
             worksheet['C21'].value = str(parameters['theme_no'])
+            self._apply_filled_background(worksheet['C21'])
+        else:
+            worksheet['C21'].value = missing_text
+            self._apply_filled_background(worksheet['C21'])
 
         # theme_name 填入 E21 单元格
         if 'theme_name' in parameters and parameters['theme_name']:
             worksheet['E21'].value = str(parameters['theme_name'])
+            self._apply_filled_background(worksheet['E21'])
+        else:
+            worksheet['E21'].value = missing_text
+            self._apply_filled_background(worksheet['E21'])
 
         # product_model_name 填入 L21 单元格
         if 'product_model_name' in parameters and parameters['product_model_name']:
             worksheet['L21'].value = str(parameters['product_model_name'])
+            self._apply_filled_background(worksheet['L21'])
+        else:
+            worksheet['L21'].value = missing_text
+            self._apply_filled_background(worksheet['L21'])
 
         # sales_name 填入 C23 单元格
         if 'sales_name' in parameters and parameters['sales_name']:
             worksheet['C23'].value = str(parameters['sales_name'])
+            self._apply_filled_background(worksheet['C23'])
+        else:
+            worksheet['C23'].value = missing_text
+            self._apply_filled_background(worksheet['C23'])
 
         related_file_info: List[Dict[str, Any]] = parameters.get('related_file_info', [])
         if related_file_info:
@@ -93,7 +122,9 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
                     break
                 key = str(cell_value).strip()
                 if key in mapping:
-                    worksheet.cell(row=row, column=5).value = str(mapping[key]['file_number'])  # E列
+                    cell_e = worksheet.cell(row=row, column=5)
+                    cell_e.value = str(mapping[key]['file_number'])  # E列
+                    self._apply_filled_background(cell_e)
                 row += 1
 
 

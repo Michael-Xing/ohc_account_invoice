@@ -40,12 +40,15 @@ class ProductEnvironmentAssessmentFiller(ExcelTemplateFiller):
         non_empty_fields = [k for k, v in parameters.items() if v]
         logger.info("[ProductEnvironmentAssessmentFiller] 填充字段: %s", non_empty_fields)
         try:
+            # 设置语言（用于空值兜底）
+            self._set_language(language)
+
             workbook = load_workbook(template_path)
             worksheet = workbook.active
-            
+
             # 1. 填充简单拼接字段
             self._fill_simple_fields(worksheet, parameters)
-            
+
             # 2. 填充表格数据
             self._fill_table_data(worksheet, parameters)
             
