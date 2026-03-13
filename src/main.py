@@ -1,17 +1,22 @@
 """OHC账票生成FastAPI服务主模块"""
 
 import base64
+import logging
 import re
 import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 from src.config import settings
+
+# Use uvicorn's logger name so it follows uvicorn log configuration.
+logger = logging.getLogger("uvicorn.error")
 
 # 创建FastAPI应用
 app = FastAPI(
@@ -37,6 +42,36 @@ from src.interfaces.routers.system import router as system_router
 app.include_router(templates_router)
 app.include_router(generate_router)
 app.include_router(system_router)
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_error_handler(request: Request, exc: RequestValidationError):
+    """
+    Log detailed request validation errors (422) to help debugging client payload issues.
+    """
+    # exc.errors() is a list of structured items: {loc, msg, type, ...}
+    errors = exc.errors()
+    # Put details into the message too, so it works with any log formatter.
+    logger.warning(
+        "Request validation failed: method=%s path=%s query=%s client=%s errors=%s",
+        request.method,
+        str(request.url.path),
+        str(request.url.query),
+        getattr(request.client, "host", None),
+        errors,
+        extra={
+            "http": {
+                "method": request.method,
+                "path": str(request.url.path),
+                "query": str(request.url.query),
+                "client": getattr(request.client, "host", None),
+            },
+            "validation": {
+                "errors": errors,
+            },
+        },
+    )
+    return JSONResponse(status_code=422, content={"detail": errors})
 
 # Optional Sentry monitoring initialization (if configured and package available)
 try:

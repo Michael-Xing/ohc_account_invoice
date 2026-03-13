@@ -6,7 +6,9 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from docx import Document
+from docx.shared import RGBColor
 from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
 
 from src.config import settings
 
@@ -43,8 +45,14 @@ class TemplateFillerStrategy(ABC):
         return text
 
 
+#: Excel/Word 统一使用的“已填充”主题蓝色（RGB 115,159,215）
+WORD_FILLED_TEXT_COLOR = RGBColor(0x73, 0x9F, 0xD7)
+
+
 class ExcelTemplateFiller(TemplateFillerStrategy):
     """Excel模板填充策略"""
+
+    _FILLED_CELL_COLOR = "FF739FD7"
     
     def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
         try:
@@ -60,6 +68,23 @@ class ExcelTemplateFiller(TemplateFillerStrategy):
         except Exception as e:
             print(f"Excel模板填充失败: {str(e)}")
             return False
+
+    def _create_filled_cell_pattern(self) -> PatternFill:
+        """创建统一的已填充单元格背景色样式（RGB 115,159,215）"""
+        return PatternFill(fill_type="solid", fgColor=self._FILLED_CELL_COLOR)
+
+    def _set_cell_value_with_fill(self, cell, value: Any) -> None:
+        """设置单元格值并应用统一背景色"""
+        cell.value = str(value)
+        cell.fill = self._create_filled_cell_pattern()
+
+    def _set_worksheet_cell_with_fill(self, worksheet, cell_ref: str, value: Any) -> None:
+        """通过单元格引用设置值并应用统一背景色"""
+        self._set_cell_value_with_fill(worksheet[cell_ref], value)
+
+    def _set_cell_with_fill_by_position(self, worksheet, row: int, column: int, value: Any) -> None:
+        """通过行列坐标设置值并应用统一背景色"""
+        self._set_cell_value_with_fill(worksheet.cell(row=row, column=column), value)
 
 
 class WordTemplateFiller(TemplateFillerStrategy):

@@ -1,11 +1,14 @@
 """使用说明书仕样书填充器"""
 
+import logging
+import re
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 from openpyxl import load_workbook
 
 from src.infrastructure.template_service import ExcelTemplateFiller
 
+logger = logging.getLogger(__name__)
 
 class UserManualSpecificationFiller(ExcelTemplateFiller):
     """使用说明书仕样书填充器"""
@@ -22,6 +25,8 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
         Returns:
             bool: 是否成功
         """
+        non_empty_fields = [k for k, v in parameters.items() if v]
+        logger.info("[UserManualSpecificationFiller] 填充字段: %s", non_empty_fields)
         try:
             workbook = load_workbook(template_path)
             worksheet = workbook.active
@@ -38,50 +43,39 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
             workbook.save(output_path)
             return True
         except Exception as e:
-            print(f"使用说明书仕样书模板填充失败: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            logger.error("使用说明书仕样书模板填充失败: %s", str(e), exc_info=True)
             return False
 
     def _fill_fields(self, worksheet, parameters: Dict[str, Any]):
         """填充字段到指定单元格"""
         # theme_no 填入 B19 单元格
         if 'theme_no' in parameters and parameters['theme_no']:
-            worksheet['B19'].value = str(parameters['theme_no'])
+            self._set_worksheet_cell_with_fill(worksheet, 'B19', parameters['theme_no'])
 
         # theme_name 填入 D19 单元格
         if 'theme_name' in parameters and parameters['theme_name']:
-            worksheet['D19'].value = str(parameters['theme_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'D19', parameters['theme_name'])
 
         # product_model_name 填入 J19 单元格
         if 'product_model_name' in parameters and parameters['product_model_name']:
-            worksheet['J19'].value = str(parameters['product_model_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'J19', parameters['product_model_name'])
 
         # sales_name 填入 B21 单元格
         if 'sales_name' in parameters and parameters['sales_name']:
-            worksheet['B21'].value = str(parameters['sales_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'B21', parameters['sales_name'])
 
-        # 根据 file_type 填充 name 和 version
-        file_type = parameters.get('file_type', '').strip()
-        name = parameters.get('name', '')
-        version = parameters.get('version', '')
+        related_file_info: List[Dict[str, Any]] = parameters.get('related_file_info', [])
+        if related_file_info:
+            mapping = {item['short_name']: item for item in related_file_info}
+            row = 25
+            while True:
+                cell_value = worksheet.cell(row=row, column=1).value  # A列
+                if cell_value is None or str(cell_value).strip() == '':
+                    break
+                key = str(cell_value).strip()
+                if key in mapping:
+                    self._set_cell_with_fill_by_position(worksheet, row, 4, mapping[key]['file_number'])  # D列
+                    self._set_cell_with_fill_by_position(worksheet, row, 7, mapping[key]['version'])  # G列
+                row += 1
 
-        if file_type == 'product_design_specification':
-            # name 填入 D27, version 填入 G27
-            if name:
-                worksheet['D27'].value = str(name)
-            if version:
-                worksheet['G27'].value = str(version)
-        elif file_type == 'requirement_specification':
-            # name 填入 D26, version 填入 G26
-            if name:
-                worksheet['D26'].value = str(name)
-            if version:
-                worksheet['G26'].value = str(version)
-        elif file_type == 'product_requirement':
-            # name 填入 D25, version 填入 G25
-            if name:
-                worksheet['D25'].value = str(name)
-            if version:
-                worksheet['G25'].value = str(version)
 

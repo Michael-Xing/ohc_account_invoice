@@ -1,10 +1,14 @@
 """包装设计仕样书填充器"""
 
+import logging
+import re
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 from openpyxl import load_workbook
 
 from src.infrastructure.template_service import ExcelTemplateFiller
+
+logger = logging.getLogger(__name__)
 
 
 class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
@@ -22,6 +26,8 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
         Returns:
             bool: 是否成功
         """
+        non_empty_fields = [k for k, v in parameters.items() if v]
+        logger.info("[PackagingDesignSpecificationFiller] 填充字段: %s", non_empty_fields)
         try:
             workbook = load_workbook(template_path)
             worksheet = workbook.active
@@ -41,9 +47,7 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
             workbook.save(output_path)
             return True
         except Exception as e:
-            print(f"包装设计仕样书模板填充失败: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            logger.error("包装设计仕样书模板填充失败: %s", str(e), exc_info=True)
             return False
 
     def _extract_language_from_path(self, template_path: Path) -> str:
@@ -59,45 +63,32 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
         """填充字段到指定单元格"""
         # theme_no 填入 C21 单元格
         if 'theme_no' in parameters and parameters['theme_no']:
-            worksheet['C21'].value = str(parameters['theme_no'])
+            self._set_worksheet_cell_with_fill(worksheet, 'C21', parameters['theme_no'])
 
         # theme_name 填入 E21 单元格
         if 'theme_name' in parameters and parameters['theme_name']:
-            worksheet['E21'].value = str(parameters['theme_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'E21', parameters['theme_name'])
 
         # product_model_name 填入 L21 单元格
         if 'product_model_name' in parameters and parameters['product_model_name']:
-            worksheet['L21'].value = str(parameters['product_model_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'L21', parameters['product_model_name'])
 
         # sales_name 填入 C23 单元格
         if 'sales_name' in parameters and parameters['sales_name']:
-            worksheet['C23'].value = str(parameters['sales_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'C23', parameters['sales_name'])
 
-        texts = []
-        # 根据语言填充文档类型列表到 B27 列往下
-        if language == 'ja':
-            texts = [
-                '製品要件書',
-                '要求仕様書',
-                '製品設計仕様書',
-                'リスクコントロール仕様書',
-                'ユーザビリティ仕様書',
-                '課題分析·対策書',
-                '製品アセスメント要項書'
-            ]
-        elif language == 'zh':
-            texts = [
-                '产品要件书',
-                '要求仕样书',
-                '产品设计仕样书',
-                '风险控制仕样书',
-                '可用性仕样书',
-                '课题分析/对策结果书',
-                '产品环境评估要项书'
-            ]
+        related_file_info: List[Dict[str, Any]] = parameters.get('related_file_info', [])
+        if related_file_info:
+            mapping = {item['short_name']: item for item in related_file_info}
+            row = 27
+            while True:
+                cell_value = worksheet.cell(row=row, column=2).value  # B列
+                if cell_value is None or str(cell_value).strip() == '':
+                    break
+                key = str(cell_value).strip()
+                if key in mapping:
+                    self._set_cell_with_fill_by_position(worksheet, row, 5, mapping[key]['file_number'])  # E列
+                row += 1
 
-        # 从 B27 开始填充
-        for idx, text in enumerate(texts):
-            row = 27 + idx
-            worksheet[f'B{row}'].value = text
+
 

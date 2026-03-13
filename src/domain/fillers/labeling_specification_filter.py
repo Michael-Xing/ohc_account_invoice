@@ -59,133 +59,112 @@ class LabelingSpecificationFiller(ExcelTemplateFiller):
         """填充字段到指定单元格"""
         # theme_no 填入 D5 单元格
         if 'theme_no' in parameters and parameters['theme_no']:
-            worksheet['D5'].value = str(parameters['theme_no'])
+            self._set_worksheet_cell_with_fill(worksheet, 'D5', parameters['theme_no'])
 
-        # theme_name 填入 K5 单元格
+        # theme_name 填入 M5 单元格
         if 'theme_name' in parameters and parameters['theme_name']:
-            worksheet['K5'].value = str(parameters['theme_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'M5', parameters['theme_name'])
 
         # product_model_name 填入 D7 单元格
         if 'product_model_name' in parameters and parameters['product_model_name']:
-            worksheet['D7'].value = str(parameters['product_model_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'D7', parameters['product_model_name'])
 
-        # product_model_name 填入 G12 单元格 (商品型式名)
+        # product_model_name 填入 G12 单元格
         if 'product_model' in parameters and parameters['product_model']:
-            worksheet['G12'].value = str(parameters['product_model'])
+            self._set_worksheet_cell_with_fill(worksheet, 'G12', parameters['product_model'])
 
-        # product_name 填入 G13 单元格 (販売名称)
+        # product_name 填入 G13 单元格
         if 'product_name' in parameters and parameters['product_name']:
-            worksheet['G13'].value = str(parameters['product_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'G13', parameters['product_name'])
 
-        # sales_name 填入 G14 单元格 （販売形式）
+        # sales_name 填入 G14 单元格
         if 'sales_name' in parameters and parameters['sales_name']:
-            worksheet['G14'].value = str(parameters['sales_name'])
+            self._set_worksheet_cell_with_fill(worksheet, 'G14', parameters['sales_name'])
 
-        worksheet['G15'].value = "Intellisense"
-        worksheet['G16'].value = "OMRON"
+        self._set_worksheet_cell_with_fill(worksheet, 'G15', "Intellisense")
+        self._set_worksheet_cell_with_fill(worksheet, 'G16', "OMRON")
 
         # ohc_target 填入 G19 单元格, 如果是OHC向以外则保持空白。
         if 'ohc_target' in parameters and parameters['ohc_target']:
-            worksheet['G19'].value = "OHC提供"
-            worksheet['G26'].value = "欧姆龙健康医疗（中国）有限公司"
+            self._set_worksheet_cell_with_fill(worksheet, 'G19', "OHC提供")
+            self._set_worksheet_cell_with_fill(worksheet, 'G26', "欧姆龙健康医疗（中国）有限公司")
 
-        # sales_channel 填入 E21 单元格 （販売形式）
+        # sales_channel 填入 E21 单元格
         if 'sales_channel' in parameters and parameters['sales_channel']:
             if str(parameters['sales_channel']).strip() == "医療機関":
-                worksheet['G21'].value = "400-889-0089"
+                self._set_worksheet_cell_with_fill(worksheet, 'G21', "400-889-0089")
             else:
-                worksheet['G21'].value = "400-770-9988"
+                self._set_worksheet_cell_with_fill(worksheet, 'G21', "400-770-9988")
 
-        worksheet['G25'].value = "注册证编号/产品技术要求编号"
+        self._set_worksheet_cell_with_fill(worksheet, 'G25', "注册证编号/产品技术要求编号")
 
+        if 'address' in parameters and parameters['address']:
+            self._set_worksheet_cell_with_fill(worksheet, 'G17', parameters['address'])
+        if 'country' in parameters and parameters['country']:
+            self._set_worksheet_cell_with_fill(worksheet, 'G18', str(parameters['country']) + "制造")
 
+        # texts = ""
+        # if language == 'ja':
+        #     texts = [
+        #         '代表型番',
+        #         '商品型式名',
+        #         '販売名称',
+        #         '販売形式',
+        #         'ｴﾘｱﾈｰﾐﾝｸﾞ（販売商品コード）',
+        #         'OMRON　ロゴ',
+        #         '製造元',
+        #         '生産国',
+        #         'JANコード',
+        #         'ITFコート',
+        #         'お問合せ先 ',
+        #         '医療機器分類',
+        #         '類別番号および類別名称',
+        #         '使用目的/効能効果',
+        #         '医療機器認証番号',
+        #         '製造販売元'
+        #     ]
+        #
+        # if language == 'zh':
+        #     texts = [
+        #         '代表型号',
+        #         '商品型号名称',
+        #         '销售名称',
+        #         '销售形式',
+        #         '区域命名（销售商品代码）',
+        #         'OMRON 标志',
+        #         '制造商',
+        #         '生产国',
+        #         'JAN 代码',
+        #         'ITF 代码',
+        #         '咨询联系方式',
+        #         '医疗器械分类',
+        #         '类别编号及类别名称',
+        #         '使用目的／功效',
+        #         '医疗器械认证编号',
+        #         '制造销售商'
+        #     ]
+        #
+        # if language == 'en':
+        #     texts = [
+        #         'Representative Model Number',
+        #         'Product Model Name',
+        #         'Sales Name',
+        #         'Sales Format',
+        #         'Area Naming (Sales Product Code)',
+        #         'OMRON Logo',
+        #         'Manufacturer',
+        #         'Country of Origin',
+        #         'JAN Code',
+        #         'ITF Code',
+        #         'Contact Information',
+        #         'Medical Device Classification',
+        #         'Class Number and Class Name',
+        #         'Intended Use / Effectiveness',
+        #         'Medical Device Certification Number',
+        #         'Manufacturer and Distributor'
+        #     ]
 
-        production_area_map = {
-            "OMD": {
-                "country": "中国",
-                "address": "欧姆龙（大连）有限公司大连经济技术开发区松江路3号",
-                "phone": "",
-            },
-            "OHZ": {
-                "country": "日本",
-                "address": "",
-                "phone": "",
-            },
-            "OHV": {
-                "country": "越南",
-                "address": "",
-                "phone": "",
-            },
-        }
-
-        # production_area
-        if 'production_area' in parameters and parameters['production_area']:
-            info = production_area_map.get(parameters['production_area'], {})
-            worksheet['G17'].value = info.get('address', '')
-            worksheet['G18'].value = info.get('country', '')+'制造'
-
-        texts = ""
-        if language == 'ja':
-            texts = [
-                '代表型番',
-                '商品型式名',
-                '販売名称',
-                '販売形式',
-                'ｴﾘｱﾈｰﾐﾝｸﾞ（販売商品コード）',
-                'OMRON　ロゴ',
-                '製造元',
-                '生産国',
-                'JANコード',
-                'ITFコート',
-                'お問合せ先 ',
-                '医療機器分類',
-                '類別番号および類別名称',
-                '使用目的/効能効果',
-                '医療機器認証番号',
-                '製造販売元'
-            ]
-
-        if language == 'zh':
-            texts = [
-                '代表型号',
-                '商品型号名称',
-                '销售名称',
-                '销售形式',
-                '区域命名（销售商品代码）',
-                'OMRON 标志',
-                '制造商',
-                '生产国',
-                'JAN 代码',
-                'ITF 代码',
-                '咨询联系方式',
-                '医疗器械分类',
-                '类别编号及类别名称',
-                '使用目的／功效',
-                '医疗器械认证编号',
-                '制造销售商'
-            ]
-
-        if language == 'en':
-            texts = [
-                'Representative Model Number',
-                'Product Model Name',
-                'Sales Name',
-                'Sales Format',
-                'Area Naming (Sales Product Code)',
-                'OMRON Logo',
-                'Manufacturer',
-                'Country of Origin',
-                'JAN Code',
-                'ITF Code',
-                'Contact Information',
-                'Medical Device Classification',
-                'Class Number and Class Name',
-                'Intended Use / Effectiveness',
-                'Medical Device Certification Number',
-                'Manufacturer and Distributor'
-            ]
-
-        for idx, text in enumerate(texts):
-            row = 11 + idx  # 从第11行开始
-            worksheet[f'C{row}'].value = text
+        # for idx, text in enumerate(texts):
+        #     row = 11 + idx  # 从第11行开始
+        #     worksheet[f'C{row}'].value = text
 

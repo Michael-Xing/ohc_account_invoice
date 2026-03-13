@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Dict, Any, List
 
@@ -6,6 +7,8 @@ from openpyxl.styles import Alignment, Font, Border, PatternFill, Protection, Si
 from openpyxl.cell.cell import MergedCell
 
 from src.infrastructure.template_service import ExcelTemplateFiller
+
+logger = logging.getLogger(__name__)
 
 
 class DHFIndexFiller(ExcelTemplateFiller):
@@ -23,6 +26,8 @@ class DHFIndexFiller(ExcelTemplateFiller):
         Returns:
             bool: 是否成功
         """
+        non_empty_fields = [k for k, v in parameters.items() if v]
+        logger.info("[DHFIndexFiller] 填充字段: %s", non_empty_fields)
         try:
             # 加载模板文件
             workbook = load_workbook(template_path, data_only=False, keep_vba=False)
@@ -45,9 +50,7 @@ class DHFIndexFiller(ExcelTemplateFiller):
             
             return True
         except Exception as e:
-            print(f"DHF INDEX模板填充失败: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            logger.error("DHF INDEX模板填充失败: %s", str(e), exc_info=True)
             return False
 
     def _fill_basic_info(self, worksheet, parameters: Dict[str, Any]):
@@ -223,13 +226,13 @@ class DHFIndexFiller(ExcelTemplateFiller):
             for file_item in file_list:
                 # 处理file_item可能是字典或对象的情况
                 if isinstance(file_item, dict):
-                    file_name = str(file_item.get('file_name', ''))
-                    number = str(file_item.get('number', ''))
+                    file_name = str(file_item.get('short_name', ''))
+                    number = str(file_item.get('file_number', ''))
                     stage = str(file_item.get('stage', ''))
                 else:
                     # 假设是对象，尝试获取属性
-                    file_name = str(getattr(file_item, 'file_name', ''))
-                    number = str(getattr(file_item, 'number', ''))
+                    file_name = str(getattr(file_item, 'short_name', ''))
+                    number = str(getattr(file_item, 'file_number', ''))
                     stage = str(getattr(file_item, 'stage', ''))
                 
                 if not file_name:
