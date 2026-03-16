@@ -91,7 +91,7 @@ class ExcelTemplateFiller(TemplateFillerStrategy):
         try:
             # 设置语言
             self._set_language(language)
-            
+
             workbook = load_workbook(template_path)
             for sheet_name in workbook.sheetnames:
                 worksheet = workbook[sheet_name]
@@ -113,7 +113,7 @@ class WordTemplateFiller(TemplateFillerStrategy):
         try:
             # 设置语言
             self._set_language(language)
-            
+
             doc = Document(template_path)
             for paragraph in doc.paragraphs:
                 if paragraph.text:
