@@ -100,6 +100,7 @@ class ESVerificationPlanParameters(BaseTemplateParameters):
     relative_humidity: str = Field(default="", description="相对湿度")
     test_voltage: str = Field(default="", description="试验电压")
     test_names: List[str] = Field(default_factory=list, description="试验名称列表，按表格列向下填充")
+    requirements_and_standards: List[str] = Field(default_factory=list, description="要求事项与规格列表，按表格列向下填充")
     # verification_purpose: str = Field(default="", description="验证目的")
 
 
@@ -118,6 +119,7 @@ class PPVerificationPlanParameters(BaseTemplateParameters):
     relative_humidity: str = Field(default="", description="相对湿度")
     test_voltage: str = Field(default="", description="试验电压")
     test_names: List[str] = Field(default_factory=list, description="试验名称列表，按表格列向下填充")
+    requirements_and_standards: List[str] = Field(default_factory=list, description="要求事项与规格列表，按表格列向下填充")
     # verification_purpose: str = Field(default="", description="验证目的")
 
 

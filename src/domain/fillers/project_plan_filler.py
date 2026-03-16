@@ -4,7 +4,7 @@ from copy import deepcopy
 import logging
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from docx import Document
 from docx.oxml.ns import qn
@@ -26,8 +26,9 @@ class ProjectPlanFiller(TemplateFillerStrategy):
         "department_input",
     )
 
-    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path, language: Optional[str] = None) -> bool:
         """填充项目计划书模板（占位符 + 表格列数组填充）"""
+        self._set_language(language)
         non_empty_fields = [k for k, v in parameters.items() if v]
         logger.info("[ProjectPlanFiller] 填充字段: %s", non_empty_fields)
         try:
@@ -38,6 +39,9 @@ class ProjectPlanFiller(TemplateFillerStrategy):
                 self._fill_list_columns(doc, list_values)
 
             flat_parameters = self._flatten_parameters(parameters)
+            for field, values in list_values.items():
+                if not values:
+                    flat_parameters[field] = self._missing_text()
             self._fallback_text_replace(doc, flat_parameters)
 
             doc.save(output_path)
@@ -277,10 +281,20 @@ class ProjectPlanFiller(TemplateFillerStrategy):
         for key, value in parameters.items():
             if key in list_fields:
                 continue
-            if isinstance(value, (str, int, float)):
-                flat[key] = str(value)
-            elif isinstance(value, dict):
+            if isinstance(value, dict):
                 for sub_key, sub_val in value.items():
                     if isinstance(sub_val, (str, int, float)):
-                        flat[sub_key] = str(sub_val)
+                        if isinstance(sub_val, str) and sub_val.strip() == "":
+                            flat[sub_key] = self._missing_text()
+                        else:
+                            flat[sub_key] = str(sub_val)
+                    elif sub_val is None:
+                        flat[sub_key] = self._missing_text()
+            elif isinstance(value, (str, int, float)):
+                if isinstance(value, str) and value.strip() == "":
+                    flat[key] = self._missing_text()
+                else:
+                    flat[key] = str(value)
+            elif value is None:
+                flat[key] = self._missing_text()
         return flat

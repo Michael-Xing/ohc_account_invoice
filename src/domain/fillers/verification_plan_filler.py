@@ -4,7 +4,7 @@ from copy import deepcopy
 import logging
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from docx import Document
 from docx.oxml.ns import qn
@@ -18,18 +18,27 @@ logger = logging.getLogger(__name__)
 class VerificationPlanFiller(TemplateFillerStrategy):
     """ES/PP验证计划书专用填充器（docx）"""
 
-    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path, language: Optional[str] = None) -> bool:
         """填充验证计划书模板，保留 run 样式进行占位符替换"""
+        self._set_language(language)
         non_empty_fields = [k for k, v in parameters.items() if v]
         logger.info("[VerificationPlanFiller] 填充字段: %s", non_empty_fields)
         try:
             doc = Document(template_path)
 
-            test_names = self._normalize_test_names(parameters.get("test_names"))
+            test_names = self._normalize_list_field(parameters.get("test_names"))
             if test_names:
-                self._fill_test_name_column(doc, test_names)
+                self._fill_list_column(doc, "{{test_name}}", test_names)
+
+            requirements_and_standards = self._normalize_list_field(parameters.get("requirements_and_standards"))
+            if requirements_and_standards:
+                self._fill_list_column(doc, "{{requirements_and_standards}}", requirements_and_standards)
 
             flat_parameters = self._flatten_parameters(parameters)
+            if not test_names:
+                flat_parameters["test_name"] = self._missing_text()
+            if not requirements_and_standards:
+                flat_parameters["requirements_and_standards"] = self._missing_text()
             self._fallback_text_replace(doc, flat_parameters)
 
             doc.save(output_path)
@@ -39,10 +48,10 @@ class VerificationPlanFiller(TemplateFillerStrategy):
             return False
 
     # ------------------------------------------------------------------
-    # test_names 数组 → 表格列填充
+    # 列表字段 → 表格列填充
     # ------------------------------------------------------------------
 
-    def _normalize_test_names(self, value: Any) -> List[str]:
+    def _normalize_list_field(self, value: Any) -> List[str]:
         if value is None:
             return []
         if isinstance(value, list):
@@ -52,19 +61,18 @@ class VerificationPlanFiller(TemplateFillerStrategy):
             return [text] if text else []
         return []
 
-    def _fill_test_name_column(self, doc: Document, test_names: List[str]) -> None:
+    def _fill_list_column(self, doc: Document, placeholder: str, values: List[str]) -> None:
         for table in doc.tables:
             for row_idx, row in enumerate(table.rows):
                 for col_idx, cell in enumerate(row.cells):
-                    if "{{test_name}}" not in (cell.text or ""):
+                    if placeholder not in (cell.text or ""):
                         continue
-                    self._fill_column_from_anchor(table, row_idx, col_idx, test_names)
+                    self._fill_column_from_anchor(table, row_idx, col_idx, values)
                     return
-        logger.warning("[VerificationPlanFiller] 未找到 {{test_name}} 占位符，跳过 test_name 列填充")
+        logger.warning("[VerificationPlanFiller] 未找到 %s 占位符，跳过列填充", placeholder)
 
     def _fill_column_from_anchor(self, table, start_row: int, col_idx: int, values: List[str]) -> None:
         text_style = self._extract_cell_style(table.cell(start_row, col_idx))
-        index_style = self._extract_cell_style(table.cell(start_row, col_idx - 1)) if col_idx > 0 else None
 
         available = len(table.rows) - start_row
         if len(values) > available:
@@ -74,8 +82,6 @@ class VerificationPlanFiller(TemplateFillerStrategy):
         for offset, value in enumerate(values):
             row_idx = start_row + offset
             self._set_cell_value(table.cell(row_idx, col_idx), value, text_style)
-            if col_idx > 0:
-                self._set_cell_value(table.cell(row_idx, col_idx - 1), str(offset + 1), index_style)
 
     # ------------------------------------------------------------------
     # 兜底占位符替换（正文 + 表格 + 页眉页脚）
@@ -235,13 +241,24 @@ class VerificationPlanFiller(TemplateFillerStrategy):
 
     def _flatten_parameters(self, parameters: Dict[str, Any]) -> Dict[str, str]:
         flat: Dict[str, str] = {}
+        list_fields = {"test_names", "requirements_and_standards"}
         for key, value in parameters.items():
-            if key == "test_names":
+            if key in list_fields:
                 continue
-            if isinstance(value, (str, int, float)):
-                flat[key] = str(value)
-            elif isinstance(value, dict):
+            if isinstance(value, dict):
                 for sub_key, sub_val in value.items():
                     if isinstance(sub_val, (str, int, float)):
-                        flat[sub_key] = str(sub_val)
+                        if isinstance(sub_val, str) and sub_val.strip() == "":
+                            flat[sub_key] = self._missing_text()
+                        else:
+                            flat[sub_key] = str(sub_val)
+                    elif sub_val is None:
+                        flat[sub_key] = self._missing_text()
+            elif isinstance(value, (str, int, float)):
+                if isinstance(value, str) and value.strip() == "":
+                    flat[key] = self._missing_text()
+                else:
+                    flat[key] = str(value)
+            elif value is None:
+                flat[key] = self._missing_text()
         return flat
