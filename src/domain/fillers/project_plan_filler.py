@@ -8,9 +8,9 @@ from typing import Any, Dict, List, Tuple
 
 from docx import Document
 from docx.oxml.ns import qn
-from docx.shared import Pt
+from docx.shared import Pt, RGBColor
 
-from src.infrastructure.template_service import TemplateFillerStrategy, WORD_FILLED_TEXT_COLOR
+from src.infrastructure.template_service import TemplateFillerStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -158,7 +158,7 @@ class ProjectPlanFiller(TemplateFillerStrategy):
         if not paragraph.runs:
             paragraph.text = ideal_text
             for run in paragraph.runs:
-                run.font.color.rgb = WORD_FILLED_TEXT_COLOR
+                run.font.color.rgb = RGBColor(115, 159, 215)
             return
 
         font = self._extract_run_font_from_run(paragraph.runs[0])
@@ -183,7 +183,7 @@ class ProjectPlanFiller(TemplateFillerStrategy):
             new_run = paragraph.add_run(text)
             self._apply_font(new_run, font)
             if is_filled:
-                new_run.font.color.rgb = WORD_FILLED_TEXT_COLOR
+                new_run.font.color.rgb = RGBColor(115, 159, 215)
 
     # ------------------------------------------------------------------
     # 单元格写值
@@ -199,7 +199,7 @@ class ProjectPlanFiller(TemplateFillerStrategy):
                 run.clear()
             new_run = paragraph.add_run(text)
             self._apply_font(new_run, style)
-            new_run.font.color.rgb = WORD_FILLED_TEXT_COLOR
+            new_run.font.color.rgb = RGBColor(115, 159, 215)
             if style.get("alignment") is not None:
                 paragraph.alignment = style["alignment"]
         else:
@@ -210,7 +210,7 @@ class ProjectPlanFiller(TemplateFillerStrategy):
                     p.alignment = style["alignment"]
                 if p.runs:
                     self._apply_font(p.runs[0], style)
-                    p.runs[0].font.color.rgb = WORD_FILLED_TEXT_COLOR
+                    p.runs[0].font.color.rgb = RGBColor(115, 159, 215)
 
     # ------------------------------------------------------------------
     # 行操作
