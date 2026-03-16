@@ -1,7 +1,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List, Optional
 
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Font, Border, PatternFill, Protection, Side
@@ -85,7 +85,13 @@ class DHFIndexFiller(ExcelTemplateFiller):
         if not current_height or current_height < row_height:
             worksheet.row_dimensions[row].height = row_height
     
-    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+    def fill_template(
+        self,
+        template_path: Path,
+        parameters: Dict[str, Any],
+        output_path: Path,
+        language: Optional[str] = None,
+    ) -> bool:
         """
         填充DHF INDEX模板
         
@@ -100,6 +106,9 @@ class DHFIndexFiller(ExcelTemplateFiller):
         non_empty_fields = [k for k, v in parameters.items() if v]
         logger.info("[DHFIndexFiller] 填充字段: %s", non_empty_fields)
         try:
+            # 设置语言（用于空值兜底）
+            self._set_language(language)
+
             # 加载模板文件
             workbook = load_workbook(template_path, data_only=False, keep_vba=False)
             worksheet = workbook.active
@@ -138,18 +147,31 @@ class DHFIndexFiller(ExcelTemplateFiller):
 
     def _fill_basic_info(self, worksheet, parameters: Dict[str, Any]):
         """填充基本信息到C3-C7单元格"""
+        # 获取空值兜底文本
+        missing_text = self._missing_text()
+
         # theme_no: 填充到C3单元格
         if 'theme_no' in parameters and parameters['theme_no']:
             cell_c3 = worksheet['C3']
             cell_c3.value = str(parameters['theme_no'])
             self._apply_filled_background(cell_c3)
-        
+        else:
+            # 空值时填充默认值
+            cell_c3 = worksheet['C3']
+            cell_c3.value = missing_text
+            self._apply_filled_background(cell_c3)
+
         # theme_name: 填充到C4单元格
         if 'theme_name' in parameters and parameters['theme_name']:
             cell_c4 = worksheet['C4']
             cell_c4.value = str(parameters['theme_name'])
             self._apply_filled_background(cell_c4)
-        
+        else:
+            # 空值时填充默认值
+            cell_c4 = worksheet['C4']
+            cell_c4.value = missing_text
+            self._apply_filled_background(cell_c4)
+
         # product_model: 填充到C5单元格，保留原始值，自适应行高
         if 'product_model' in parameters and parameters['product_model']:
             product_model = str(parameters['product_model'])
@@ -170,7 +192,12 @@ class DHFIndexFiller(ExcelTemplateFiller):
                 cell_c5.alignment = Alignment(wrap_text=True)
             # 根据文本长度自适应调整行高
             self._adjust_row_height_for_text(worksheet, cell_c5.row, product_model)
-        
+        else:
+            # 空值时填充默认值
+            cell_c5 = worksheet['C5']
+            cell_c5.value = missing_text
+            self._apply_filled_background(cell_c5)
+
         # sales_name: 填充到C6单元格，保留原始值，自适应行高
         if 'sales_name' in parameters and parameters['sales_name']:
             sales_name = str(parameters['sales_name'])
@@ -191,7 +218,12 @@ class DHFIndexFiller(ExcelTemplateFiller):
                 cell_c6.alignment = Alignment(wrap_text=True)
             # 根据文本长度自适应调整行高
             self._adjust_row_height_for_text(worksheet, cell_c6.row, sales_name)
-        
+        else:
+            # 空值时填充默认值
+            cell_c6 = worksheet['C6']
+            cell_c6.value = missing_text
+            self._apply_filled_background(cell_c6)
+
         # stage: 拼接到C7单元格内容的后面
         if 'stage' in parameters and parameters['stage']:
             cell_c7 = worksheet['C7']
@@ -307,22 +339,21 @@ class DHFIndexFiller(ExcelTemplateFiller):
         file_list = parameters['file_list']
         
         def _normalize_name(name: str) -> str:
-            """归一化名称：去除首尾空白，并将连续空白折叠为单个空格。"""
+            """归一化名称：去除首尾空白/空字符，并将连续空白折叠为单个空格。"""
             if not name:
                 return ""
             # 兼容全角空格等
             name = name.replace("\u3000", " ")
+            # 兼容零宽空格/BOM 等不可见“空字符”
+            name = name.replace("\u200b", "").replace("\ufeff", "")
             name = re.sub(r"\s+", " ", name).strip()
             return name
 
         def _extract_b_title(cell_text: str) -> str:
-            """提取B列括号前的标题文本（兼容中英文括号）。"""
+            """提取B列用于匹配的文本：去掉首尾空白和空字符后做全量匹配。"""
             if not cell_text:
                 return ""
-            cell_text = str(cell_text)
-            # 只取第一个中文/英文左括号之前的部分
-            title = re.split(r"[（(]", cell_text, maxsplit=1)[0]
-            return _normalize_name(title)
+            return _normalize_name(str(cell_text))
 
         # 按“别名(由short_name按|拆分)”分组聚合
         # key为拆分后的单个名称，value为列表，每个元素是(file_number, stage)元组

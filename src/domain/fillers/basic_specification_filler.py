@@ -1,7 +1,7 @@
 import ast
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import io
 import re
@@ -50,8 +50,16 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         "durability",
     }
 
-    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+
+    def fill_template(
+        self,
+        template_path: Path,
+        parameters: Dict[str, Any],
+        output_path: Path,
+        language: Optional[str] = None,
+    ) -> bool:
         """填充基本规格书模板"""
+        self._set_language(language)
         non_empty_fields = [k for k, v in parameters.items() if v]
         logger.info("[BasicSpecificationFiller] 填充字段: %s", non_empty_fields)
         try:
@@ -146,7 +154,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                             markdown_text = str(value or "").strip()
                             
                             # 如果值是默认文本，跳过表格检测
-                            if markdown_text and markdown_text != "AI未检索到，需人工确认":
+                            if markdown_text and not self._is_missing_text(markdown_text):
                                 if self._is_markdown_table(markdown_text):
                                     # 是表格，插入表格
                                     logger.info(f"在表格单元格中检测到 markdown 表格字段: {key}")
@@ -256,8 +264,8 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                     markdown_text = str(value or "").strip()
                     
                     # 如果为空，使用默认文本
-                    if not markdown_text or markdown_text == "AI未检索到，需人工确认":
-                        markdown_text = "AI未检索到，需人工确认"
+                    if self._is_missing_text(markdown_text):
+                        markdown_text = self._missing_text()
                         # 默认文本按普通文本处理
                         insert_idx = parent.index(parent_element)
                         parent.remove(parent_element)
@@ -294,7 +302,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                     markdown_text = str(value or "").strip()
                     
                     # 如果包含 markdown 格式（列表、加粗等），需要特殊处理
-                    if markdown_text and markdown_text != "AI未检索到，需人工确认":
+                    if markdown_text and not self._is_missing_text(markdown_text):
                         # 检查是否包含 markdown 列表或其他格式
                         if self._contains_markdown_formatting(markdown_text):
                             # 对于非独占一行的占位符，如果包含 markdown 格式，需要替换整个段落
@@ -1234,7 +1242,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         
         # 对于其他字段，如果值为空，返回默认文本
         if value is None or (isinstance(value, str) and value.strip() == ""):
-            return "AI未检索到，需人工确认"
+            return self._missing_text()
         return value
 
     def _flatten_parameters(self, parameters: Dict[str, Any]) -> Dict[str, str]:
@@ -1252,21 +1260,21 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                     if isinstance(sub_val, (str, int, float)):
                         # 如果值为空字符串，使用默认文本
                         if isinstance(sub_val, str) and sub_val.strip() == "":
-                            flat[sub_key] = "AI未检索到，需人工确认"
+                            flat[sub_key] = self._missing_text()
                         else:
                             flat[sub_key] = str(sub_val)
                     elif sub_val is None:
                         # 如果值为 None，使用默认文本
-                        flat[sub_key] = "AI未检索到，需人工确认"
+                        flat[sub_key] = self._missing_text()
             elif isinstance(value, (str, int, float)):
                 # 如果值为空字符串，使用默认文本
                 if isinstance(value, str) and value.strip() == "":
-                    flat[key] = "AI未检索到，需人工确认"
+                    flat[key] = self._missing_text()
                 else:
                     flat[key] = str(value)
             elif value is None:
                 # 如果值为 None，使用默认文本
-                flat[key] = "AI未检索到，需人工确认"
+                flat[key] = self._missing_text()
         return flat
 
     def _clear_cell(self, cell) -> None:

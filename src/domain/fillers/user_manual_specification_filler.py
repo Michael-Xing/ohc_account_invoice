@@ -3,17 +3,32 @@
 import logging
 import re
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List, Optional
 from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
 
 from src.infrastructure.template_service import ExcelTemplateFiller
 
 logger = logging.getLogger(__name__)
 
+
 class UserManualSpecificationFiller(ExcelTemplateFiller):
     """使用说明书仕样书填充器"""
 
-    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+    # 填充器写入/修改过的单元格背景色：RGB(115,159,215) -> HEX 0x739FD7
+    _FILLED_BG_COLOR = "FF739FD7"  # ARGB format
+
+    def _apply_filled_background(self, cell) -> None:
+        """将单元格背景色设置为填充高亮色"""
+        cell.fill = PatternFill(fill_type="solid", fgColor=self._FILLED_BG_COLOR)
+
+    def fill_template(
+        self,
+        template_path: Path,
+        parameters: Dict[str, Any],
+        output_path: Path,
+        language: Optional[str] = None,
+    ) -> bool:
         """
         填充使用说明书仕样书模板
 
@@ -30,6 +45,9 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
         try:
             workbook = load_workbook(template_path)
             worksheet = workbook.active
+
+            # 设置语言（用于空值兜底）
+            self._set_language(language)
 
             # 填充字段
             self._fill_fields(worksheet, parameters)
@@ -48,21 +66,40 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
 
     def _fill_fields(self, worksheet, parameters: Dict[str, Any]):
         """填充字段到指定单元格"""
+        # 获取空值兜底文本
+        missing_text = self._missing_text()
+
         # theme_no 填入 B19 单元格
         if 'theme_no' in parameters and parameters['theme_no']:
             worksheet['B19'].value = str(parameters['theme_no'])
+            self._apply_filled_background(worksheet['B19'])
+        else:
+            worksheet['B19'].value = missing_text
+            self._apply_filled_background(worksheet['B19'])
 
         # theme_name 填入 D19 单元格
         if 'theme_name' in parameters and parameters['theme_name']:
             worksheet['D19'].value = str(parameters['theme_name'])
+            self._apply_filled_background(worksheet['D19'])
+        else:
+            worksheet['D19'].value = missing_text
+            self._apply_filled_background(worksheet['D19'])
 
         # product_model_name 填入 J19 单元格
         if 'product_model_name' in parameters and parameters['product_model_name']:
             worksheet['J19'].value = str(parameters['product_model_name'])
+            self._apply_filled_background(worksheet['J19'])
+        else:
+            worksheet['J19'].value = missing_text
+            self._apply_filled_background(worksheet['J19'])
 
         # sales_name 填入 B21 单元格
         if 'sales_name' in parameters and parameters['sales_name']:
             worksheet['B21'].value = str(parameters['sales_name'])
+            self._apply_filled_background(worksheet['B21'])
+        else:
+            worksheet['B21'].value = missing_text
+            self._apply_filled_background(worksheet['B21'])
 
         related_file_info: List[Dict[str, Any]] = parameters.get('related_file_info', [])
         if related_file_info:
@@ -74,8 +111,13 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
                     break
                 key = str(cell_value).strip()
                 if key in mapping:
-                    worksheet.cell(row=row, column=4).value = str(mapping[key]['file_number'])  # D列
-                    worksheet.cell(row=row, column=7).value = str(mapping[key]['version'])  # G列
+                    cell_d = worksheet.cell(row=row, column=4)
+                    cell_d.value = str(mapping[key]['file_number'])  # D列
+                    self._apply_filled_background(cell_d)
+
+                    cell_g = worksheet.cell(row=row, column=7)
+                    cell_g.value = str(mapping[key]['version'])  # G列
+                    self._apply_filled_background(cell_g)
                 row += 1
 
 

@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Alignment
@@ -27,8 +27,17 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         """将单元格背景色设置为填充高亮色。"""
         cell.fill = PatternFill(fill_type="solid", fgColor=self._FILLED_BG_COLOR)
 
-    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+    def fill_template(
+        self,
+        template_path: Path,
+        parameters: Dict[str, Any],
+        output_path: Path,
+        language: Optional[str] = None,
+    ) -> bool:
         try:
+            # 设置语言（用于空值兜底）
+            self._set_language(language)
+
             workbook = load_workbook(template_path)
             worksheet = workbook.active
 
@@ -50,6 +59,9 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
             return False
 
     def _fill_fields(self, worksheet, parameters: Dict[str, Any]) -> None:
+        # 获取空值兜底文本
+        missing_text = self._missing_text()
+
         # 1) 基础字段：只写值，不动样式
         mapping = {
             "test_name": "D3",  # 合并后单元格 D3
@@ -64,24 +76,28 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
             val = parameters.get(key, "")
             if val is None:
                 val = ""
-            # 允许传入空字符串：保持原内容（不覆盖）还是覆盖为空？
-            # 需求：默认值为空字符串，但未明确是否要清空模板默认内容。
-            # 为避免误伤模板原有内容，这里仅在非空时写入。
-            if str(val) != "":
+            # 空值时填充默认值
+            if str(val) == "":
+                cell = worksheet[addr]
+                cell.value = missing_text
+                self._apply_filled_background(cell)
+            else:
                 cell = worksheet[addr]
                 cell.value = str(val)
                 self._apply_filled_background(cell)
 
         # 2) 长文本：需要左上对齐 + 行首缩进两个字符（Excel 缩进）
+        test_purpose = parameters.get("test_purpose")
         self._set_text_block(
             worksheet=worksheet,
             cell_addr="C37",
-            text=str(parameters.get("test_purpose") or ""),
+            text=str(test_purpose) if test_purpose else missing_text,
         )
+        test_conditions = parameters.get("test_conditions")
         self._set_text_block(
             worksheet=worksheet,
             cell_addr="C44",
-            text=str(parameters.get("test_conditions") or ""),
+            text=str(test_conditions) if test_conditions else missing_text,
         )
 
     def _set_text_block(self, worksheet, cell_addr: str, text: str) -> None:
