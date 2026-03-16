@@ -532,7 +532,6 @@ dependencies = [
     { name = "minio" },
     { name = "openpyxl" },
     { name = "pillow" },
-    { name = "pillow" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "python-docx" },

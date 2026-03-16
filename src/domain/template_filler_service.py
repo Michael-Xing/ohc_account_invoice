@@ -18,6 +18,7 @@ from src.domain.fillers.labeling_specification_filter import LabelingSpecificati
 from src.domain.fillers.packaging_design_specification_filler import PackagingDesignSpecificationFiller
 from src.domain.fillers.project_plan_filler import ProjectPlanFiller
 from src.domain.fillers.user_manual_specification_filler import UserManualSpecificationFiller
+from src.domain.fillers.individual_test_spec_filler import IndividualTestSpecFiller
 from src.domain.fillers.verification_plan_filler import VerificationPlanFiller
 
 # ... 其他填充器为简洁起见省略；原始实现已保留在代码库中 ...
@@ -176,6 +177,9 @@ class TemplateService:
         "PACKAGING_DESIGN_SPECIFICATION": PackagingDesignSpecificationFiller(),
         "USER_MANUAL_SPECIFICATION": UserManualSpecificationFiller(),
         "PROJECT_PLAN": ProjectPlanFiller(),
+        # 个别试验要项书（ES/PP）共用同一套 Excel 布局，使用同一个专用填充器
+        "ES_INDIVIDUAL_TEST_SPEC": IndividualTestSpecFiller(),
+        "PP_INDIVIDUAL_TEST_SPEC": IndividualTestSpecFiller(),
         # 其他模板使用默认策略
     }
 
@@ -267,13 +271,25 @@ class TemplateService:
         
         return None
 
-    def fill_excel_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+    def fill_excel_template(
+        self,
+        template_path: Path,
+        parameters: Dict[str, Any],
+        output_path: Path,
+        language: Optional[str] = None,
+    ) -> bool:
         filler = ExcelTemplateFiller()
-        return filler.fill_template(template_path, parameters, output_path)
+        return filler.fill_template(template_path, parameters, output_path, language)
 
-    def fill_word_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+    def fill_word_template(
+        self,
+        template_path: Path,
+        parameters: Dict[str, Any],
+        output_path: Path,
+        language: Optional[str] = None,
+    ) -> bool:
         filler = WordTemplateFiller()
-        return filler.fill_template(template_path, parameters, output_path)
+        return filler.fill_template(template_path, parameters, output_path, language)
 
     def generate_document(self, template_name: str, parameters: Dict[str, Any], output_path: Path, language: Optional[str] = None) -> bool:
         if not self.validate_template_name(template_name):
@@ -288,7 +304,7 @@ class TemplateService:
         # 自动检测文件类型（先尝试excel，再尝试word）
         template_path = self.get_template_path(template_name, None, language)
         if template_path:
-            return filler.fill_template(template_path, parameters, output_path)
+            return filler.fill_template(template_path, parameters, output_path, language)
         return False
 
     def _generate_with_default_strategy(self, template_name: str, parameters: Dict[str, Any], 
@@ -300,9 +316,9 @@ class TemplateService:
         
         # 根据文件扩展名选择填充器
         if template_path.suffix == ".xlsx":
-            return self.fill_excel_template(template_path, parameters, output_path)
+            return self.fill_excel_template(template_path, parameters, output_path, language)
         elif template_path.suffix == ".docx":
-            return self.fill_word_template(template_path, parameters, output_path)
+            return self.fill_word_template(template_path, parameters, output_path, language)
         return False
 
     def get_template_info(self, template_name: str, language: Optional[str] = None) -> Optional[Dict[str, Any]]:

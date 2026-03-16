@@ -66,7 +66,15 @@ class PTFIndexParameters(BaseTemplateParameters):
 
 class ESIndividualTestSpecParameters(BaseTemplateParameters):
     """ES个别试验要项书参数"""
-    test_item: str = Field(default="", description="试验项目")
+    # NOTE: `IndividualTestSpecFiller` expects these 8 keys.
+    test_name: str = Field(default="", description="试验名称/试验项目（模板 D3）")
+    test_number: str = Field(default="", description="试验编号（模板 K3）")
+    theme_no: str = Field(default="", description="主题No（模板 D5）")
+    product_model: str = Field(default="", description="产品型号（模板 K5）")
+    meas_temperature: str = Field(default="", description="测定温度（模板 L8）")
+    meas_humidity: str = Field(default="", description="测定湿度（模板 N8）")
+    test_purpose: str = Field(default="", description="试验目的（模板 C37）")
+    test_conditions: str = Field(default="", description="试验条件（模板 C44）")
 
 
 class ESIndividualTestResultParameters(BaseTemplateParameters):
@@ -224,7 +232,14 @@ class BasicSpecificationParameters(BaseTemplateParameters):
 
 class PPIndividualTestSpecParameters(BaseTemplateParameters):
     """PP个别试验要项书参数"""
-    test_purpose: str = Field(default="", description="试验目的")
+    test_name: str = Field(default="", description="试验名称/试验项目（模板 D3）")
+    test_number: str = Field(default="", description="试验编号（模板 K3）")
+    theme_no: str = Field(default="", description="主题No（模板 D5）")
+    product_model: str = Field(default="", description="产品型号（模板 K5）")
+    meas_temperature: str = Field(default="", description="测定温度（模板 L8）")
+    meas_humidity: str = Field(default="", description="测定湿度（模板 N8）")
+    test_purpose: str = Field(default="", description="试验目的（模板 C37）")
+    test_conditions: str = Field(default="", description="试验条件（模板 C44）")
 
 
 class FollowUpDRMinutesParameters(BaseTemplateParameters):
@@ -238,6 +253,7 @@ class LabelingSpecificationParameters(BaseTemplateParameters):
     theme_no: str = Field(default="", description="项目NO，填入D5单元格")
     theme_name: str = Field(default="", description="项目名称，填入M5单元格")
     product_model_name: str = Field(default="", description="商品型式名，填入D7单元格")
+    representative_model: str = Field(default="", description="代表型号，填入G11单元格")
     product_model: str = Field(default="", description="商品型式，填充到E17单元格")
     product_name: str = Field(default="", description="商品名，拼接到I8单元格内容后面")
     sales_name: str = Field(default="", description="贩卖名称，填充到E19单元格")

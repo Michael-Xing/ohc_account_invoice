@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List, Optional
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment, Border, PatternFill, Side
 from openpyxl.utils import get_column_letter, range_boundaries
@@ -14,8 +14,18 @@ logger = logging.getLogger(__name__)
 
 class ProductEnvironmentAssessmentFiller(ExcelTemplateFiller):
     """产品环境评估要项书/结果书填充器"""
+
+    # 填充器写入/修改过的单元格背景色：RGB(115,159,215) -> HEX 0x739FD7
+    _FILLED_CELL_BG_COLOR = "FF739FD7"  # openpyxl 使用 ARGB
+    _FILLED_CELL_FILL = PatternFill(fill_type="solid", fgColor=_FILLED_CELL_BG_COLOR)
     
-    def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path) -> bool:
+    def fill_template(
+        self,
+        template_path: Path,
+        parameters: Dict[str, Any],
+        output_path: Path,
+        language: Optional[str] = None,
+    ) -> bool:
         """
         填充产品环境评估要项书/结果书模板
         
@@ -30,12 +40,15 @@ class ProductEnvironmentAssessmentFiller(ExcelTemplateFiller):
         non_empty_fields = [k for k, v in parameters.items() if v]
         logger.info("[ProductEnvironmentAssessmentFiller] 填充字段: %s", non_empty_fields)
         try:
+            # 设置语言（用于空值兜底）
+            self._set_language(language)
+
             workbook = load_workbook(template_path)
             worksheet = workbook.active
-            
+
             # 1. 填充简单拼接字段
             self._fill_simple_fields(worksheet, parameters)
-            
+
             # 2. 填充表格数据
             self._fill_table_data(worksheet, parameters)
             
@@ -43,13 +56,28 @@ class ProductEnvironmentAssessmentFiller(ExcelTemplateFiller):
             for row in worksheet.iter_rows():
                 for cell in row:
                     if cell.value and isinstance(cell.value, str):
-                        cell.value = self._replace_placeholders(cell.value, parameters)
+                        original_value = cell.value
+                        replaced_value = self._replace_placeholders(original_value, parameters)
+                        if replaced_value != original_value:
+                            cell.value = replaced_value
+                            self._apply_filled_background_to_cell(cell)
             
             workbook.save(output_path)
             return True
         except Exception as e:
             logger.error("产品环境评估模板填充失败: %s", str(e), exc_info=True)
             return False
+
+    def _apply_filled_background_to_cell(self, cell) -> None:
+        """将单元格标记为“已填充”，设置背景色。"""
+        cell.fill = self._FILLED_CELL_FILL
+
+    def _apply_filled_background_to_range(self, worksheet, cell_range: str) -> None:
+        """将一个区域内的所有单元格标记为“已填充”，设置背景色。"""
+        min_col, min_row, max_col, max_row = range_boundaries(cell_range)
+        for r in range(min_row, max_row + 1):
+            for c in range(min_col, max_col + 1):
+                self._apply_filled_background_to_cell(worksheet.cell(r, c))
     
     def _fill_simple_fields(self, worksheet, parameters: Dict[str, Any]):
         """填充简单拼接字段"""
@@ -58,24 +86,28 @@ class ProductEnvironmentAssessmentFiller(ExcelTemplateFiller):
             cell_b5 = worksheet['B5']
             original_value = cell_b5.value or ''
             cell_b5.value = str(original_value) + str(parameters['theme_no'])
+            self._apply_filled_background_to_cell(cell_b5)
         
         # product_model_name 拼接到 B7 单元格内容后面
         if 'product_model_name' in parameters and parameters['product_model_name']:
             cell_b7 = worksheet['B7']
             original_value = cell_b7.value or ''
             cell_b7.value = str(original_value) + str(parameters['product_model_name'])
+            self._apply_filled_background_to_cell(cell_b7)
         
         # product_name 拼接到 I5 单元格内容后面
         if 'product_name' in parameters and parameters['product_name']:
             cell_i5 = worksheet['I5']
             original_value = cell_i5.value or ''
             cell_i5.value = str(original_value) + str(parameters['product_name'])
+            self._apply_filled_background_to_cell(cell_i5)
         
         # production_area 拼接到 I6 单元格内容后面
         if 'production_area' in parameters and parameters['production_area']:
             cell_i6 = worksheet['I6']
             original_value = cell_i6.value or ''
             cell_i6.value = str(original_value) + str(parameters['production_area'])
+            self._apply_filled_background_to_cell(cell_i6)
     
     def _fill_table_data(self, worksheet, parameters: Dict[str, Any]):
         """
@@ -161,6 +193,7 @@ class ProductEnvironmentAssessmentFiller(ExcelTemplateFiller):
             merge_range_bc = f'B{current_row}:C{current_row}'
             worksheet.merge_cells(merge_range_bc)
             self._apply_merged_cell_style(worksheet, merge_range_bc, header_style)
+            self._apply_filled_background_to_range(worksheet, merge_range_bc)
             
             # 字段2：D～H合并，product_model填充
             cell_d = worksheet.cell(current_row, 4)  # D列
@@ -168,6 +201,7 @@ class ProductEnvironmentAssessmentFiller(ExcelTemplateFiller):
             merge_range_dh = f'D{current_row}:H{current_row}'
             worksheet.merge_cells(merge_range_dh)
             self._apply_merged_cell_style(worksheet, merge_range_dh, header_style)
+            self._apply_filled_background_to_range(worksheet, merge_range_dh)
             
             # 字段3：I～J合并，sales_name填充
             cell_i = worksheet.cell(current_row, 9)  # I列
@@ -175,6 +209,7 @@ class ProductEnvironmentAssessmentFiller(ExcelTemplateFiller):
             merge_range_ij = f'I{current_row}:J{current_row}'
             worksheet.merge_cells(merge_range_ij)
             self._apply_merged_cell_style(worksheet, merge_range_ij, header_style)
+            self._apply_filled_background_to_range(worksheet, merge_range_ij)
             
             # 字段4：K～M合并，target_area填充
             cell_k = worksheet.cell(current_row, 11)  # K列
@@ -182,6 +217,7 @@ class ProductEnvironmentAssessmentFiller(ExcelTemplateFiller):
             merge_range_km = f'K{current_row}:M{current_row}'
             worksheet.merge_cells(merge_range_km)
             self._apply_merged_cell_style(worksheet, merge_range_km, header_style)
+            self._apply_filled_background_to_range(worksheet, merge_range_km)
             
             # 设置行高
             if row_height:
