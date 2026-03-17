@@ -113,19 +113,25 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
             self._apply_filled_background(worksheet['C23'])
 
         related_file_info: List[Dict[str, Any]] = parameters.get('related_file_info', [])
-        if related_file_info:
-            mapping = {item['short_name']: item for item in related_file_info}
-            row = 27
-            while True:
-                cell_value = worksheet.cell(row=row, column=2).value  # B列
-                if cell_value is None or str(cell_value).strip() == '':
-                    break
-                key = str(cell_value).strip()
-                if key in mapping:
-                    cell_e = worksheet.cell(row=row, column=5)
-                    cell_e.value = str(mapping[key]['file_number'])  # E列
-                    self._apply_filled_background(cell_e)
-                row += 1
+        mapping: Dict[str, Dict[str, Any]] = {}
+        for item in related_file_info:
+            for name in str(item.get('short_name', '')).split('|'):
+                name = name.strip()
+                if name:
+                    mapping[name] = item
+        row = 27
+        while True:
+            cell_value = worksheet.cell(row=row, column=2).value  # B列
+            if cell_value is None or str(cell_value).strip() == '':
+                break
+            key = str(cell_value).strip()
+            cell_e = worksheet.cell(row=row, column=5)
+            if key in mapping:
+                cell_e.value = str(mapping[key]['file_number'])  # E列
+            else:
+                cell_e.value = missing_text
+            self._apply_filled_background(cell_e)
+            row += 1
 
 
 

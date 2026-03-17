@@ -102,22 +102,28 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
             self._apply_filled_background(worksheet['B21'])
 
         related_file_info: List[Dict[str, Any]] = parameters.get('related_file_info', [])
-        if related_file_info:
-            mapping = {item['short_name']: item for item in related_file_info}
-            row = 25
-            while True:
-                cell_value = worksheet.cell(row=row, column=1).value  # A列
-                if cell_value is None or str(cell_value).strip() == '':
-                    break
-                key = str(cell_value).strip()
-                if key in mapping:
-                    cell_d = worksheet.cell(row=row, column=4)
-                    cell_d.value = str(mapping[key]['file_number'])  # D列
-                    self._apply_filled_background(cell_d)
-
-                    cell_g = worksheet.cell(row=row, column=7)
-                    cell_g.value = str(mapping[key]['version'])  # G列
-                    self._apply_filled_background(cell_g)
-                row += 1
+        mapping: Dict[str, Dict[str, Any]] = {}
+        for item in related_file_info:
+            for name in str(item.get('short_name', '')).split('|'):
+                name = name.strip()
+                if name:
+                    mapping[name] = item
+        row = 25
+        while True:
+            cell_value = worksheet.cell(row=row, column=1).value  # A列
+            if cell_value is None or str(cell_value).strip() == '':
+                break
+            key = str(cell_value).strip()
+            cell_d = worksheet.cell(row=row, column=4)
+            cell_g = worksheet.cell(row=row, column=7)
+            if key in mapping:
+                cell_d.value = str(mapping[key]['file_number'])  # D列
+                cell_g.value = str(mapping[key]['version'])  # G列
+            else:
+                cell_d.value = missing_text
+                cell_g.value = missing_text
+            self._apply_filled_background(cell_d)
+            self._apply_filled_background(cell_g)
+            row += 1
 
 
