@@ -137,9 +137,8 @@ class LabelingSpecificationFiller(ExcelTemplateFiller):
 
         # sales_channel 填入 E21 单元格
         if 'sales_channel' in parameters and parameters['sales_channel']:
-            if str(parameters['sales_channel']).strip() == "医療機関":
                 worksheet['G21'].value = "400-889-0089"
-            else:
+        else:
                 worksheet['G21'].value = "400-770-9988"
 
         worksheet['G25'].value = "注册证编号/产品技术要求编号"

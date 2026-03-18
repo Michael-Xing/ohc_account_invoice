@@ -22,6 +22,29 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
         """将单元格背景色设置为填充高亮色"""
         cell.fill = PatternFill(fill_type="solid", fgColor=self._FILLED_BG_COLOR)
 
+    def _extract_stage_order(self, stage: Any) -> int:
+        """提取阶段中的 DR 数字，未匹配时返回 -1。"""
+        match = re.search(r"DR\s*(\d+)", str(stage or ""), re.IGNORECASE)
+        return int(match.group(1)) if match else -1
+
+    def _build_related_file_mapping(
+        self, related_file_info: List[Dict[str, Any]]
+    ) -> Dict[str, Dict[str, Any]]:
+        """按 short_name 聚合，保留 DR 数字最大的记录。"""
+        mapping: Dict[str, Dict[str, Any]] = {}
+        for item in related_file_info:
+            key = str(item.get("short_name", "")).strip()
+            if not key:
+                continue
+
+            current_item = mapping.get(key)
+            if current_item is None or self._extract_stage_order(
+                item.get("stage")
+            ) >= self._extract_stage_order(current_item.get("stage")):
+                mapping[key] = item
+
+        return mapping
+
     def fill_template(
         self,
         template_path: Path,
@@ -102,12 +125,7 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
             self._apply_filled_background(worksheet['B21'])
 
         related_file_info: List[Dict[str, Any]] = parameters.get('related_file_info', [])
-        mapping: Dict[str, Dict[str, Any]] = {}
-        for item in related_file_info:
-            for name in str(item.get('short_name', '')).split('|'):
-                name = name.strip()
-                if name:
-                    mapping[name] = item
+        mapping = self._build_related_file_mapping(related_file_info)
         row = 25
         while True:
             cell_value = worksheet.cell(row=row, column=1).value  # A列
