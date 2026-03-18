@@ -49,9 +49,9 @@ class DHFIndexFiller(ExcelTemplateFiller):
         if cell.font and cell.font.size:
             font_size = cell.font.size
         
-        # 估算每行可容纳的字符数（考虑中文字符占2个位置）
-        # 简化处理：假设平均每个字符占1.5个位置（中英文混合）
-        chars_per_line = int(column_width * 1.5)
+        # 估算每行可容纳的字符数（考虑中文字符占2个位置，英文占1个位置）
+        # 使用保守估计：中英文混合时平均每字符占1.7个位置
+        chars_per_line = int(column_width * 1.7)
         if chars_per_line <= 0:
             chars_per_line = 15  # 默认值
         
@@ -72,12 +72,13 @@ class DHFIndexFiller(ExcelTemplateFiller):
             total_lines = 1
         
         # 计算行高（点）
-        # 行高 = 行数 * 字体大小 * 行距系数（1.2-1.5之间，留出一些余量）
-        row_height = total_lines * font_size * 1.3
+        # 行高 = 行数 * 字体大小 * 行距系数
+        # 增加系数到1.5，确保内容不会被遮盖
+        row_height = total_lines * font_size * 1.5
         
         # 设置最小和最大行高限制
         min_height = font_size * 1.2  # 最小行高
-        max_height = font_size * 20   # 最大行高（防止过高）
+        max_height = font_size * 25   # 最大行高（防止过高）
         row_height = max(min_height, min(row_height, max_height))
         
         # 设置行高（如果当前行高小于计算出的行高，则更新）
