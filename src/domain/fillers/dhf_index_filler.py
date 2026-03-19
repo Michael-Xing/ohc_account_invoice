@@ -228,8 +228,12 @@ class DHFIndexFiller(ExcelTemplateFiller):
         # stage: 拼接到C7单元格内容的后面
         if 'stage' in parameters and parameters['stage']:
             cell_c7 = worksheet['C7']
-            original_value = cell_c7.value or ''
-            cell_c7.value = str(original_value) + str(parameters['stage'])
+            cell_c7.value = str(parameters['stage'])
+            self._apply_filled_background(cell_c7)
+        else:
+            # 空值时填充默认值
+            cell_c7 = worksheet['C7']
+            cell_c7.value = missing_text
             self._apply_filled_background(cell_c7)
 
     def _get_merged_cell_top_left(self, worksheet, row, col):
