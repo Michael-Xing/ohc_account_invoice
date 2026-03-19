@@ -5,8 +5,7 @@ from src.application.generate_service import generate_document_internal
 from src.interfaces.schemas import (
     DHFIndexParameters, PTFIndexParameters, ESIndividualTestSpecParameters,
     ESIndividualTestResultParameters, PPIndividualTestResultParameters,
-    ESVerificationPlanParameters, ESVerificationResultParameters,
-    PPVerificationPlanParameters, PPVerificationResultParameters,
+    VerificationPlanParameters, VerificationResultParameters,
     BasicSpecificationParameters, PPIndividualTestSpecParameters,
     FollowUpDRMinutesParameters, LabelingSpecificationParameters,
     ProductEnvironmentAssessmentParameters, ExistingProductComparisonParameters,
@@ -16,6 +15,17 @@ from src.interfaces.schemas import (
 from src.interfaces.schemas import GenerateDocumentResponse, GenerateDocumentRequest
 
 router = APIRouter(prefix="", tags=["generate"])
+
+
+def _generate_verification_document(
+    parameters: VerificationPlanParameters | VerificationResultParameters,
+) -> GenerateDocumentResponse:
+    params_dict = parameters.model_dump()
+    language = params_dict.pop("language", None) or None
+    phase = params_dict.pop("phase")
+    document_kind = str(params_dict.pop("document_kind")).upper()
+    template_name = f"{phase}_VERIFICATION_{document_kind}"
+    return GenerateDocumentResponse(**generate_document_internal(template_name, params_dict, language))
 
 
 @router.post("/generate", response_model=GenerateDocumentResponse, summary="生成文档", description="生成账票文档（通用接口）")
@@ -59,32 +69,9 @@ async def generate_pp_individual_test_result(parameters: PPIndividualTestResultP
     return GenerateDocumentResponse(**generate_document_internal("PP_INDIVIDUAL_TEST_RESULT", params_dict, language))
 
 
-@router.post("/generate/es-verification-plan", response_model=GenerateDocumentResponse, summary="生成ES验证计划书", description="生成ES验证计划书")
-async def generate_es_verification_plan(parameters: ESVerificationPlanParameters):
-    params_dict = parameters.model_dump()
-    language = params_dict.pop("language", None) or None
-    return GenerateDocumentResponse(**generate_document_internal("ES_VERIFICATION_PLAN", params_dict, language))
-
-
-@router.post("/generate/es-verification-result", response_model=GenerateDocumentResponse, summary="生成ES验证结果书", description="生成ES验证结果书")
-async def generate_es_verification_result(parameters: ESVerificationResultParameters):
-    params_dict = parameters.model_dump()
-    language = params_dict.pop("language", None) or None
-    return GenerateDocumentResponse(**generate_document_internal("ES_VERIFICATION_RESULT", params_dict, language))
-
-
-@router.post("/generate/pp-verification-plan", response_model=GenerateDocumentResponse, summary="生成PP验证计划书", description="生成PP验证计划书")
-async def generate_pp_verification_plan(parameters: PPVerificationPlanParameters):
-    params_dict = parameters.model_dump()
-    language = params_dict.pop("language", None) or None
-    return GenerateDocumentResponse(**generate_document_internal("PP_VERIFICATION_PLAN", params_dict, language))
-
-
-@router.post("/generate/pp-verification-result", response_model=GenerateDocumentResponse, summary="生成PP验证结果书", description="生成PP验证结果书")
-async def generate_pp_verification_result(parameters: PPVerificationResultParameters):
-    params_dict = parameters.model_dump()
-    language = params_dict.pop("language", None) or None
-    return GenerateDocumentResponse(**generate_document_internal("PP_VERIFICATION_RESULT", params_dict, language))
+@router.post("/generate/verification", response_model=GenerateDocumentResponse, summary="生成验证计划书/结果书", description="统一生成ES/PP验证计划书或验证结果书")
+async def generate_verification(parameters: VerificationPlanParameters | VerificationResultParameters):
+    return _generate_verification_document(parameters)
 
 
 @router.post("/generate/basic-specification", response_model=GenerateDocumentResponse, summary="生成基本规格书", description="生成基本规格书")
