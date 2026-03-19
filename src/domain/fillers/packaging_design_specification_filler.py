@@ -2,6 +2,7 @@
 
 import logging
 import re
+from copy import copy
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from openpyxl import load_workbook
@@ -29,19 +30,22 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
 
     def _build_related_file_mapping(
         self, related_file_info: List[Dict[str, Any]]
-    ) -> Dict[str, Dict[str, Any]]:
-        """按 short_name 聚合，保留 DR 数字最大的记录。"""
-        mapping: Dict[str, Dict[str, Any]] = {}
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """按 short_name 聚合，保留该名称下的全部记录。"""
+        mapping: Dict[str, List[Dict[str, Any]]] = {}
         for item in related_file_info:
             key = str(item.get("short_name", "")).strip()
             if not key:
                 continue
 
-            current_item = mapping.get(key)
-            if current_item is None or self._extract_stage_order(
-                item.get("stage")
-            ) >= self._extract_stage_order(current_item.get("stage")):
-                mapping[key] = item
+            mapping.setdefault(key, []).append(item)
+
+        for key, items in mapping.items():
+            mapping[key] = sorted(
+                items,
+                key=lambda item: self._extract_stage_order(item.get("stage")),
+                reverse=True,
+            )
 
         return mapping
 
@@ -145,7 +149,12 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
             key = str(cell_value).strip()
             cell_e = worksheet.cell(row=row, column=5)
             if key in mapping:
-                cell_e.value = str(mapping[key]['file_number'])  # E列
+                cell_e.value = "\n".join(
+                    str(item.get("file_number") or missing_text) for item in mapping[key]
+                )
+                alignment = copy(cell_e.alignment)
+                alignment.wrap_text = True
+                cell_e.alignment = alignment
             else:
                 cell_e.value = missing_text
             self._apply_filled_background(cell_e)

@@ -166,7 +166,3 @@ class LabelingSpecificationFiller(ExcelTemplateFiller):
         else:
             worksheet['G18'].value = missing_text
         self._apply_filled_background(worksheet['G18'])
-
-        # C11~C26 为"项目项名称"列，设置背景色
-        for r in range(11, 27):
-            self._apply_filled_background(worksheet[f"C{r}"])

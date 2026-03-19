@@ -2,6 +2,7 @@
 
 import logging
 import re
+from copy import copy
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from openpyxl import load_workbook
@@ -29,19 +30,22 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
 
     def _build_related_file_mapping(
         self, related_file_info: List[Dict[str, Any]]
-    ) -> Dict[str, Dict[str, Any]]:
-        """按 short_name 聚合，保留 DR 数字最大的记录。"""
-        mapping: Dict[str, Dict[str, Any]] = {}
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """按 short_name 聚合，保留该名称下的全部记录。"""
+        mapping: Dict[str, List[Dict[str, Any]]] = {}
         for item in related_file_info:
             key = str(item.get("short_name", "")).strip()
             if not key:
                 continue
 
-            current_item = mapping.get(key)
-            if current_item is None or self._extract_stage_order(
-                item.get("stage")
-            ) >= self._extract_stage_order(current_item.get("stage")):
-                mapping[key] = item
+            mapping.setdefault(key, []).append(item)
+
+        for key, items in mapping.items():
+            mapping[key] = sorted(
+                items,
+                key=lambda item: self._extract_stage_order(item.get("stage")),
+                reverse=True,
+            )
 
         return mapping
 
@@ -135,8 +139,19 @@ class UserManualSpecificationFiller(ExcelTemplateFiller):
             cell_d = worksheet.cell(row=row, column=4)
             cell_g = worksheet.cell(row=row, column=7)
             if key in mapping:
-                cell_d.value = str(mapping[key]['file_number'])  # D列
-                cell_g.value = str(mapping[key]['version'])  # G列
+                items = mapping[key]
+                cell_d.value = "\n".join(
+                    str(item.get("file_number") or missing_text) for item in items
+                )
+                cell_g.value = "\n".join(
+                    str(item.get("version") or missing_text) for item in items
+                )
+                alignment_d = copy(cell_d.alignment)
+                alignment_d.wrap_text = True
+                cell_d.alignment = alignment_d
+                alignment_g = copy(cell_g.alignment)
+                alignment_g.wrap_text = True
+                cell_g.alignment = alignment_g
             else:
                 cell_d.value = missing_text
                 cell_g.value = missing_text
