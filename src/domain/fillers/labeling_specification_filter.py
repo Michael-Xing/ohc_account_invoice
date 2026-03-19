@@ -137,9 +137,8 @@ class LabelingSpecificationFiller(ExcelTemplateFiller):
 
         # sales_channel 填入 E21 单元格
         if 'sales_channel' in parameters and parameters['sales_channel']:
-            if str(parameters['sales_channel']).strip() == "医療機関":
                 worksheet['G21'].value = "400-889-0089"
-            else:
+        else:
                 worksheet['G21'].value = "400-770-9988"
 
         worksheet['G25'].value = "注册证编号/产品技术要求编号"
@@ -167,7 +166,3 @@ class LabelingSpecificationFiller(ExcelTemplateFiller):
         else:
             worksheet['G18'].value = missing_text
         self._apply_filled_background(worksheet['G18'])
-
-        # C11~C26 为"项目项名称"列，设置背景色
-        for r in range(11, 27):
-            self._apply_filled_background(worksheet[f"C{r}"])

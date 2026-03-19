@@ -2,6 +2,7 @@
 
 import logging
 import re
+from copy import copy
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from openpyxl import load_workbook
@@ -21,6 +22,32 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
     def _apply_filled_background(self, cell) -> None:
         """将单元格背景色设置为填充高亮色"""
         cell.fill = PatternFill(fill_type="solid", fgColor=self._FILLED_BG_COLOR)
+
+    def _extract_stage_order(self, stage: Any) -> int:
+        """提取阶段中的 DR 数字，未匹配时返回 -1。"""
+        match = re.search(r"DR\s*(\d+)", str(stage or ""), re.IGNORECASE)
+        return int(match.group(1)) if match else -1
+
+    def _build_related_file_mapping(
+        self, related_file_info: List[Dict[str, Any]]
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """按 short_name 聚合，保留该名称下的全部记录。"""
+        mapping: Dict[str, List[Dict[str, Any]]] = {}
+        for item in related_file_info:
+            key = str(item.get("short_name", "")).strip()
+            if not key:
+                continue
+
+            mapping.setdefault(key, []).append(item)
+
+        for key, items in mapping.items():
+            mapping[key] = sorted(
+                items,
+                key=lambda item: self._extract_stage_order(item.get("stage")),
+                reverse=True,
+            )
+
+        return mapping
 
     def fill_template(
         self,
@@ -113,12 +140,7 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
             self._apply_filled_background(worksheet['C23'])
 
         related_file_info: List[Dict[str, Any]] = parameters.get('related_file_info', [])
-        mapping: Dict[str, Dict[str, Any]] = {}
-        for item in related_file_info:
-            for name in str(item.get('short_name', '')).split('|'):
-                name = name.strip()
-                if name:
-                    mapping[name] = item
+        mapping = self._build_related_file_mapping(related_file_info)
         row = 27
         while True:
             cell_value = worksheet.cell(row=row, column=2).value  # B列
@@ -127,7 +149,12 @@ class PackagingDesignSpecificationFiller(ExcelTemplateFiller):
             key = str(cell_value).strip()
             cell_e = worksheet.cell(row=row, column=5)
             if key in mapping:
-                cell_e.value = str(mapping[key]['file_number'])  # E列
+                cell_e.value = "\n".join(
+                    str(item.get("file_number") or missing_text) for item in mapping[key]
+                )
+                alignment = copy(cell_e.alignment)
+                alignment.wrap_text = True
+                cell_e.alignment = alignment
             else:
                 cell_e.value = missing_text
             self._apply_filled_background(cell_e)
