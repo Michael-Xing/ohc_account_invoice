@@ -154,6 +154,10 @@ class BasicSpecificationParameters(BaseTemplateParameters):
     theme_no: str = Field(default="", description="项目NO")  # 项目编号
     production_area: str = Field(default="", description="生产地")  # 生产地
 
+    # 参考文件和适用范围
+    reference_document: str = Field(default="", description="参考文件")  # 参考文件
+    scope: str = Field(default="", description="适用范围")  # 适用范围
+
     # 术语定义（Markdown表格）
     definition_term_table: str = Field(default="", description="术语定义，Markdown表格，需转换为Word表格")  # 术语定义表格
 
