@@ -48,7 +48,7 @@ async def generate_ptf_index(parameters: PTFIndexParameters):
     return GenerateDocumentResponse(**generate_document_internal("PTF_INDEX", params_dict, language))
 
 
-@router.post("/generate/es-individual-test-spec", response_model=GenerateDocumentResponse, summary="生成ES个别试验要项书", description="生成ES个别试验要项书")
+@router.post("/generate/individual-test", response_model=GenerateDocumentResponse, summary="生成个别试验书", description="个别试验书")
 async def generate_es_individual_test_spec(parameters: ESIndividualTestSpecParameters):
     params_dict = parameters.model_dump()
     language = params_dict.pop("language", None) or None
