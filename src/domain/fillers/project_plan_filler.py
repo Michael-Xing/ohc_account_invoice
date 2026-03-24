@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from docx import Document
+from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
 
@@ -18,30 +19,19 @@ logger = logging.getLogger(__name__)
 class ProjectPlanFiller(TemplateFillerStrategy):
     """项目计划书专用填充器（docx）"""
 
-    LIST_FIELDS = (
-        "function",
-        "responsibility",
-        "management_object",
-        "department",
-        "department_input",
-    )
+    MARKDOWN_TABLE_FIELDS = {"function_module"}
 
     def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path, language: Optional[str] = None) -> bool:
-        """填充项目计划书模板（占位符 + 表格列数组填充）"""
+        """填充项目计划书模板（简单占位符替换）"""
         self._set_language(language)
         non_empty_fields = [k for k, v in parameters.items() if v]
         logger.info("[ProjectPlanFiller] 填充字段: %s", non_empty_fields)
         try:
             doc = Document(template_path)
 
-            list_values = self._collect_list_values(parameters)
-            if any(list_values.values()):
-                self._fill_list_columns(doc, list_values)
+            self._process_markdown_table_fields(doc, parameters)
 
             flat_parameters = self._flatten_parameters(parameters)
-            for field, values in list_values.items():
-                if not values:
-                    flat_parameters[field] = self._missing_text()
             self._fallback_text_replace(doc, flat_parameters)
 
             doc.save(output_path)
@@ -51,71 +41,282 @@ class ProjectPlanFiller(TemplateFillerStrategy):
             return False
 
     # ------------------------------------------------------------------
-    # 列表字段（数组）→ 表格列填充
+    # Markdown 混合内容字段处理（文本 + 表格）
     # ------------------------------------------------------------------
 
-    def _collect_list_values(self, parameters: Dict[str, Any]) -> Dict[str, List[str]]:
-        out: Dict[str, List[str]] = {}
-        for field in self.LIST_FIELDS:
-            out[field] = self._normalize_list(parameters.get(field))
-        return out
+    def _process_markdown_table_fields(self, doc: Document, parameters: Dict[str, Any]) -> None:
+        """扫描段落和表格单元格，将 MARKDOWN_TABLE_FIELDS 中的占位符替换为混合内容"""
+        for field in self.MARKDOWN_TABLE_FIELDS:
+            placeholder = f"{{{{{field}}}}}"
+            md_text = str(parameters.get(field) or "").strip()
+            if not md_text:
+                continue
 
-    def _normalize_list(self, value: Any) -> List[str]:
-        if value is None:
+            parts = self._parse_mixed_markdown(md_text)
+            if not parts:
+                continue
+
+            for paragraph in list(doc.paragraphs):
+                if placeholder in paragraph.text:
+                    parent = paragraph._element.getparent()
+                    idx = list(parent).index(paragraph._element)
+                    parent.remove(paragraph._element)
+                    self._render_mixed_at_position(doc, parent, idx, parts)
+                    break
+            else:
+                for table in doc.tables:
+                    found = False
+                    for row in table.rows:
+                        for cell in row.cells:
+                            if placeholder in (cell.text or ""):
+                                self._clear_cell(cell)
+                                self._render_mixed_into_cell(doc, cell, parts)
+                                found = True
+                                break
+                        if found:
+                            break
+                    if found:
+                        break
+
+    # ------------------------------------------------------------------
+    # 混合 Markdown 解析
+    # ------------------------------------------------------------------
+
+    def _parse_mixed_markdown(self, markdown_text: str) -> List[Dict[str, Any]]:
+        """将 markdown 文本拆分为 text / table 片段列表"""
+        if not markdown_text:
             return []
-        if isinstance(value, list):
-            return [str(item).strip() for item in value if str(item).strip()]
-        if isinstance(value, str):
-            text = value.strip()
-            return [text] if text else []
-        return []
 
-    def _fill_list_columns(self, doc: Document, list_values: Dict[str, List[str]]) -> None:
-        found_any = False
-        for table in doc.tables:
-            anchors = self._find_list_anchors(table)
-            if not anchors:
+        lines = markdown_text.splitlines()
+        parts: List[Dict[str, Any]] = []
+        text_buf: List[str] = []
+        i = 0
+
+        while i < len(lines):
+            line_stripped = lines[i].strip()
+
+            if i + 1 < len(lines):
+                next_stripped = lines[i + 1].strip()
+                if ("|" in line_stripped and "|" in next_stripped
+                        and re.search(r'[-:]+', next_stripped)):
+                    if text_buf:
+                        joined = "\n".join(text_buf)
+                        if joined.strip():
+                            parts.append({"type": "text", "content": joined})
+                        text_buf = []
+
+                    table_lines = [lines[i], lines[i + 1]]
+                    i += 2
+                    while i < len(lines):
+                        cur_stripped = lines[i].strip()
+                        if not cur_stripped:
+                            if i + 1 < len(lines) and "|" in lines[i + 1].strip():
+                                table_lines.append(lines[i])
+                                i += 1
+                                continue
+                            break
+                        if "|" in cur_stripped:
+                            table_lines.append(lines[i])
+                            i += 1
+                        else:
+                            break
+
+                    parts.append({"type": "table", "content": "\n".join(table_lines)})
+                    continue
+
+            text_buf.append(lines[i])
+            i += 1
+
+        if text_buf:
+            joined = "\n".join(text_buf)
+            if joined.strip():
+                parts.append({"type": "text", "content": joined})
+
+        return parts
+
+    # ------------------------------------------------------------------
+    # 混合内容渲染
+    # ------------------------------------------------------------------
+
+    def _render_mixed_at_position(self, doc: Document, parent, insert_idx: int,
+                                  parts: List[Dict[str, Any]]) -> None:
+        """在文档块级位置依次渲染 text/table 片段"""
+        cur = insert_idx
+        for part in parts:
+            if part["type"] == "table":
+                headers, rows = self._parse_markdown_table(part["content"])
+                if headers:
+                    self._insert_md_table_at(doc, parent, cur, headers, rows)
+                    cur += 1
+            else:
+                elements = self._render_text_to_elements(doc, part["content"])
+                for el in elements:
+                    parent.insert(cur, el)
+                    cur += 1
+
+    def _render_mixed_into_cell(self, doc: Document, cell,
+                                parts: List[Dict[str, Any]]) -> None:
+        """在单元格内依次渲染 text/table 片段"""
+        for part in parts:
+            if part["type"] == "table":
+                headers, rows = self._parse_markdown_table(part["content"])
+                if headers:
+                    self._insert_md_table_into_cell(cell, headers, rows)
+            else:
+                for raw_line in part["content"].splitlines():
+                    line = raw_line.strip()
+                    if not line:
+                        continue
+                    p = cell.add_paragraph("")
+                    self._append_markdown_inline(p, line)
+
+    # ------------------------------------------------------------------
+    # Markdown 表格解析与插入
+    # ------------------------------------------------------------------
+
+    def _parse_markdown_table(self, markdown_text: str) -> Tuple[List[str], List[List[str]]]:
+        lines = [line.strip() for line in markdown_text.splitlines() if line.strip()]
+        if len(lines) < 2:
+            return [], []
+        header_line = lines[0]
+        separator_line = lines[1]
+        if "|" not in header_line or "|" not in separator_line:
+            return [], []
+        headers = [c.strip() for c in header_line.strip("|").split("|")]
+        rows: List[List[str]] = []
+        for line in lines[2:]:
+            if "|" not in line:
                 continue
-            found_any = True
+            cells = [c.strip() for c in line.strip("|").split("|")]
+            if len(cells) < len(headers):
+                cells.extend([""] * (len(headers) - len(cells)))
+            elif len(cells) > len(headers):
+                cells = cells[:len(headers)]
+            rows.append(cells)
+        return headers, rows
 
-            anchor_styles: Dict[str, Dict] = {}
-            for field, (row_idx, col_idx) in anchors.items():
-                anchor_styles[field] = self._extract_cell_style(table.cell(row_idx, col_idx))
+    def _insert_md_table_at(self, doc: Document, parent, insert_idx: int,
+                            headers: List[str], rows: List[List[str]]) -> None:
+        tbl = doc.add_table(rows=1 + len(rows), cols=len(headers))
+        for i, h in enumerate(headers):
+            run = tbl.rows[0].cells[i].paragraphs[0].add_run(h)
+            self._apply_table_font(run, bold=True)
+        self._apply_header_row_style(tbl.rows[0])
+        for r_idx, vals in enumerate(rows, start=1):
+            for c_idx, val in enumerate(vals):
+                self._append_markdown_inline(tbl.rows[r_idx].cells[c_idx].paragraphs[0], val)
+        self._apply_table_border(tbl)
+        parent.insert(insert_idx, tbl._element)
 
-            found_fields = list(anchors.keys())
-            max_len = max((len(list_values.get(f, [])) for f in found_fields), default=0)
+    def _insert_md_table_into_cell(self, cell,
+                                   headers: List[str], rows: List[List[str]]) -> None:
+        tbl = cell.add_table(rows=1 + len(rows), cols=len(headers))
+        for i, h in enumerate(headers):
+            run = tbl.rows[0].cells[i].paragraphs[0].add_run(h)
+            self._apply_table_font(run, bold=True)
+        self._apply_header_row_style(tbl.rows[0])
+        for r_idx, vals in enumerate(rows, start=1):
+            for c_idx, val in enumerate(vals):
+                self._append_markdown_inline(tbl.rows[r_idx].cells[c_idx].paragraphs[0], val)
+        self._apply_table_border(tbl)
 
-            if max_len == 0:
-                for field, (row_idx, col_idx) in anchors.items():
-                    self._set_cell_value(table.cell(row_idx, col_idx), "", anchor_styles.get(field))
+    # ------------------------------------------------------------------
+    # 文本渲染
+    # ------------------------------------------------------------------
+
+    def _render_text_to_elements(self, doc: Document, text: str) -> List:
+        """将文本内容渲染为段落元素列表，支持标题/列表/加粗"""
+        elements = []
+        for raw_line in text.splitlines():
+            line = raw_line.rstrip()
+            if not line:
+                p = doc.add_paragraph("")
+                elements.append(p._element)
                 continue
 
-            max_anchor_row = max(r for r, _ in anchors.values())
-            required_rows = max_anchor_row + max_len
-            while len(table.rows) < required_rows:
-                self._clone_last_row(table)
+            if line.startswith("#"):
+                level = len(line) - len(line.lstrip("#"))
+                content = line[level:].strip()
+                p = doc.add_paragraph("")
+                style_name = f"Heading {level}"
+                if style_name in doc.styles:
+                    p.style = doc.styles[style_name]
+                self._append_markdown_inline(p, content)
+                elements.append(p._element)
+                continue
 
-            for field in found_fields:
-                values = list_values.get(field, [])
-                anchor_row, col_idx = anchors[field]
-                style = anchor_styles.get(field)
-                for offset in range(max_len):
-                    value = values[offset] if offset < len(values) else ""
-                    self._set_cell_value(table.cell(anchor_row + offset, col_idx), value, style)
+            if re.match(r"^[-*]\s+", line):
+                content = re.sub(r"^[-*]\s+", "", line)
+                p = doc.add_paragraph(style="List Bullet" if "List Bullet" in doc.styles else None)
+                self._append_markdown_inline(p, content)
+                elements.append(p._element)
+                continue
 
-        if not found_any:
-            logger.warning("[ProjectPlanFiller] 未找到数组列占位符，跳过列表字段填充")
+            if re.match(r"^\d+\.\s+", line):
+                content = re.sub(r"^\d+\.\s+", "", line)
+                p = doc.add_paragraph(style="List Number" if "List Number" in doc.styles else None)
+                self._append_markdown_inline(p, content)
+                elements.append(p._element)
+                continue
 
-    def _find_list_anchors(self, table) -> Dict[str, Tuple[int, int]]:
-        anchors: Dict[str, Tuple[int, int]] = {}
-        placeholders = {f: "{{" + f + "}}" for f in self.LIST_FIELDS}
-        for row_idx, row in enumerate(table.rows):
-            for col_idx, cell in enumerate(row.cells):
-                text = cell.text or ""
-                for field, ph in placeholders.items():
-                    if field not in anchors and ph in text:
-                        anchors[field] = (row_idx, col_idx)
-        return anchors
+            p = doc.add_paragraph("")
+            self._append_markdown_inline(p, line)
+            elements.append(p._element)
+
+        return elements
+
+    def _append_markdown_inline(self, paragraph, text: str) -> None:
+        """处理行内 markdown（**加粗**）"""
+        pos = 0
+        for match in re.finditer(r"\*\*(.+?)\*\*", text):
+            if match.start() > pos:
+                run = paragraph.add_run(text[pos:match.start()])
+                self._apply_table_font(run)
+            run = paragraph.add_run(match.group(1))
+            self._apply_table_font(run, bold=True)
+            pos = match.end()
+        if pos < len(text):
+            run = paragraph.add_run(text[pos:])
+            self._apply_table_font(run)
+
+    # ------------------------------------------------------------------
+    # 单元格/样式工具
+    # ------------------------------------------------------------------
+
+    def _clear_cell(self, cell) -> None:
+        cell.text = ""
+        for para in list(cell.paragraphs):
+            p_el = para._element
+            p_el.getparent().remove(p_el)
+        cell.add_paragraph("")
+
+    def _apply_table_font(self, run, bold: bool = False) -> None:
+        run.font.name = "微软雅黑"
+        run._element.rPr.rFonts.set(qn("w:eastAsia"), "微软雅黑")
+        run.font.size = Pt(10)
+        run.font.color.rgb = RGBColor(115, 159, 215)
+        run.font.bold = bold
+
+    def _apply_header_row_style(self, row) -> None:
+        for cell in row.cells:
+            shading = OxmlElement("w:shd")
+            shading.set(qn("w:fill"), "D9D9D9")
+            cell._tc.get_or_add_tcPr().append(shading)
+
+    def _apply_table_border(self, table) -> None:
+        tbl_pr = table._element.tblPr
+        if tbl_pr is None:
+            tbl_pr = OxmlElement("w:tblPr")
+            table._element.insert(0, tbl_pr)
+        borders = OxmlElement("w:tblBorders")
+        for name in ("top", "left", "bottom", "right", "insideH", "insideV"):
+            b = OxmlElement(f"w:{name}")
+            b.set(qn("w:val"), "single")
+            b.set(qn("w:sz"), "4")
+            b.set(qn("w:space"), "0")
+            b.set(qn("w:color"), "000000")
+            borders.append(b)
+        tbl_pr.append(borders)
 
     # ------------------------------------------------------------------
     # 兜底占位符替换（正文 + 表格 + 页眉页脚）
@@ -159,14 +360,6 @@ class ProjectPlanFiller(TemplateFillerStrategy):
             r"\{\{(" + "|".join(re.escape(k) for k in flat_parameters) + r")\}\}"
         )
 
-        if not paragraph.runs:
-            paragraph.text = ideal_text
-            for run in paragraph.runs:
-                run.font.color.rgb = RGBColor(115, 159, 215)
-            return
-
-        font = self._extract_run_font_from_run(paragraph.runs[0])
-
         # 对整段拼合文本做拆分，确保跨 run 场景也能精确定位
         parts = placeholder_re.split(full_text)
         # parts: [普通文字, key, 普通文字, key, ...]
@@ -179,6 +372,8 @@ class ProjectPlanFiller(TemplateFillerStrategy):
                 value = flat_parameters.get(part, "")
                 if value:
                     segments.append((value, True))
+
+        font = self._extract_run_font_from_run(paragraph.runs[0]) if paragraph.runs else {}
 
         for run in list(paragraph.runs):
             run.clear()
@@ -258,7 +453,7 @@ class ProjectPlanFiller(TemplateFillerStrategy):
         return props
 
     def _apply_font(self, run, font: Dict = None) -> None:
-        """统一设置 run 字体（字形相关），不主动修改颜色"""
+        """统一设置 run 字体，并尽量恢复原有显式颜色"""
         if not font:
             return
         if font.get("name"):
@@ -270,6 +465,10 @@ class ProjectPlanFiller(TemplateFillerStrategy):
             run.font.bold = bool(font["bold"])
         if font.get("italic") is not None:
             run.font.italic = bool(font["italic"])
+        if font.get("color_rgb") is not None:
+            run.font.color.rgb = font["color_rgb"]
+        elif font.get("color_theme") is not None:
+            run.font.color.theme_color = font["color_theme"]
 
     # ------------------------------------------------------------------
     # 参数工具
@@ -277,9 +476,8 @@ class ProjectPlanFiller(TemplateFillerStrategy):
 
     def _flatten_parameters(self, parameters: Dict[str, Any]) -> Dict[str, str]:
         flat: Dict[str, str] = {}
-        list_fields = set(self.LIST_FIELDS)
         for key, value in parameters.items():
-            if key in list_fields:
+            if key in self.MARKDOWN_TABLE_FIELDS:
                 continue
             if isinstance(value, dict):
                 for sub_key, sub_val in value.items():

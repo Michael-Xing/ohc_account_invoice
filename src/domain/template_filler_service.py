@@ -20,6 +20,7 @@ from src.domain.fillers.project_plan_filler import ProjectPlanFiller
 from src.domain.fillers.user_manual_specification_filler import UserManualSpecificationFiller
 from src.domain.fillers.individual_test_spec_filler import IndividualTestSpecFiller
 from src.domain.fillers.verification_plan_filler import VerificationPlanFiller
+from src.domain.fillers.ptf_index_filler import PTFIndexFiller
 
 # ... 其他填充器为简洁起见省略；原始实现已保留在代码库中 ...
 
@@ -169,6 +170,7 @@ class TemplateService:
 
     TEMPLATE_FILLER_MAPPING = {
         "DHF_INDEX": DHFIndexFiller(),
+        "PTF_INDEX": PTFIndexFiller(),
         "PRODUCT_ENVIRONMENT_ASSESSMENT": ProductEnvironmentAssessmentFiller(),
         "BASIC_SPECIFICATION": BasicSpecificationFiller(),
         "ES_VERIFICATION_PLAN": VerificationPlanFiller(),

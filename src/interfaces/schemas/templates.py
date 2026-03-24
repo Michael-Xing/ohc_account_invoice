@@ -60,8 +60,10 @@ class DHFIndexParameters(BaseTemplateParameters):
 
 
 class PTFIndexParameters(BaseTemplateParameters):
-    """PTF INDEX（`static/templates/excel/zh/PTF INDEX.xlsx`）参数"""
-    pass
+    """PTF INDEX参数"""
+    target_area: str = Field(default="", description="贩卖国家，多个值用半角逗号连接")
+    file_numbers: List[str] = Field(default_factory=list, description="文件编号列表，按顺序依次填充到模板对应行")
+
 
 
 class ESIndividualTestSpecParameters(BaseTemplateParameters):
@@ -105,6 +107,7 @@ class VerificationPlanParameters(BaseVerificationParameters):
     environment_temperature: str = Field(default="", description="环境温度")
     relative_humidity: str = Field(default="", description="相对湿度")
     test_voltage: str = Field(default="", description="试验电压")
+    test_numbers: List[str] = Field(default_factory=list, description="试验编号列表，按表格列向下填充")
     test_names: List[str] = Field(default_factory=list, description="试验名称列表，按表格列向下填充")
     requirements_and_standards: List[str] = Field(default_factory=list, description="适用标准/试验标准列表，按表格列向下填充")
 
@@ -251,7 +254,7 @@ class LabelingSpecificationParameters(BaseTemplateParameters):
     product_name: str = Field(default="", description="商品名，拼接到I8单元格内容后面")
     sales_name: str = Field(default="", description="贩卖名称，填充到E19单元格")
     production_area: str = Field(default="", description="生产地，如果=OMD则填固定值到E22，否则空白")
-    ohc_target: str = Field(default="", description="是否是OHC 向け，如果=True则填固定值到E24，否则空白")
+    target_area: str = Field(default="", description="贩卖国家，多个值用半角逗号连接，包含OHC时填固定值到G19和G26")
     sales_channel: str = Field(default="", description="販売チャネル，填固定值到E26，贩卖渠道只有“医療機関”时→ 400-889-0089,多种贩卖渠道时→ 400-770-9988")
     stage: str = Field(default="", description="阶段")
     related_file_info: List[FileListItem] = Field(default_factory=list, description="关联文件列表")
@@ -304,9 +307,33 @@ class UserManualSpecificationParameters(BaseTemplateParameters):
 
 class ProjectPlanParameters(BaseTemplateParameters):
     """项目计划书参数"""
-    project_scope: str = Field(default="", description="项目范围")
-    project_timeline: str = Field(default="", description="项目时间线")
-
     theme_no: str = Field(default="", description="项目NO")
     theme_name: str = Field(default="", description="项目名称")
     product_model_name: str = Field(default="", description="商品型式名")
+    sales_name: str = Field(default="", description="贩卖名称")
+    target: str = Field(default="", description="商品目标")
+    differentiation: str = Field(default="", description="差异化")
+    design: str = Field(default="", description="设计一览")
+    # product_requirement: str = Field(default="", description="产品要件书")
+    issue_result: str = Field(default="", description="课题分析·对策结果书")
+    document_drawing_no: str = Field(default="", description="文件·图纸编号")
+    document_drawing_rev: str = Field(default="", description="文件·图纸版本")
+    software: str = Field(default="", description="软件开发计划书")
+    function_module: str = Field(default="")
+    p_plan: str = Field(default="")
+    equipment_plan: str = Field(default="")
+    engineering_plan: str = Field(default="")
+    customer_service: str = Field(default="")
+    approval_plan: str = Field(default="")
+    risk_management: str = Field(default="")
+    es_verification_plan: str = Field(default="")
+    es_verification_result: str = Field(default="")
+    igs: str = Field(default="")
+    qc_engineering: str = Field(default="")
+    new_product_confirmation: str = Field(default="", description="新商品开发确认书")
+    requirement_spec: str = Field(default="", description="要求仕样书")
+    product_design_spec: str = Field(default="", description="产品设计仕样书")
+    schedule: str = Field(default="", description="日程表")
+    doc_record_list: str = Field(default="", description="作成文件·记录一览表")
+    target_fc: str = Field(default="", description="开发目标FC")
+    color_instruction_record: str = Field(default="", description="颜色指示相关记录")
