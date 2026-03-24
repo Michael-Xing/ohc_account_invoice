@@ -28,7 +28,7 @@ def test_generate_document_e2e(monkeypatch, tmp_path):
         def get_supported_templates(self):
             return {"TEST": "Test Template"}
 
-        def get_template_info(self, name, language=None):
+        def get_template_info(self, name, parameters=None, language=None):
             return {"name": "TEST", "display_name": "Test Template", "available_formats": ["xlsx"]}
         
         def validate_template_name(self, name):

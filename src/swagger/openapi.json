@@ -239,19 +239,19 @@
         }
       }
     },
-    "/generate/es-individual-test-spec": {
+    "/generate/individual-test-spec": {
       "post": {
         "tags": [
           "generate"
         ],
-        "summary": "生成ES个别试验要项书",
-        "description": "生成ES个别试验要项书",
-        "operationId": "generate_es_individual_test_spec_generate_es_individual_test_spec_post",
+        "summary": "生成个别试验要项书",
+        "description": "生成个别试验要项书",
+        "operationId": "generate_individual_test_spec_generate_individual_test_spec_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ESIndividualTestSpecParameters"
+                "$ref": "#/components/schemas/IndividualTestSpecParameters"
               }
             }
           },
@@ -281,19 +281,19 @@
         }
       }
     },
-    "/generate/es-individual-test-result": {
+    "/generate/individual-test-result": {
       "post": {
         "tags": [
           "generate"
         ],
-        "summary": "生成ES个别试验结果书",
-        "description": "生成ES个别试验结果书",
-        "operationId": "generate_es_individual_test_result_generate_es_individual_test_result_post",
+        "summary": "生成个别试验结果书",
+        "description": "生成个别试验结果书",
+        "operationId": "generate_individual_test_result_generate_individual_test_result_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ESIndividualTestResultParameters"
+                "$ref": "#/components/schemas/IndividualTestResultParameters"
               }
             }
           },
@@ -323,19 +323,19 @@
         }
       }
     },
-    "/generate/pp-individual-test-result": {
+    "/generate/verification-plan": {
       "post": {
         "tags": [
           "generate"
         ],
-        "summary": "生成PP个别试验结果书",
-        "description": "生成PP个别试验结果书",
-        "operationId": "generate_pp_individual_test_result_generate_pp_individual_test_result_post",
+        "summary": "生成验证计划书",
+        "description": "生成ES/PP验证计划书",
+        "operationId": "generate_verification_plan_generate_verification_plan_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PPIndividualTestResultParameters"
+                "$ref": "#/components/schemas/VerificationPlanParameters"
               }
             }
           },
@@ -365,145 +365,19 @@
         }
       }
     },
-    "/generate/es-verification-plan": {
+    "/generate/verification-result": {
       "post": {
         "tags": [
           "generate"
         ],
-        "summary": "生成ES验证计划书",
-        "description": "生成ES验证计划书",
-        "operationId": "generate_es_verification_plan_generate_es_verification_plan_post",
+        "summary": "生成验证结果书",
+        "description": "生成ES/PP验证结果书",
+        "operationId": "generate_verification_result_generate_verification_result_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ESVerificationPlanParameters"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GenerateDocumentResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/generate/es-verification-result": {
-      "post": {
-        "tags": [
-          "generate"
-        ],
-        "summary": "生成ES验证结果书",
-        "description": "生成ES验证结果书",
-        "operationId": "generate_es_verification_result_generate_es_verification_result_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ESVerificationResultParameters"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GenerateDocumentResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/generate/pp-verification-plan": {
-      "post": {
-        "tags": [
-          "generate"
-        ],
-        "summary": "生成PP验证计划书",
-        "description": "生成PP验证计划书",
-        "operationId": "generate_pp_verification_plan_generate_pp_verification_plan_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PPVerificationPlanParameters"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GenerateDocumentResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/generate/pp-verification-result": {
-      "post": {
-        "tags": [
-          "generate"
-        ],
-        "summary": "生成PP验证结果书",
-        "description": "生成PP验证结果书",
-        "operationId": "generate_pp_verification_result_generate_pp_verification_result_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PPVerificationResultParameters"
+                "$ref": "#/components/schemas/VerificationResultParameters"
               }
             }
           },
@@ -546,48 +420,6 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/BasicSpecificationParameters"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GenerateDocumentResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/generate/pp-individual-test-spec": {
-      "post": {
-        "tags": [
-          "generate"
-        ],
-        "summary": "生成PP个别试验要项书",
-        "description": "生成PP个别试验要项书",
-        "operationId": "generate_pp_individual_test_spec_generate_pp_individual_test_spec_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PPIndividualTestSpecParameters"
               }
             }
           },
@@ -1041,89 +873,46 @@
       "BasicSpecificationParameters": {
         "properties": {
           "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Project Number",
-            "description": "项目编号"
+            "description": "项目编号",
+            "default": ""
           },
           "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Version",
-            "description": "版本号"
+            "description": "版本号",
+            "default": ""
           },
           "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Date",
-            "description": "日期"
+            "description": "日期",
+            "default": ""
           },
           "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
           "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Document Type",
-            "description": "文档类型"
+            "description": "文档类型",
+            "default": ""
           },
           "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Department",
-            "description": "部门"
+            "description": "部门",
+            "default": ""
           },
           "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
+            "default": ""
           },
           "product_model": {
             "type": "string",
@@ -1149,6 +938,18 @@
             "description": "生产地",
             "default": ""
           },
+          "reference_document": {
+            "type": "string",
+            "title": "Reference Document",
+            "description": "参考文件",
+            "default": ""
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "description": "适用范围",
+            "default": ""
+          },
           "definition_term_table": {
             "type": "string",
             "title": "Definition Term Table",
@@ -1165,6 +966,12 @@
             "type": "string",
             "title": "Intended Patients",
             "description": "对象患者，支持Markdown语法",
+            "default": ""
+          },
+          "intended_user": {
+            "type": "string",
+            "title": "Intended User",
+            "description": "使用对象，支持Markdown语法",
             "default": ""
           },
           "environment": {
@@ -1186,12 +993,10 @@
             "default": ""
           },
           "appearance_image": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
+            "type": "string",
             "title": "Appearance Image",
-            "description": "外观图URL列表，将下载并按顺序插入到同一占位符位置"
+            "description": "外观图URL列表字符串，将下载并按顺序插入到同一占位符位置",
+            "default": ""
           },
           "dimensions_and_weight": {
             "type": "string",
@@ -1252,12 +1057,10 @@
             "default": ""
           },
           "function_block_image": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
+            "type": "string",
             "title": "Function Block Image",
-            "description": "功能块图URL列表，将下载并按顺序插入到同一占位符位置"
+            "description": "功能块图URL列表字符串，将下载并按顺序插入到同一占位符位置",
+            "default": ""
           },
           "function_block_table": {
             "type": "string",
@@ -1378,119 +1181,82 @@
       "DHFIndexParameters": {
         "properties": {
           "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Project Number",
-            "description": "项目编号"
+            "description": "项目编号",
+            "default": ""
           },
           "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Version",
-            "description": "版本号"
+            "description": "版本号",
+            "default": ""
           },
           "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Date",
-            "description": "日期"
+            "description": "日期",
+            "default": ""
           },
           "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
           "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Document Type",
-            "description": "文档类型"
+            "description": "文档类型",
+            "default": ""
           },
           "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Department",
-            "description": "部门"
+            "description": "部门",
+            "default": ""
           },
           "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
+            "default": ""
           },
           "theme_no": {
             "type": "string",
             "title": "Theme No",
-            "description": "项目NO，填充到C3单元格"
+            "description": "项目NO，填充到C3单元格",
+            "default": ""
           },
           "theme_name": {
             "type": "string",
             "title": "Theme Name",
-            "description": "商品类别，填充到C4单元格"
+            "description": "商品类别，填充到C4单元格",
+            "default": ""
           },
           "product_model": {
             "type": "string",
             "title": "Product Model",
-            "description": "商品型号，根据'/'分割，填充到C5单元格"
+            "description": "商品型号，根据'/'分割，填充到C5单元格",
+            "default": ""
           },
           "sales_name": {
             "type": "string",
             "title": "Sales Name",
-            "description": "贩卖名称，根据'/'分割，填充到C6单元格"
+            "description": "贩卖名称，根据'/'分割，填充到C6单元格",
+            "default": ""
           },
           "stage": {
             "type": "string",
             "title": "Stage",
-            "description": "阶段，拼接到C7单元格内容的后面"
+            "description": "阶段，拼接到C7单元格内容的后面",
+            "default": ""
           },
           "product_name": {
             "type": "string",
             "title": "Product Name",
-            "description": "商品名"
+            "description": "商品名",
+            "default": ""
           },
           "file_list": {
             "items": {
@@ -1502,568 +1268,64 @@
           }
         },
         "type": "object",
-        "required": [
-          "theme_no",
-          "theme_name",
-          "product_model",
-          "sales_name",
-          "stage",
-          "product_name",
-          "file_list"
-        ],
         "title": "DHFIndexParameters",
         "description": "DHF INDEX参数"
-      },
-      "ESIndividualTestResultParameters": {
-        "properties": {
-          "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Project Number",
-            "description": "项目编号"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Document Type",
-            "description": "文档类型"
-          },
-          "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Department",
-            "description": "部门"
-          },
-          "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
-          },
-          "test_item": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Test Item",
-            "description": "试验项目"
-          },
-          "test_result": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Test Result",
-            "description": "试验结果"
-          },
-          "tester": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tester",
-            "description": "试验者"
-          }
-        },
-        "type": "object",
-        "title": "ESIndividualTestResultParameters",
-        "description": "ES个别试验结果书参数"
-      },
-      "ESIndividualTestSpecParameters": {
-        "properties": {
-          "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Project Number",
-            "description": "项目编号"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Document Type",
-            "description": "文档类型"
-          },
-          "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Department",
-            "description": "部门"
-          },
-          "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
-          },
-          "test_item": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Test Item",
-            "description": "试验项目"
-          }
-        },
-        "type": "object",
-        "title": "ESIndividualTestSpecParameters",
-        "description": "ES个别试验要项书参数"
-      },
-      "ESVerificationPlanParameters": {
-        "properties": {
-          "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Project Number",
-            "description": "项目编号"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Document Type",
-            "description": "文档类型"
-          },
-          "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Department",
-            "description": "部门"
-          },
-          "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
-          },
-          "verification_purpose": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Verification Purpose",
-            "description": "验证目的"
-          }
-        },
-        "type": "object",
-        "title": "ESVerificationPlanParameters",
-        "description": "ES验证计划书参数"
-      },
-      "ESVerificationResultParameters": {
-        "properties": {
-          "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Project Number",
-            "description": "项目编号"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Document Type",
-            "description": "文档类型"
-          },
-          "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Department",
-            "description": "部门"
-          },
-          "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
-          },
-          "verification_result": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Verification Result",
-            "description": "验证结果"
-          }
-        },
-        "type": "object",
-        "title": "ESVerificationResultParameters",
-        "description": "ES验证结果书参数"
       },
       "ExistingProductComparisonParameters": {
         "properties": {
           "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Project Number",
-            "description": "项目编号"
+            "description": "项目编号",
+            "default": ""
           },
           "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Version",
-            "description": "版本号"
+            "description": "版本号",
+            "default": ""
           },
           "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Date",
-            "description": "日期"
+            "description": "日期",
+            "default": ""
           },
           "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
           "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Document Type",
-            "description": "文档类型"
+            "description": "文档类型",
+            "default": ""
           },
           "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Department",
-            "description": "部门"
+            "description": "部门",
+            "default": ""
           },
           "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
+            "default": ""
           },
           "comparison_products": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Comparison Products",
-            "description": "对比产品"
+            "description": "对比产品",
+            "default": ""
           },
           "comparison_results": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Comparison Results",
-            "description": "对比结果"
+            "description": "对比结果",
+            "default": ""
           }
         },
         "type": "object",
@@ -2072,141 +1334,90 @@
       },
       "FileListItem": {
         "properties": {
-          "number": {
+          "file_number": {
             "type": "string",
-            "title": "Number",
-            "description": "文件编号"
+            "title": "File Number",
+            "description": "文件编号",
+            "default": ""
           },
-          "file_name": {
+          "short_name": {
             "type": "string",
-            "title": "File Name",
-            "description": "文件名称"
+            "title": "Short Name",
+            "description": "文件名称",
+            "default": ""
           },
           "stage": {
             "type": "string",
             "title": "Stage",
-            "description": "阶段"
+            "description": "阶段",
+            "default": ""
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "阶段",
+            "default": ""
           }
         },
         "type": "object",
-        "required": [
-          "number",
-          "file_name",
-          "stage"
-        ],
         "title": "FileListItem",
         "description": "文件列表项"
       },
       "FollowUpDRMinutesParameters": {
         "properties": {
           "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Project Number",
-            "description": "项目编号"
+            "description": "项目编号",
+            "default": ""
           },
           "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Version",
-            "description": "版本号"
+            "description": "版本号",
+            "default": ""
           },
           "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Date",
-            "description": "日期"
+            "description": "日期",
+            "default": ""
           },
           "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
           "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Document Type",
-            "description": "文档类型"
+            "description": "文档类型",
+            "default": ""
           },
           "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Department",
-            "description": "部门"
+            "description": "部门",
+            "default": ""
           },
           "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
+            "default": ""
           },
           "meeting_date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Meeting Date",
-            "description": "会议日期"
+            "description": "会议日期",
+            "default": ""
           },
           "meeting_location": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Meeting Location",
-            "description": "会议地点"
+            "description": "会议地点",
+            "default": ""
           }
         },
         "type": "object",
@@ -2389,740 +1600,487 @@
         "title": "HealthCheckResponse",
         "description": "健康检查响应模型"
       },
-      "LabelingSpecificationParameters": {
+      "IndividualTestResultParameters": {
         "properties": {
           "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Project Number",
-            "description": "项目编号"
+            "description": "项目编号",
+            "default": ""
           },
           "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Version",
-            "description": "版本号"
+            "description": "版本号",
+            "default": ""
           },
           "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Date",
-            "description": "日期"
+            "description": "日期",
+            "default": ""
           },
           "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
           "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Document Type",
-            "description": "文档类型"
+            "description": "文档类型",
+            "default": ""
           },
           "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Department",
-            "description": "部门"
+            "description": "部门",
+            "default": ""
           },
           "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
+            "default": ""
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "WS",
+              "ES",
+              "PP"
+            ],
+            "title": "Phase",
+            "description": "试验阶段",
+            "default": "ES"
+          },
+          "test_name": {
+            "type": "string",
+            "title": "Test Name",
+            "description": "试验名称/试验项目（模板 D3）",
+            "default": ""
+          },
+          "test_number": {
+            "type": "string",
+            "title": "Test Number",
+            "description": "试验编号（模板 K3）",
+            "default": ""
+          },
+          "theme_no": {
+            "type": "string",
+            "title": "Theme No",
+            "description": "主题No（模板 D5）",
+            "default": ""
+          },
+          "product_model": {
+            "type": "string",
+            "title": "Product Model",
+            "description": "产品型号（模板 K5）",
+            "default": ""
+          },
+          "meas_temperature": {
+            "type": "string",
+            "title": "Meas Temperature",
+            "description": "测定温度（模板 L8）",
+            "default": ""
+          },
+          "meas_humidity": {
+            "type": "string",
+            "title": "Meas Humidity",
+            "description": "测定湿度（模板 N8）",
+            "default": ""
+          },
+          "test_purpose": {
+            "type": "string",
+            "title": "Test Purpose",
+            "description": "试验目的（模板 C37）",
+            "default": ""
+          },
+          "test_conditions": {
+            "type": "string",
+            "title": "Test Conditions",
+            "description": "试验条件（模板 C44）",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "IndividualTestResultParameters",
+        "description": "个别试验结果书参数"
+      },
+      "IndividualTestSpecParameters": {
+        "properties": {
+          "project_number": {
+            "type": "string",
+            "title": "Project Number",
+            "description": "项目编号",
+            "default": ""
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "版本号",
+            "default": ""
+          },
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "日期",
+            "default": ""
+          },
+          "author": {
+            "type": "string",
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "type": "string",
+            "title": "Document Type",
+            "description": "文档类型",
+            "default": ""
+          },
+          "department": {
+            "type": "string",
+            "title": "Department",
+            "description": "部门",
+            "default": ""
+          },
+          "language": {
+            "type": "string",
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
+            "default": ""
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "WS",
+              "ES",
+              "PP"
+            ],
+            "title": "Phase",
+            "description": "试验阶段",
+            "default": "ES"
+          },
+          "test_name": {
+            "type": "string",
+            "title": "Test Name",
+            "description": "试验名称/试验项目（模板 D3）",
+            "default": ""
+          },
+          "test_number": {
+            "type": "string",
+            "title": "Test Number",
+            "description": "试验编号（模板 K3）",
+            "default": ""
+          },
+          "theme_no": {
+            "type": "string",
+            "title": "Theme No",
+            "description": "主题No（模板 D5）",
+            "default": ""
+          },
+          "product_model": {
+            "type": "string",
+            "title": "Product Model",
+            "description": "产品型号（模板 K5）",
+            "default": ""
+          },
+          "meas_temperature": {
+            "type": "string",
+            "title": "Meas Temperature",
+            "description": "测定温度（模板 L8）",
+            "default": ""
+          },
+          "meas_humidity": {
+            "type": "string",
+            "title": "Meas Humidity",
+            "description": "测定湿度（模板 N8）",
+            "default": ""
+          },
+          "test_purpose": {
+            "type": "string",
+            "title": "Test Purpose",
+            "description": "试验目的（模板 C37）",
+            "default": ""
+          },
+          "test_conditions": {
+            "type": "string",
+            "title": "Test Conditions",
+            "description": "试验条件（模板 C44）",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "IndividualTestSpecParameters",
+        "description": "个别试验要项书参数"
+      },
+      "LabelingSpecificationParameters": {
+        "properties": {
+          "project_number": {
+            "type": "string",
+            "title": "Project Number",
+            "description": "项目编号",
+            "default": ""
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "版本号",
+            "default": ""
+          },
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "日期",
+            "default": ""
+          },
+          "author": {
+            "type": "string",
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "type": "string",
+            "title": "Document Type",
+            "description": "文档类型",
+            "default": ""
+          },
+          "department": {
+            "type": "string",
+            "title": "Department",
+            "description": "部门",
+            "default": ""
+          },
+          "language": {
+            "type": "string",
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
+            "default": ""
+          },
+          "theme_no": {
+            "type": "string",
+            "title": "Theme No",
+            "description": "项目NO，填入D5单元格",
+            "default": ""
+          },
+          "theme_name": {
+            "type": "string",
+            "title": "Theme Name",
+            "description": "项目名称，填入K5单元格",
+            "default": ""
+          },
+          "product_model_name": {
+            "type": "string",
+            "title": "Product Model Name",
+            "description": "商品型式名，填入D7单元格",
+            "default": ""
+          },
+          "representative_model": {
+            "type": "string",
+            "title": "Representative Model",
+            "description": "代表型号，填入G11单元格",
+            "default": ""
+          },
+          "product_model": {
+            "type": "string",
+            "title": "Product Model",
+            "description": "商品型式，填充到E17单元格",
+            "default": ""
           },
           "product_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Product Name",
-            "description": "产品名称"
+            "description": "商品名，拼接到I8单元格内容后面",
+            "default": ""
+          },
+          "sales_name": {
+            "type": "string",
+            "title": "Sales Name",
+            "description": "贩卖名称，填充到E19单元格",
+            "default": ""
+          },
+          "production_area": {
+            "type": "string",
+            "title": "Production Area",
+            "description": "生产地，如果=OMD则填固定值到E22，否则空白",
+            "default": ""
+          },
+          "ohc_target": {
+            "type": "string",
+            "title": "Ohc Target",
+            "description": "是否是OHC 向け，如果=True则填固定值到E24，否则空白",
+            "default": ""
+          },
+          "sales_channel": {
+            "type": "string",
+            "title": "Sales Channel",
+            "description": "販売チャネル，填固定值到E26，贩卖渠道只有“医療機関”时→ 400-889-0089,多种贩卖渠道时→ 400-770-9988",
+            "default": ""
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage",
+            "description": "阶段",
+            "default": ""
+          },
+          "related_file_info": {
+            "items": {
+              "$ref": "#/components/schemas/FileListItem"
+            },
+            "type": "array",
+            "title": "Related File Info",
+            "description": "关联文件列表"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address",
+            "description": "生产地址，填入G17单元格",
+            "default": ""
+          },
+          "country": {
+            "type": "string",
+            "title": "Country",
+            "description": "生产国家，填入G18单元格",
+            "default": ""
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone",
+            "description": "联系电话",
+            "default": ""
           }
         },
         "type": "object",
         "title": "LabelingSpecificationParameters",
-        "description": "标签规格书参数"
-      },
-      "PPIndividualTestResultParameters": {
-        "properties": {
-          "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Project Number",
-            "description": "项目编号"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Document Type",
-            "description": "文档类型"
-          },
-          "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Department",
-            "description": "部门"
-          },
-          "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
-          },
-          "test_item": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Test Item",
-            "description": "试验项目"
-          },
-          "test_result": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Test Result",
-            "description": "试验结果"
-          }
-        },
-        "type": "object",
-        "title": "PPIndividualTestResultParameters",
-        "description": "PP个别试验结果书参数"
-      },
-      "PPIndividualTestSpecParameters": {
-        "properties": {
-          "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Project Number",
-            "description": "项目编号"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Document Type",
-            "description": "文档类型"
-          },
-          "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Department",
-            "description": "部门"
-          },
-          "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
-          },
-          "test_purpose": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Test Purpose",
-            "description": "试验目的"
-          }
-        },
-        "type": "object",
-        "title": "PPIndividualTestSpecParameters",
-        "description": "PP个别试验要项书参数"
-      },
-      "PPVerificationPlanParameters": {
-        "properties": {
-          "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Project Number",
-            "description": "项目编号"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Document Type",
-            "description": "文档类型"
-          },
-          "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Department",
-            "description": "部门"
-          },
-          "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
-          },
-          "verification_purpose": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Verification Purpose",
-            "description": "验证目的"
-          }
-        },
-        "type": "object",
-        "title": "PPVerificationPlanParameters",
-        "description": "PP验证计划书参数"
-      },
-      "PPVerificationResultParameters": {
-        "properties": {
-          "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Project Number",
-            "description": "项目编号"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version",
-            "description": "版本号"
-          },
-          "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Date",
-            "description": "日期"
-          },
-          "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Author",
-            "description": "作者",
-            "default": "OHC账票AI助手"
-          },
-          "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Document Type",
-            "description": "文档类型"
-          },
-          "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Department",
-            "description": "部门"
-          },
-          "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
-          },
-          "verification_result": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Verification Result",
-            "description": "验证结果"
-          }
-        },
-        "type": "object",
-        "title": "PPVerificationResultParameters",
-        "description": "PP验证结果书参数"
+        "description": "标签仕样书-仕样确认书参数"
       },
       "PTFIndexParameters": {
         "properties": {
           "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Project Number",
-            "description": "项目编号"
+            "description": "项目编号",
+            "default": ""
           },
           "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Version",
-            "description": "版本号"
+            "description": "版本号",
+            "default": ""
           },
           "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Date",
-            "description": "日期"
+            "description": "日期",
+            "default": ""
           },
           "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
           "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Document Type",
-            "description": "文档类型"
+            "description": "文档类型",
+            "default": ""
           },
           "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Department",
-            "description": "部门"
+            "description": "部门",
+            "default": ""
           },
           "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
+            "default": ""
           }
         },
         "type": "object",
         "title": "PTFIndexParameters",
-        "description": "PTF INDEX参数"
+        "description": "PTF INDEX（`static/templates/excel/zh/PTF INDEX.xlsx`）参数"
       },
       "PackagingDesignSpecificationParameters": {
         "properties": {
           "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Project Number",
-            "description": "项目编号"
+            "description": "项目编号",
+            "default": ""
           },
           "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Version",
-            "description": "版本号"
+            "description": "版本号",
+            "default": ""
           },
           "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Date",
-            "description": "日期"
+            "description": "日期",
+            "default": ""
           },
           "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
           "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Document Type",
-            "description": "文档类型"
+            "description": "文档类型",
+            "default": ""
           },
           "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Department",
-            "description": "部门"
+            "description": "部门",
+            "default": ""
           },
           "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
+            "default": ""
           },
-          "product_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Name",
-            "description": "产品名称"
+          "theme_no": {
+            "type": "string",
+            "title": "Theme No",
+            "description": "项目NO，填入C21单元格",
+            "default": ""
           },
-          "packaging_requirements": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Packaging Requirements",
-            "description": "包装要求"
+          "theme_name": {
+            "type": "string",
+            "title": "Theme Name",
+            "description": "项目名称，填入E21单元格",
+            "default": ""
+          },
+          "product_model_name": {
+            "type": "string",
+            "title": "Product Model Name",
+            "description": "商品型式名，填入L21单元格",
+            "default": ""
+          },
+          "sales_name": {
+            "type": "string",
+            "title": "Sales Name",
+            "description": "贩卖名称，填入C23单元格",
+            "default": ""
+          },
+          "related_file_info": {
+            "items": {
+              "$ref": "#/components/schemas/FileListItem"
+            },
+            "type": "array",
+            "title": "Related File Info",
+            "description": "关联文件列表"
           }
         },
         "type": "object",
@@ -3132,285 +2090,185 @@
       "ProductEnvironmentAssessmentParameters": {
         "properties": {
           "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Project Number",
-            "description": "项目编号"
+            "description": "项目编号",
+            "default": ""
           },
           "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Version",
-            "description": "版本号"
+            "description": "版本号",
+            "default": ""
           },
           "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Date",
-            "description": "日期"
+            "description": "日期",
+            "default": ""
           },
           "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
           "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Document Type",
-            "description": "文档类型"
+            "description": "文档类型",
+            "default": ""
           },
           "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Department",
-            "description": "部门"
+            "description": "部门",
+            "default": ""
           },
           "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
+            "default": ""
           },
           "theme_no": {
             "type": "string",
             "title": "Theme No",
-            "description": "项目NO，拼接到B5单元格内容后面"
+            "description": "项目NO，拼接到B5单元格内容后面",
+            "default": ""
           },
           "theme_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Theme Name",
-            "description": "商品类别（已废弃，不再使用）"
+            "description": "商品类别（已废弃，不再使用）",
+            "default": ""
           },
           "product_model": {
             "type": "string",
             "title": "Product Model",
-            "description": "商品型号，根据'/'分割，填充到22行的D～H列合并单元格"
+            "description": "商品型号，根据'/'分割，填充到22行的D～H列合并单元格",
+            "default": ""
           },
           "product_model_name": {
             "type": "string",
             "title": "Product Model Name",
-            "description": "商品型号名，拼接到B7单元格内容后面"
+            "description": "商品型号名，拼接到B7单元格内容后面",
+            "default": ""
           },
           "product_name": {
             "type": "string",
             "title": "Product Name",
-            "description": "商品名，拼接到I5单元格内容后面"
+            "description": "商品名，拼接到I5单元格内容后面",
+            "default": ""
           },
           "production_area": {
             "type": "string",
             "title": "Production Area",
-            "description": "生产地，拼接到I7单元格内容后面"
+            "description": "生产地，拼接到I7单元格内容后面",
+            "default": ""
           },
           "sales_name": {
             "type": "string",
             "title": "Sales Name",
-            "description": "贩卖名称，根据'/'分割，填充到22行的I～J列合并单元格"
+            "description": "贩卖名称，根据'/'分割，填充到22行的I～J列合并单元格",
+            "default": ""
           },
           "target_area": {
             "type": "string",
             "title": "Target Area",
-            "description": "贩卖国家，填充到22行的K～M列合并单元格"
+            "description": "贩卖国家，填充到22行的K～M列合并单元格",
+            "default": ""
           },
           "remarks": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Remarks",
-            "description": "备注（可选）"
+            "description": "备注（可选）",
+            "default": ""
           },
           "eta_schedule": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Eta Schedule",
-            "description": "ETA预定日志（可选）"
+            "description": "ETA预定日志（可选）",
+            "default": ""
           }
         },
         "type": "object",
-        "required": [
-          "theme_no",
-          "product_model",
-          "product_model_name",
-          "product_name",
-          "production_area",
-          "sales_name",
-          "target_area"
-        ],
         "title": "ProductEnvironmentAssessmentParameters",
         "description": "产品环境评估要项书/结果书参数"
       },
       "ProjectPlanParameters": {
         "properties": {
           "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Project Number",
-            "description": "项目编号"
+            "description": "项目编号",
+            "default": ""
           },
           "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Version",
-            "description": "版本号"
+            "description": "版本号",
+            "default": ""
           },
           "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Date",
-            "description": "日期"
+            "description": "日期",
+            "default": ""
           },
           "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
           "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Document Type",
-            "description": "文档类型"
+            "description": "文档类型",
+            "default": ""
           },
           "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Department",
-            "description": "部门"
+            "description": "部门",
+            "default": ""
           },
           "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
+            "default": ""
           },
           "project_scope": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Project Scope",
-            "description": "项目范围"
+            "description": "项目范围",
+            "default": ""
           },
           "project_timeline": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Project Timeline",
-            "description": "项目时间线"
+            "description": "项目时间线",
+            "default": ""
+          },
+          "theme_no": {
+            "type": "string",
+            "title": "Theme No",
+            "description": "项目NO",
+            "default": ""
+          },
+          "theme_name": {
+            "type": "string",
+            "title": "Theme Name",
+            "description": "项目名称",
+            "default": ""
+          },
+          "product_model_name": {
+            "type": "string",
+            "title": "Product Model Name",
+            "description": "商品型式名",
+            "default": ""
           }
         },
         "type": "object",
@@ -3539,113 +2397,78 @@
       "UserManualSpecificationParameters": {
         "properties": {
           "project_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Project Number",
-            "description": "项目编号"
+            "description": "项目编号",
+            "default": ""
           },
           "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Version",
-            "description": "版本号"
+            "description": "版本号",
+            "default": ""
           },
           "date": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Date",
-            "description": "日期"
+            "description": "日期",
+            "default": ""
           },
           "author": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Author",
             "description": "作者",
             "default": "OHC账票AI助手"
           },
           "document_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Document Type",
-            "description": "文档类型"
+            "description": "文档类型",
+            "default": ""
           },
           "department": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Department",
-            "description": "部门"
+            "description": "部门",
+            "default": ""
           },
           "language": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Language",
-            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板"
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
+            "default": ""
           },
-          "product_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Name",
-            "description": "产品名称"
+          "theme_no": {
+            "type": "string",
+            "title": "Theme No",
+            "description": "项目NO，填入B19单元格",
+            "default": ""
           },
-          "manual_requirements": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Manual Requirements",
-            "description": "说明书要求"
+          "theme_name": {
+            "type": "string",
+            "title": "Theme Name",
+            "description": "项目名称，填入D19单元格",
+            "default": ""
+          },
+          "product_model_name": {
+            "type": "string",
+            "title": "Product Model Name",
+            "description": "商品型式名，填入J19单元格",
+            "default": ""
+          },
+          "sales_name": {
+            "type": "string",
+            "title": "Sales Name",
+            "description": "贩卖名称，填入B21单元格",
+            "default": ""
+          },
+          "related_file_info": {
+            "items": {
+              "$ref": "#/components/schemas/FileListItem"
+            },
+            "type": "array",
+            "title": "Related File Info",
+            "description": "关联文件列表"
           }
         },
         "type": "object",
@@ -3684,6 +2507,204 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VerificationPlanParameters": {
+        "properties": {
+          "project_number": {
+            "type": "string",
+            "title": "Project Number",
+            "description": "项目编号",
+            "default": ""
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "版本号",
+            "default": ""
+          },
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "日期",
+            "default": ""
+          },
+          "author": {
+            "type": "string",
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "type": "string",
+            "title": "Document Type",
+            "description": "文档类型",
+            "default": ""
+          },
+          "department": {
+            "type": "string",
+            "title": "Department",
+            "description": "部门",
+            "default": ""
+          },
+          "language": {
+            "type": "string",
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
+            "default": ""
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "WS",
+              "ES",
+              "PP"
+            ],
+            "title": "Phase",
+            "description": "阶段",
+            "default": "ES"
+          },
+          "document_kind": {
+            "type": "string",
+            "const": "plan",
+            "title": "Document Kind",
+            "description": "文档类型",
+            "default": "plan"
+          },
+          "theme_no": {
+            "type": "string",
+            "title": "Theme No",
+            "description": "项目NO",
+            "default": ""
+          },
+          "theme_name": {
+            "type": "string",
+            "title": "Theme Name",
+            "description": "项目名称",
+            "default": ""
+          },
+          "sales_name": {
+            "type": "string",
+            "title": "Sales Name",
+            "description": "贩卖名称",
+            "default": ""
+          },
+          "product_model_name": {
+            "type": "string",
+            "title": "Product Model Name",
+            "description": "商品型式名",
+            "default": ""
+          },
+          "environment_temperature": {
+            "type": "string",
+            "title": "Environment Temperature",
+            "description": "环境温度",
+            "default": ""
+          },
+          "relative_humidity": {
+            "type": "string",
+            "title": "Relative Humidity",
+            "description": "相对湿度",
+            "default": ""
+          },
+          "test_voltage": {
+            "type": "string",
+            "title": "Test Voltage",
+            "description": "试验电压",
+            "default": ""
+          },
+          "test_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Test Names",
+            "description": "试验名称列表，按表格列向下填充"
+          },
+          "requirements_and_standards": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Requirements And Standards",
+            "description": "适用标准/试验标准列表，按表格列向下填充"
+          }
+        },
+        "type": "object",
+        "title": "VerificationPlanParameters",
+        "description": "验证计划书参数"
+      },
+      "VerificationResultParameters": {
+        "properties": {
+          "project_number": {
+            "type": "string",
+            "title": "Project Number",
+            "description": "项目编号",
+            "default": ""
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "版本号",
+            "default": ""
+          },
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "日期",
+            "default": ""
+          },
+          "author": {
+            "type": "string",
+            "title": "Author",
+            "description": "作者",
+            "default": "OHC账票AI助手"
+          },
+          "document_type": {
+            "type": "string",
+            "title": "Document Type",
+            "description": "文档类型",
+            "default": ""
+          },
+          "department": {
+            "type": "string",
+            "title": "Department",
+            "description": "部门",
+            "default": ""
+          },
+          "language": {
+            "type": "string",
+            "title": "Language",
+            "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
+            "default": ""
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "WS",
+              "ES",
+              "PP"
+            ],
+            "title": "Phase",
+            "description": "阶段",
+            "default": "ES"
+          },
+          "document_kind": {
+            "type": "string",
+            "const": "result",
+            "title": "Document Kind",
+            "description": "文档类型",
+            "default": "result"
+          },
+          "verification_result": {
+            "type": "string",
+            "title": "Verification Result",
+            "description": "验证结果",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "VerificationResultParameters",
+        "description": "验证结果书参数"
       }
     }
   }
