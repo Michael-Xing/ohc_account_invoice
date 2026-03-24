@@ -66,9 +66,13 @@ class PTFIndexParameters(BaseTemplateParameters):
 
 
 
-class ESIndividualTestSpecParameters(BaseTemplateParameters):
-    """ES个别试验要项书参数"""
-    # NOTE: `IndividualTestSpecFiller` expects these 8 keys.
+class IndividualTestParameters(BaseTemplateParameters):
+    """个别试验要项书/结果书公共参数"""
+    phase: Literal["WS", "ES", "PP"] = Field(default="ES", description="试验阶段")
+
+
+class IndividualTestSpecParameters(IndividualTestParameters):
+    """个别试验要项书参数"""
     test_name: str = Field(default="", description="试验名称/试验项目（模板 D3）")
     test_number: str = Field(default="", description="试验编号（模板 K3）")
     theme_no: str = Field(default="", description="主题No（模板 D5）")
@@ -79,27 +83,25 @@ class ESIndividualTestSpecParameters(BaseTemplateParameters):
     test_conditions: str = Field(default="", description="试验条件（模板 C44）")
 
 
-class ESIndividualTestResultParameters(BaseTemplateParameters):
-    """ES个别试验结果书参数"""
-    test_item: str = Field(default="", description="试验项目")
-    test_result: str = Field(default="", description="试验结果")
-    tester: str = Field(default="", description="试验者")
-
-
-class PPIndividualTestResultParameters(BaseTemplateParameters):
-    """PP个别试验结果书参数"""
-    test_item: str = Field(default="", description="试验项目")
-    test_result: str = Field(default="", description="试验结果")
+class IndividualTestResultParameters(IndividualTestParameters):
+    """个别试验结果书参数"""
+    test_name: str = Field(default="", description="试验名称/试验项目（模板 D3）")
+    test_number: str = Field(default="", description="试验编号（模板 K3）")
+    theme_no: str = Field(default="", description="主题No（模板 D5）")
+    product_model: str = Field(default="", description="产品型号（模板 K5）")
+    meas_temperature: str = Field(default="", description="测定温度（模板 L8）")
+    meas_humidity: str = Field(default="", description="测定湿度（模板 N8）")
+    test_purpose: str = Field(default="", description="试验目的（模板 C37）")
+    test_conditions: str = Field(default="", description="试验条件（模板 C44）")
 
 
 class BaseVerificationParameters(BaseTemplateParameters):
     """验证计划/结果书公共参数"""
-    phase: Literal["ES", "PP"] = Field(default="ES", description="阶段")
+    phase: Literal["WS", "ES", "PP"] = Field(default="ES", description="阶段")
 
 
 class VerificationPlanParameters(BaseVerificationParameters):
     """验证计划书参数"""
-    document_kind: Literal["plan"] = Field(default="plan", description="文档类型")
     theme_no: str = Field(default="", description="项目NO")
     theme_name: str = Field(default="", description="项目名称")
     sales_name: str = Field(default="", description="贩卖名称")
@@ -114,8 +116,15 @@ class VerificationPlanParameters(BaseVerificationParameters):
 
 class VerificationResultParameters(BaseVerificationParameters):
     """验证结果书参数"""
-    document_kind: Literal["result"] = Field(default="result", description="文档类型")
-    verification_result: str = Field(default="", description="验证结果")
+    theme_no: str = Field(default="", description="项目NO")
+    theme_name: str = Field(default="", description="项目名称")
+    sales_name: str = Field(default="", description="贩卖名称")
+    product_model_name: str = Field(default="", description="商品型式名")
+    environment_temperature: str = Field(default="", description="环境温度")
+    relative_humidity: str = Field(default="", description="相对湿度")
+    test_voltage: str = Field(default="", description="试验电压")
+    test_names: List[str] = Field(default_factory=list, description="试验名称列表，按表格列向下填充")
+    requirements_and_standards: List[str] = Field(default_factory=list, description="适用标准/试验标准列表，按表格列向下填充")
 
 
 class BasicSpecificationServiceEnvironmentConditions(NullToDefaultModel):
@@ -224,18 +233,6 @@ class BasicSpecificationParameters(BaseTemplateParameters):
 
     # 性能说明（Markdown表格，列项相同内容需要合并单元格）
     performance_table: str = Field(default="", description="性能说明，Markdown表格，需转换为Word表格并按列合并相同内容")  # 性能说明表格
-
-
-class PPIndividualTestSpecParameters(BaseTemplateParameters):
-    """PP个别试验要项书参数"""
-    test_name: str = Field(default="", description="试验名称/试验项目（模板 D3）")
-    test_number: str = Field(default="", description="试验编号（模板 K3）")
-    theme_no: str = Field(default="", description="主题No（模板 D5）")
-    product_model: str = Field(default="", description="产品型号（模板 K5）")
-    meas_temperature: str = Field(default="", description="测定温度（模板 L8）")
-    meas_humidity: str = Field(default="", description="测定湿度（模板 N8）")
-    test_purpose: str = Field(default="", description="试验目的（模板 C37）")
-    test_conditions: str = Field(default="", description="试验条件（模板 C44）")
 
 
 class FollowUpDRMinutesParameters(BaseTemplateParameters):

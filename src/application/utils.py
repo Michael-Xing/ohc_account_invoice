@@ -13,7 +13,7 @@ def generate_output_filename(template_name: str, parameters: Dict[str, Any], lan
     
     格式: <project_id>-<template_display_name>-AI_<version>-<datetime>.<ext>
     """
-    template_info = template_service.get_template_info(template_name, language)
+    template_info = template_service.get_template_info(template_name, parameters, language)
     if not template_info:
         raise ValueError(f"模板 '{template_name}' 不存在")
 
@@ -36,8 +36,8 @@ def generate_output_filename(template_name: str, parameters: Dict[str, Any], lan
 
     # 获取模板显示名称
     template_display_name = template_info.get("display_name", template_name)
-    # 清理模板名称，只保留允许的字符
-    clean_template_name = re.sub(r'[^\w\-\.\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]', '-', str(template_display_name))
+    # 清理模板名称，只保留允许的字符（包括括号）
+    clean_template_name = re.sub(r'[^\w\-\.\(\)\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]', '-', str(template_display_name))
 
     # 获取版本号
     version = parameters.get("version") or parameters.get("ver")

@@ -45,68 +45,36 @@ class TemplateService:
                 "en": "PTF Index"
             }
         },
-        "ES_INDIVIDUAL_TEST_SPEC": {
-            "description": "ES个别试验要项书，用于记录ES阶段的个别试验要求",
+        "INDIVIDUAL_TEST_SPEC": {
+            "description": "个别试验要项书",
             "display_names": {
                 "zh": "个别试验要项书",
-                "ja": "ES個別試験要項書",
-                "en": "ES Individual Test Specification"
+                "ja": "個別試験事項書",
+                "en": "Individual Test Specification"
             }
         },
-        "ES_INDIVIDUAL_TEST_RESULT": {
-            "description": "ES个别试验结果书，用于记录ES阶段的个别试验结果",
+        "INDIVIDUAL_TEST_RESULT": {
+            "description": "个别试验结果书",
             "display_names": {
-                "zh": "个别试验要项书",
-                "ja": "ES個別試験結果書",
-                "en": "ES Individual Test Result"
+                "zh": "个别试验结果书",
+                "ja": "個別試験結果書",
+                "en": "Individual Test Result"
             }
         },
-        "PP_INDIVIDUAL_TEST_RESULT": {
-            "description": "PP个别试验结果书，用于记录PP阶段的个别试验结果",
+        "VERIFICATION_PLAN": {
+            "description": "验证计划书，用于制定ES/PP阶段的验证计划",
             "display_names": {
-                "zh": "个别试验要项书",
-                "ja": "PP個別試験結果書",
-                "en": "PP Individual Test Result"
+                "zh": "检证计划・要项书",
+                "ja": "検証計画・要項書",
+                "en": "Verification Plan Specification"
             }
         },
-        "PP_INDIVIDUAL_TEST_SPEC": {
-            "description": "PP个别试验要项书，用于记录PP阶段的个别试验要求",
-            "display_names": {
-                "zh": "个别试验要项书",
-                "ja": "PP個別試験要項書",
-                "en": "PP Individual Test Specification"
-            }
-        },
-        "ES_VERIFICATION_PLAN": {
-            "description": "ES验证计划书，用于制定ES阶段的验证计划",
+        "VERIFICATION_RESULT": {
+            "description": "验证结果书，用于记录ES/PP阶段的验证结果",
             "display_names": {
                 "zh": "检证计划・结果书",
-                "ja": "ES検証計画書",
-                "en": "ES Verification Plan"
-            }
-        },
-        "ES_VERIFICATION_RESULT": {
-            "description": "ES验证结果书，用于记录ES阶段的验证结果",
-            "display_names": {
-                "zh": "检证计划・结果书",
-                "ja": "ES検証結果書",
-                "en": "ES Verification Result"
-            }
-        },
-        "PP_VERIFICATION_PLAN": {
-            "description": "PP验证计划书，用于制定PP阶段的验证计划",
-            "display_names": {
-                "zh": "检证计划・结果书",
-                "ja": "PP検証計画書",
-                "en": "PP Verification Plan"
-            }
-        },
-        "PP_VERIFICATION_RESULT": {
-            "description": "PP验证结果书，用于记录PP阶段的验证结果",
-            "display_names": {
-                "zh": "检证计划・结果书",
-                "ja": "PP検証結果書",
-                "en": "PP Verification Result"
+                "ja": "検証計画・結果書",
+                "en": "Verification Result Specification"
             }
         },
         "BASIC_SPECIFICATION": {
@@ -138,7 +106,7 @@ class TemplateService:
             "description": "产品环境评估要项书/结果书，用于评估产品在不同环境下的适应性",
             "display_names": {
                 "zh": "基本机种产品环境评估要項書-結果書",
-                "ja": "基本機種製品環境アセスメント要項書／結果書",
+                "ja": "基本機種製品環境アセスメント的要项書／結果書",
                 "en": "Product Environment Assessment"
             }
         },
@@ -173,15 +141,14 @@ class TemplateService:
         "PTF_INDEX": PTFIndexFiller(),
         "PRODUCT_ENVIRONMENT_ASSESSMENT": ProductEnvironmentAssessmentFiller(),
         "BASIC_SPECIFICATION": BasicSpecificationFiller(),
-        "ES_VERIFICATION_PLAN": VerificationPlanFiller(),
-        "PP_VERIFICATION_PLAN": VerificationPlanFiller(),
+        "VERIFICATION_PLAN": VerificationPlanFiller(),
+        "VERIFICATION_RESULT": VerificationPlanFiller(),
         "LABELING_SPECIFICATION": LabelingSpecificationFiller(),
         "PACKAGING_DESIGN_SPECIFICATION": PackagingDesignSpecificationFiller(),
         "USER_MANUAL_SPECIFICATION": UserManualSpecificationFiller(),
         "PROJECT_PLAN": ProjectPlanFiller(),
-        # 个别试验要项书（ES/PP）共用同一套 Excel 布局，使用同一个专用填充器
-        "ES_INDIVIDUAL_TEST_SPEC": IndividualTestSpecFiller(),
-        "PP_INDIVIDUAL_TEST_SPEC": IndividualTestSpecFiller(),
+        "INDIVIDUAL_TEST_SPEC": IndividualTestSpecFiller(),
+        "INDIVIDUAL_TEST_RESULT": IndividualTestSpecFiller(),
         # 其他模板使用默认策略
     }
 
@@ -323,7 +290,7 @@ class TemplateService:
             return self.fill_word_template(template_path, parameters, output_path, language)
         return False
 
-    def get_template_info(self, template_name: str, language: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    def get_template_info(self, template_name: str, parameters: Optional[Dict[str, Any]] = None, language: Optional[str] = None) -> Optional[Dict[str, Any]]:
         if not self.validate_template_name(template_name):
             return None
         
@@ -334,6 +301,15 @@ class TemplateService:
             display_name = template_config["display_names"][language]
         else:
             display_name = template_config["display_names"].get("zh", template_name)
+        
+        # 从parameters中获取阶段信息，追加到display_name
+        phase = None
+        if parameters:
+            phase = parameters.get("phase")
+        
+        # 如果有阶段信息，追加到display_name后面
+        if phase:
+            display_name = f"{display_name}({phase})"
         
         info = {
             "name": template_name,
