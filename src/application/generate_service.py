@@ -29,9 +29,12 @@ def generate_document_internal(template_name: str, parameters: Dict[str, Any], l
         if not template_service.validate_template_name(template_name):
             raise TemplateNotFoundError(f"不支持的模板: {template_name}")
 
-        # Generate output filename
+        # Generate output filename (需要phase来生成文件名)
         output_filename = generate_output_filename(template_name, parameters, language)
         logger.info("Generated filename %s", output_filename)
+
+        # Remove phase from parameters before passing to template filler (phase is only for filename)
+        parameters.pop("phase", None)
 
         # Create temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=f".{output_filename.split('.')[-1]}") as temp_file:

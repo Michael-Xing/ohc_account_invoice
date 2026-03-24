@@ -3,10 +3,10 @@ from typing import Any
 
 from src.application.generate_service import generate_document_internal
 from src.interfaces.schemas import (
-    DHFIndexParameters, PTFIndexParameters, ESIndividualTestSpecParameters,
-    ESIndividualTestResultParameters, PPIndividualTestResultParameters,
+    DHFIndexParameters, PTFIndexParameters, IndividualTestSpecParameters,
+    IndividualTestResultParameters,
     VerificationPlanParameters, VerificationResultParameters,
-    BasicSpecificationParameters, PPIndividualTestSpecParameters,
+    BasicSpecificationParameters,
     FollowUpDRMinutesParameters, LabelingSpecificationParameters,
     ProductEnvironmentAssessmentParameters, ExistingProductComparisonParameters,
     PackagingDesignSpecificationParameters, UserManualSpecificationParameters,
@@ -15,17 +15,6 @@ from src.interfaces.schemas import (
 from src.interfaces.schemas import GenerateDocumentResponse, GenerateDocumentRequest
 
 router = APIRouter(prefix="", tags=["generate"])
-
-
-def _generate_verification_document(
-    parameters: VerificationPlanParameters | VerificationResultParameters,
-) -> GenerateDocumentResponse:
-    params_dict = parameters.model_dump()
-    language = params_dict.pop("language", None) or None
-    phase = params_dict.pop("phase")
-    document_kind = str(params_dict.pop("document_kind")).upper()
-    template_name = f"{phase}_VERIFICATION_{document_kind}"
-    return GenerateDocumentResponse(**generate_document_internal(template_name, params_dict, language))
 
 
 @router.post("/generate", response_model=GenerateDocumentResponse, summary="生成文档", description="生成账票文档（通用接口）")
@@ -48,30 +37,32 @@ async def generate_ptf_index(parameters: PTFIndexParameters):
     return GenerateDocumentResponse(**generate_document_internal("PTF_INDEX", params_dict, language))
 
 
-@router.post("/generate/individual-test", response_model=GenerateDocumentResponse, summary="生成个别试验书", description="个别试验书")
-async def generate_es_individual_test_spec(parameters: ESIndividualTestSpecParameters):
+@router.post("/generate/individual-test-spec", response_model=GenerateDocumentResponse, summary="生成个别试验要项书", description="生成个别试验要项书")
+async def generate_individual_test_spec(parameters: IndividualTestSpecParameters):
     params_dict = parameters.model_dump()
     language = params_dict.pop("language", None) or None
-    return GenerateDocumentResponse(**generate_document_internal("ES_INDIVIDUAL_TEST_SPEC", params_dict, language))
+    return GenerateDocumentResponse(**generate_document_internal("INDIVIDUAL_TEST_SPEC", params_dict, language))
 
 
-@router.post("/generate/es-individual-test-result", response_model=GenerateDocumentResponse, summary="生成ES个别试验结果书", description="生成ES个别试验结果书")
-async def generate_es_individual_test_result(parameters: ESIndividualTestResultParameters):
+@router.post("/generate/individual-test-result", response_model=GenerateDocumentResponse, summary="生成个别试验结果书", description="生成个别试验结果书")
+async def generate_individual_test_result(parameters: IndividualTestResultParameters):
     params_dict = parameters.model_dump()
     language = params_dict.pop("language", None) or None
-    return GenerateDocumentResponse(**generate_document_internal("ES_INDIVIDUAL_TEST_RESULT", params_dict, language))
+    return GenerateDocumentResponse(**generate_document_internal("INDIVIDUAL_TEST_RESULT", params_dict, language))
 
 
-@router.post("/generate/pp-individual-test-result", response_model=GenerateDocumentResponse, summary="生成PP个别试验结果书", description="生成PP个别试验结果书")
-async def generate_pp_individual_test_result(parameters: PPIndividualTestResultParameters):
+@router.post("/generate/verification-plan", response_model=GenerateDocumentResponse, summary="生成验证计划书", description="生成ES/PP验证计划书")
+async def generate_verification_plan(parameters: VerificationPlanParameters):
     params_dict = parameters.model_dump()
     language = params_dict.pop("language", None) or None
-    return GenerateDocumentResponse(**generate_document_internal("PP_INDIVIDUAL_TEST_RESULT", params_dict, language))
+    return GenerateDocumentResponse(**generate_document_internal("VERIFICATION_PLAN", params_dict, language))
 
 
-@router.post("/generate/verification", response_model=GenerateDocumentResponse, summary="生成验证计划书/结果书", description="统一生成ES/PP验证计划书或验证结果书")
-async def generate_verification(parameters: VerificationPlanParameters | VerificationResultParameters):
-    return _generate_verification_document(parameters)
+@router.post("/generate/verification-result", response_model=GenerateDocumentResponse, summary="生成验证结果书", description="生成ES/PP验证结果书")
+async def generate_verification_result(parameters: VerificationResultParameters):
+    params_dict = parameters.model_dump()
+    language = params_dict.pop("language", None) or None
+    return GenerateDocumentResponse(**generate_document_internal("VERIFICATION_RESULT", params_dict, language))
 
 
 @router.post("/generate/basic-specification", response_model=GenerateDocumentResponse, summary="生成基本规格书", description="生成基本规格书")
@@ -79,13 +70,6 @@ async def generate_basic_specification(parameters: BasicSpecificationParameters)
     params_dict = parameters.model_dump()
     language = params_dict.pop("language", None) or None
     return GenerateDocumentResponse(**generate_document_internal("BASIC_SPECIFICATION", params_dict, language))
-
-
-@router.post("/generate/pp-individual-test-spec", response_model=GenerateDocumentResponse, summary="生成PP个别试验要项书", description="生成PP个别试验要项书")
-async def generate_pp_individual_test_spec(parameters: PPIndividualTestSpecParameters):
-    params_dict = parameters.model_dump()
-    language = params_dict.pop("language", None) or None
-    return GenerateDocumentResponse(**generate_document_internal("PP_INDIVIDUAL_TEST_SPEC", params_dict, language))
 
 
 @router.post("/generate/follow-up-dr-minutes", response_model=GenerateDocumentResponse, summary="生成跟进DR会议记录", description="生成跟进DR会议记录")
@@ -135,4 +119,3 @@ async def generate_project_plan(parameters: ProjectPlanParameters):
     params_dict = parameters.model_dump()
     language = params_dict.pop("language", None) or None
     return GenerateDocumentResponse(**generate_document_internal("PROJECT_PLAN", params_dict, language))
-
