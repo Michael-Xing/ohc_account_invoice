@@ -26,17 +26,23 @@ class VerificationPlanFiller(TemplateFillerStrategy):
         try:
             doc = Document(template_path)
 
+            test_numbers = self._normalize_list_field(parameters.get("test_numbers"))
+            if test_numbers:
+                self._fill_list_column(doc, "{{test_numbers}}", test_numbers)
+
             test_names = self._normalize_list_field(parameters.get("test_names"))
             if test_names:
-                self._fill_list_column(doc, "{{test_name}}", test_names)
+                self._fill_list_column(doc, "{{test_names}}", test_names)
 
             requirements_and_standards = self._normalize_list_field(parameters.get("requirements_and_standards"))
             if requirements_and_standards:
                 self._fill_list_column(doc, "{{requirements_and_standards}}", requirements_and_standards)
 
             flat_parameters = self._flatten_parameters(parameters)
+            if not test_numbers:
+                flat_parameters["test_numbers"] = self._missing_text()
             if not test_names:
-                flat_parameters["test_name"] = self._missing_text()
+                flat_parameters["test_names"] = self._missing_text()
             if not requirements_and_standards:
                 flat_parameters["requirements_and_standards"] = self._missing_text()
             self._fallback_text_replace(doc, flat_parameters)
@@ -55,10 +61,21 @@ class VerificationPlanFiller(TemplateFillerStrategy):
         if value is None:
             return []
         if isinstance(value, list):
-            return [str(item).strip() for item in value if str(item).strip()]
+            normalized: List[str] = []
+            for item in value:
+                if item is None:
+                    normalized.append(self._missing_text())
+                else:
+                    text = str(item)
+                    if text.strip() == "":
+                        normalized.append(self._missing_text())
+                    else:
+                        normalized.append(text)
+            return normalized
         if isinstance(value, str):
-            text = value.strip()
-            return [text] if text else []
+            if value.strip() == "":
+                return [self._missing_text()]
+            return [value]
         return []
 
     def _fill_list_column(self, doc: Document, placeholder: str, values: List[str]) -> None:
@@ -241,7 +258,7 @@ class VerificationPlanFiller(TemplateFillerStrategy):
 
     def _flatten_parameters(self, parameters: Dict[str, Any]) -> Dict[str, str]:
         flat: Dict[str, str] = {}
-        list_fields = {"test_names", "requirements_and_standards"}
+        list_fields = {"test_numbers", "test_names", "requirements_and_standards"}
         for key, value in parameters.items():
             if key in list_fields:
                 continue

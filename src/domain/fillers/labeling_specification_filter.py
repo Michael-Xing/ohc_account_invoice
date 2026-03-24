@@ -128,8 +128,9 @@ class LabelingSpecificationFiller(ExcelTemplateFiller):
         worksheet['G16'].value = "OMRON"
         self._apply_filled_background(worksheet['G16'])
 
-        # ohc_target 填入 G19 单元格, 如果是OHC向以外则保持空白。
-        if 'ohc_target' in parameters and parameters['ohc_target']:
+        # target_area 包含 OHC 时填入 G19 单元格, 否则保持空白
+        target_area = str(parameters.get('target_area', ''))
+        if 'OHC' in target_area.upper():
             worksheet['G19'].value = "OHC提供"
             self._apply_filled_background(worksheet['G19'])
             worksheet['G26'].value = "欧姆龙健康医疗（中国）有限公司"
