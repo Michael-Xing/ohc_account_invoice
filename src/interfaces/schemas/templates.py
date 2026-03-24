@@ -100,7 +100,6 @@ class BaseVerificationParameters(BaseTemplateParameters):
 
 class VerificationPlanParameters(BaseVerificationParameters):
     """验证计划书参数"""
-    document_kind: Literal["plan"] = Field(default="plan", description="文档类型")
     theme_no: str = Field(default="", description="项目NO")
     theme_name: str = Field(default="", description="项目名称")
     sales_name: str = Field(default="", description="贩卖名称")
@@ -114,8 +113,15 @@ class VerificationPlanParameters(BaseVerificationParameters):
 
 class VerificationResultParameters(BaseVerificationParameters):
     """验证结果书参数"""
-    document_kind: Literal["result"] = Field(default="result", description="文档类型")
-    verification_result: str = Field(default="", description="验证结果")
+    theme_no: str = Field(default="", description="项目NO")
+    theme_name: str = Field(default="", description="项目名称")
+    sales_name: str = Field(default="", description="贩卖名称")
+    product_model_name: str = Field(default="", description="商品型式名")
+    environment_temperature: str = Field(default="", description="环境温度")
+    relative_humidity: str = Field(default="", description="相对湿度")
+    test_voltage: str = Field(default="", description="试验电压")
+    test_names: List[str] = Field(default_factory=list, description="试验名称列表，按表格列向下填充")
+    requirements_and_standards: List[str] = Field(default_factory=list, description="适用标准/试验标准列表，按表格列向下填充")
 
 
 class BasicSpecificationServiceEnvironmentConditions(NullToDefaultModel):

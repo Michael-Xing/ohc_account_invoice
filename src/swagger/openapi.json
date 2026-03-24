@@ -2563,13 +2563,6 @@
             "description": "阶段",
             "default": "ES"
           },
-          "document_kind": {
-            "type": "string",
-            "const": "plan",
-            "title": "Document Kind",
-            "description": "文档类型",
-            "default": "plan"
-          },
           "theme_no": {
             "type": "string",
             "title": "Theme No",
@@ -2688,18 +2681,63 @@
             "description": "阶段",
             "default": "ES"
           },
-          "document_kind": {
+          "theme_no": {
             "type": "string",
-            "const": "result",
-            "title": "Document Kind",
-            "description": "文档类型",
-            "default": "result"
-          },
-          "verification_result": {
-            "type": "string",
-            "title": "Verification Result",
-            "description": "验证结果",
+            "title": "Theme No",
+            "description": "项目NO",
             "default": ""
+          },
+          "theme_name": {
+            "type": "string",
+            "title": "Theme Name",
+            "description": "项目名称",
+            "default": ""
+          },
+          "sales_name": {
+            "type": "string",
+            "title": "Sales Name",
+            "description": "贩卖名称",
+            "default": ""
+          },
+          "product_model_name": {
+            "type": "string",
+            "title": "Product Model Name",
+            "description": "商品型式名",
+            "default": ""
+          },
+          "environment_temperature": {
+            "type": "string",
+            "title": "Environment Temperature",
+            "description": "环境温度",
+            "default": ""
+          },
+          "relative_humidity": {
+            "type": "string",
+            "title": "Relative Humidity",
+            "description": "相对湿度",
+            "default": ""
+          },
+          "test_voltage": {
+            "type": "string",
+            "title": "Test Voltage",
+            "description": "试验电压",
+            "default": ""
+          },
+          "test_names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Test Names",
+            "description": "试验名称列表，按表格列向下填充"
+          },
+          "requirements_and_standards": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Requirements And Standards",
+            "description": "适用标准/试验标准列表，按表格列向下填充"
           }
         },
         "type": "object",
