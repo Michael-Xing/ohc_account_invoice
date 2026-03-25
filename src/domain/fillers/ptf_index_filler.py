@@ -61,7 +61,7 @@ class PTFIndexFiller(ExcelTemplateFiller):
             self._set_language(language)
 
             # 加载模板文件
-            workbook = load_workbook(template_path, keep_vba=True)
+            workbook = load_workbook(template_path)
             worksheet = workbook.active
 
             # 根据 target_area 匹配 D15:H15 表头，按顺序填充对应行列
