@@ -64,17 +64,17 @@ class TemplateService:
         "VERIFICATION_PLAN": {
             "description": "验证计划书，用于制定ES/PP阶段的验证计划",
             "display_names": {
-                "zh": "检证计划・要项书",
-                "ja": "検証計画・要項書",
-                "en": "Verification Plan Specification"
+                "zh": "检证计划书",
+                "ja": "検証計画書",
+                "en": "Verification Plan"
             }
         },
         "VERIFICATION_RESULT": {
             "description": "验证结果书，用于记录ES/PP阶段的验证结果",
             "display_names": {
-                "zh": "检证计划・结果书",
-                "ja": "検証計画・結果書",
-                "en": "Verification Result Specification"
+                "zh": "检证结果书",
+                "ja": "検証結果書",
+                "en": "Verification Result"
             }
         },
         "BASIC_SPECIFICATION": {
