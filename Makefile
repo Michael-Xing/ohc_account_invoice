@@ -16,7 +16,7 @@ STORAGE_TYPE = minio
 LOCAL_STORAGE_PATH = generated_files
 
 # 多架构支持
-PLATFORMS = linux/amd64,linux/arm64
+PLATFORMS = linux/amd64
 
 # 默认目标
 help:
