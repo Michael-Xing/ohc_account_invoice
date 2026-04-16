@@ -73,6 +73,52 @@ async def request_validation_error_handler(request: Request, exc: RequestValidat
     )
     return JSONResponse(status_code=422, content={"detail": errors})
 
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    全局异常处理器 - 捕获所有未处理的异常，记录完整堆栈信息。
+    """
+    import traceback
+    exc_type = type(exc).__name__
+    exc_msg = str(exc)
+    exc_traceback = traceback.format_exc()
+    
+    # 记录完整的错误信息
+    logger.error(
+        "Unhandled exception: type=%s message=%s traceback=%s path=%s method=%s client=%s",
+        exc_type,
+        exc_msg,
+        exc_traceback,
+        request.url.path,
+        request.method,
+        getattr(request.client, "host", None),
+        extra={
+            "http": {
+                "method": request.method,
+                "path": str(request.url.path),
+                "client": getattr(request.client, "host", None),
+            },
+            "exception": {
+                "type": exc_type,
+                "message": exc_msg,
+                "traceback": exc_traceback,
+            },
+        },
+    )
+    
+    # 返回 500 错误，并包含错误信息（调试模式下更详细）
+    content = {
+        "detail": f"服务器内部错误: {exc_msg}",
+        "error_type": exc_type,
+    }
+    
+    # 如果开启了调试模式，返回更详细的信息
+    if settings.debug:
+        content["traceback"] = exc_traceback
+    
+    return JSONResponse(status_code=500, content=content)
+
 # Optional Sentry monitoring initialization (if configured and package available)
 try:
     if getattr(settings, "sentry_dsn", None):

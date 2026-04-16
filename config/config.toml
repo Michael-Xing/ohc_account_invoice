@@ -13,16 +13,16 @@ reload = false
 type = "minio"  # 可选值: minio, local, s3
 
 [storage.minio]
-endpoint = "10.33.3.18:30808"  # MinIO服务端点，例如: localhost:9000
-access_key = "dpA8VUedoYF1hTCps15f"  # MinIO访问密钥
-secret_key = "vT5ykel89yoC0qaEw7Wrh56KxnlR6S1HiobB14v5"  # MinIO秘密密钥
-bucket_name = "ohc"  # MinIO存储桶名称
-secure = false  # 是否使用HTTPS连接MinIO
-#endpoint = "10.115.18.63:31173"  # MinIO服务端点，例如: localhost:9000
-#access_key = "jdYRMsuDJ6hJMASYricM"  # MinIO访问密钥
-#secret_key = "cZEcjxDthX6iHWpOgNvBvTIMDOvolZS5Alu8U80H"  # MinIO秘密密钥
-#bucket_name = "omd"  # MinIO存储桶名称
+#endpoint = "10.33.3.18:30808"  # MinIO服务端点，例如: localhost:9000
+#access_key = "dpA8VUedoYF1hTCps15f"  # MinIO访问密钥
+#secret_key = "vT5ykel89yoC0qaEw7Wrh56KxnlR6S1HiobB14v5"  # MinIO秘密密钥
+#bucket_name = "ohc"  # MinIO存储桶名称
 #secure = false  # 是否使用HTTPS连接MinIO
+endpoint = "10.115.18.63:31173"  # MinIO服务端点，例如: localhost:9000
+access_key = "xA0AmjKuq3tTQsSlZZz0"  # MinIO访问密钥
+secret_key = "CDMeFGPq4xXyX02TGrSpdxMOMissa76PXmLpv8DM"  # MinIO秘密密钥
+bucket_name = "omd"  # MinIO存储桶名称
+secure = false  # 是否使用HTTPS连接MinIO
 
 [storage.local]
 path = "generated_files"  # 本地存储基础路径
