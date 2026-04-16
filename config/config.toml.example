@@ -39,3 +39,19 @@ max_length = 200  # 文件名最大长度
 # Sentry配置（可选）
 sentry_dsn = ""  # Sentry DSN
 sentry_environment = ""  # Sentry环境名称
+
+# SSO 认证配置
+[auth.sso]
+enabled = true  # 是否启用 SSO 认证
+verify_url = ""  # SSO服务器验证URL
+timeout = 10  # SSO验证超时时间（秒）
+
+# 跳过认证的路径
+[auth.skip_auth_paths]
+paths = ["/health", "/docs", "/redoc", "/openapi.json", "/"]
+
+
+# API Key 配置（可选，与 SSO 二选一或同时支持）
+[auth.api_key]
+enabled = true  # 是否启用 API Key 认证
+valid_keys = []  # 有效的 API Key 列表
