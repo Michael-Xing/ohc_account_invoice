@@ -43,7 +43,7 @@ sentry_environment = ""  # Sentry环境名称
 # SSO 认证配置
 [auth.sso]
 enabled = true  # 是否启用 SSO 认证
-verify_url = ""  # SSO服务器验证URL
+verify_url = "https://19s5pwyshe.execute-api.cn-northwest-1.amazonaws.com.cn:443/prod/authorize-ai"  # SSO服务器验证URL
 timeout = 10  # SSO验证超时时间（秒）
 
 # 跳过认证的路径
@@ -54,4 +54,4 @@ paths = ["/health", "/docs", "/redoc", "/openapi.json", "/"]
 # API Key 配置（可选，与 SSO 二选一或同时支持）
 [auth.api_key]
 enabled = true  # 是否启用 API Key 认证
-valid_keys = []  # 有效的 API Key 列表
+valid_keys = ["cf85a6770e16639f2388ea68c7d85d09"]  # 有效的 API Key 列表
