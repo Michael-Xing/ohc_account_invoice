@@ -19,13 +19,15 @@ FROM m.daocloud.io/docker.io/library/python:3.11-slim
 
 WORKDIR /app
 
-# 从构建阶段复制已安装的包
+# 从构建阶段复制已安装的包和入口点
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# 复制应用代码、模板文件和配置文件
+# 复制应用代码、配置文件、静态模板和 pyproject.toml（确保包入口点可用）
 COPY src/ ./src/
 COPY config/ ./config/
+COPY static/ ./static/
+COPY pyproject.toml ./
 
 # 创建目录和用户，设置权限
 RUN mkdir -p ./generated_files && \
@@ -39,7 +41,5 @@ ENV PYTHONPATH=/app/src \
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
-
-CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# 使用 exec 形式确保信号正确传递
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
