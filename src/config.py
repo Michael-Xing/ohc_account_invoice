@@ -119,6 +119,7 @@ class Settings(BaseSettings):
     aws_secret_access_key: Optional[str] = Field(default=None, description="AWS秘密访问密钥")
     aws_bucket_name: Optional[str] = Field(default=None, description="S3存储桶名称")
     aws_region: str = Field(default="us-east-1", description="AWS区域")
+    s3_endpoint: Optional[str] = Field(default=None, description="S3/MinIO自定义端点（用于MinIO兼容）")
     
     # FastAPI应用配置
     app_name: str = Field(default="OHC账票生成服务", description="应用名称")
@@ -244,6 +245,9 @@ def _flatten_toml_config(data: Dict[str, Any]) -> Dict[str, Any]:
             for key, value in s3_config.items():
                 result_key = mapping.get(key, f"aws_{key}")
                 result[result_key] = value
+            # 特殊处理：如果S3配置中有endpoint字段，映射到s3_endpoint
+            if "endpoint" in s3_config:
+                result["s3_endpoint"] = s3_config["endpoint"]
     
     # 模板配置
     if "templates" in data:

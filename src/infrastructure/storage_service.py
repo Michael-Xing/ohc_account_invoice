@@ -143,12 +143,29 @@ class S3StorageService(StorageService):
         except Exception as e:
             raise ImportError("boto3 未安装，S3 存储不可用") from e
 
-        self.client = boto3.client(
-            "s3",
-            aws_access_key_id=settings.aws_access_key_id,
-            aws_secret_access_key=settings.aws_secret_access_key,
-            region_name=getattr(settings, "aws_region", None),
-        )
+        # 获取region和自定义endpoint
+        region = getattr(settings, "aws_region", None) or ""
+        s3_endpoint = getattr(settings, "s3_endpoint", None)
+
+        # 构建boto3客户端参数
+        client_kwargs = {
+            "aws_access_key_id": settings.aws_access_key_id,
+            "aws_secret_access_key": settings.aws_secret_access_key,
+        }
+
+        if s3_endpoint:
+            # 有自定义endpoint：使用自定义endpoint（用于S3兼容服务如MinIO）
+            client_kwargs["endpoint_url"] = s3_endpoint if s3_endpoint.startswith("http") else f"https://{s3_endpoint}"
+            client_kwargs["region_name"] = region  # 仍需region用于签名
+        else:
+            # 无自定义endpoint：标准AWS S3
+            client_kwargs["region_name"] = region
+            # 对于AWS中国区，boto3可能无法自动生成正确的endpoint，手动指定
+            if region.startswith("cn-"):
+                # AWS中国区使用 amazonaws.com.cn
+                client_kwargs["endpoint_url"] = f"https://s3.{region}.amazonaws.com.cn"
+
+        self.client = boto3.client("s3", **client_kwargs)
         self.bucket = settings.aws_bucket_name
 
     def save_file(self, file_path: Path, file_name: str, project_id: str = None, version: str = None) -> Tuple[bool, Optional[str], str]:
