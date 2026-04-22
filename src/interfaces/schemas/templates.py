@@ -123,6 +123,7 @@ class VerificationResultParameters(BaseVerificationParameters):
     environment_temperature: str = Field(default="", description="环境温度")
     relative_humidity: str = Field(default="", description="相对湿度")
     test_voltage: str = Field(default="", description="试验电压")
+    test_numbers: List[str] = Field(default_factory=list, description="试验编号列表，按表格列向下填充")
     test_names: List[str] = Field(default_factory=list, description="试验名称列表，按表格列向下填充")
     requirements_and_standards: List[str] = Field(default_factory=list, description="适用标准/试验标准列表，按表格列向下填充")
 
