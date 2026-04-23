@@ -3,14 +3,18 @@
 要求：
 - 仅填充指定单元格（含合并单元格的左上角单元格）
 - 不影响其它单元格内容与样式
-- 对 C37 / C44 设置左上对齐，并做 2 级缩进
+- 对 C37 设置左上对齐，并做 2 级缩进
 - 支持动态调整行高以完整展示内容
-- 支持在 C44 位置处理 markdown/HTML 表格，将其转换为 Excel 表格插入（C-P 列）
+- 支持在填充位置处理 markdown/HTML 表格，将其转换为 Excel 表格插入（C-P 列）
+- 各标题行（C41, C51, C60, C70, C79）不会被覆盖，内容填充从隔行开始
+- 标题行间的行数随内容动态调整，不够时插入新行，后续标题行自动下移
+- 填充逻辑保持一致（text_block + tables 支持）
 """
 
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -19,6 +23,20 @@ from openpyxl.styles import PatternFill, Alignment, Font, Border, Side
 from openpyxl.utils import get_column_letter
 
 from src.infrastructure.template_service import ExcelTemplateFiller
+
+
+@dataclass
+class BlockConfig:
+    """区块配置"""
+    title_row: int          # 标题行号
+    fill_start_row: int    # 填充起始行号
+    param_name: str        # 参数名
+    is_last: bool = False  # 是否是最后一个区块
+    # 计算结果（动态计算）
+    content_rows: int = 0
+    available_rows: int = 0
+    rows_to_insert: int = 0
+    cumulative_insert_rows: int = 0  # 到此区块为止累计插入的行数
 
 
 class IndividualTestSpecFiller(ExcelTemplateFiller):
@@ -101,12 +119,134 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
             cell_addr="C37",
             text=str(test_purpose) if test_purpose else missing_text,
         )
-        test_conditions = parameters.get("test_conditions")
-        self._set_test_conditions_with_tables(
-            worksheet=worksheet,
-            cell_addr="C44",
-            text=str(test_conditions) if test_conditions else missing_text,
-        )
+
+        # 3) 动态区块填充（test_conditions, test_method, others, admission_decision_standard, source）
+        self._fill_dynamic_blocks(worksheet, parameters, missing_text)
+
+    def _fill_dynamic_blocks(self, worksheet, parameters: Dict[str, Any], missing_text: str) -> None:
+        """
+        动态区块填充：根据内容行数动态插入行
+
+        区块定义（原始模板行号）：
+        区块                        标题行  填充起始行  下一区块  可用行数（原始）
+        test_conditions            C41    C43       C51       7
+        test_method                C51    C53       C60       6
+        others                     C60    C62       C70       7
+        admission_decision_standard C70    C72       C79       6
+        source                     C79    C81       C85       3
+        test_result                C85    -         -         - (边界，不填充)
+
+        核心逻辑：
+        1. 按顺序处理每个区块
+        2. 计算可用行数 = 下一区块标题行(已调整) - 当前填充起始行(已调整) - 1
+        3. 如果内容行数 > 可用行数，则在可用空间之后、下一标题行之前插入新行
+        4. 插入后更新累计插入行数，继续处理下一个区块
+        5. 填充内容，确保不覆盖后续标题行
+        """
+        # 区块配置（原始行号）
+        blocks = [
+            BlockConfig(title_row=41, fill_start_row=43, param_name="test_conditions"),
+            BlockConfig(title_row=51, fill_start_row=53, param_name="test_method"),
+            BlockConfig(title_row=60, fill_start_row=62, param_name="others"),
+            BlockConfig(title_row=70, fill_start_row=72, param_name="admission_decision_standard"),
+            BlockConfig(title_row=79, fill_start_row=81, param_name="source"),
+            BlockConfig(title_row=85, fill_start_row=None, param_name="test_result", is_last=True),
+        ]
+
+        cumulative_insert_rows = 0  # 累计插入的行数
+
+        for i, block in enumerate(blocks):
+            # test_result 不需要填充内容
+            if block.param_name == "test_result":
+                continue
+
+            # 获取下一区块的标题行（已调整）
+            next_block = blocks[i + 1]
+            next_title_row_adjusted = next_block.title_row + cumulative_insert_rows
+
+            # 计算当前区块的实际填充起始行（原始位置 + 累计插入行数）
+            current_fill_start = block.fill_start_row + cumulative_insert_rows
+
+            # 计算可用行数：下一区块标题行 - 当前填充起始行 - 1（保留间隔）
+            available_rows = next_title_row_adjusted - current_fill_start - 1
+
+            # 解析内容
+            param_value = parameters.get(block.param_name, "")
+            text = str(param_value) if param_value else missing_text
+            parts = self._parse_mixed_content(text)
+            content_rows = self._calculate_content_rows(parts)
+
+            # 如果需要插入行（在可用空间之后、下一标题行之前插入）
+            if content_rows > available_rows:
+                rows_to_insert = content_rows - available_rows
+                insert_row = current_fill_start + available_rows
+                self._insert_rows(worksheet, insert_row, rows_to_insert)
+                cumulative_insert_rows += rows_to_insert
+
+            # 重新计算填充起始行（插入后）
+            current_fill_start = block.fill_start_row + cumulative_insert_rows
+
+            # 填充内容
+            cell = worksheet.cell(current_fill_start, 3)
+            self._apply_filled_background(cell)
+            self._fill_mixed_content_with_tables(worksheet, cell, parts)
+
+    def _calculate_content_rows(self, parts: List[Dict[str, Any]]) -> int:
+        """
+        计算内容占用的行数
+
+        规则：
+        - 每个对象前间隔一行（第一个对象不需要）
+        - 文本：1行（合并单元格）
+        - 图片：1行
+        - 表格：表头1行 + 数据行数
+        """
+        if not parts:
+            return 0
+
+        total_rows = 0
+        for idx, part in enumerate(parts):
+            # 对象前间隔一行（第一个对象不需要）
+            if idx > 0:
+                total_rows += 1
+
+            if part["type"] == "text":
+                total_rows += 1
+            elif part["type"] == "image":
+                total_rows += 1
+            elif part["type"] == "table":
+                markdown_text = part.get("content", "")
+                headers, rows = self._parse_markdown_table(markdown_text)
+                if headers:
+                    total_rows += 1 + len(rows)  # 表头 + 数据行
+
+        return total_rows
+
+    def _insert_rows(self, worksheet, insert_at_row: int, num_rows: int) -> None:
+        """
+        在指定位置插入多行
+
+        Args:
+            worksheet: 工作表对象
+            insert_at_row: 插入位置（该行及之后的内容会下移）
+            num_rows: 要插入的行数
+        """
+        if num_rows <= 0:
+            return
+
+        # 记录原始最大行
+        original_max_row = worksheet.max_row
+
+        # 取消插入区域及之后的合并单元格（C列到P列）
+        # 插入行会破坏插入点之后的所有行的合并单元格，所以需要取消整个区域的合并
+        max_col = 16  # P列
+        end_row = original_max_row + num_rows  # 插入后的最大行
+
+        # 先取消插入区域的合并单元格
+        self._unmerge_cells_in_range(worksheet, insert_at_row, end_row, 3, max_col)
+
+        # 使用 worksheet.insert_rows 插入行
+        worksheet.insert_rows(insert_at_row, amount=num_rows)
 
     def _set_wrap_text_and_adjust_row_height(self, worksheet, cell) -> None:
         """设置单元格自动换行并动态调整行高"""
@@ -203,6 +343,11 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         """
         设置试验条件文本，支持 markdown 表格转换为 Excel 表格
         内容结构：文本 + 表格 + 文本 + 表格 ...
+        
+        Args:
+            worksheet: 工作表对象
+            cell_addr: 起始单元格地址
+            text: 要填充的文本
         """
         if text == "":
             return
@@ -226,11 +371,16 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         填充混合内容（文本+表格+图片）
 
         结构：
-        - 从 C44 单元格作为起点
+        - 从指定单元格作为起点
         - 每个对象（文本/表格/图片）间隔1个标准行
-        - 文本：合并 C-R 列，左对齐，自适应行高
+        - 文本：合并 C-P 列，左对齐，自适应行高
         - 图片：下载后按顺序插入单元格
         - 表格：按 markdown/HTML 语法解析后插入
+
+        Args:
+            worksheet: 工作表对象
+            first_cell: 起始单元格
+            parts: 解析后的内容列表
         """
         current_row = first_cell.row
 
