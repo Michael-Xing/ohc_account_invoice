@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from openpyxl import load_workbook
+from openpyxl.cell import MergedCell
 from openpyxl.styles import PatternFill, Alignment, Font, Border, Side
 from openpyxl.utils import get_column_letter
 
@@ -128,76 +129,99 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         动态区块填充：根据内容行数动态插入行
 
         区块定义（原始模板行号）：
-        区块                        标题行  填充起始行  下一区块  可用行数（原始）
-        test_conditions            C41    C43       C51       7
-        test_method                C51    C53       C60       6
-        others                     C60    C62       C70       7
-        admission_decision_standard C70    C72       C79       6
-        source                     C79    C81       C85       3
-        test_result                C85    -         -         - (边界，不填充)
+        区块                        标题行  填充起始行
+        test_conditions            C41    C43
+        test_method                C50    C52
+        others                     C60    C62
+        admission_decision_standard C70    C72
+        source                     C80    C82
+        test_result                C90    - (边界，不填充)
 
         核心逻辑：
-        1. 按顺序处理每个区块
-        2. 计算可用行数 = 下一区块标题行(已调整) - 当前填充起始行(已调整) - 1
-        3. 如果内容行数 > 可用行数，则在可用空间之后、下一标题行之前插入新行
-        4. 插入后更新累计插入行数，继续处理下一个区块
-        5. 填充内容，确保不覆盖后续标题行
+        1. 保存 test_result 后面到模板原始最大行的内容
+        2. 按顺序处理每个区块，计算并插入需要的行
+        3. 填充内容
+        4. 恢复 test_result 后面的原始内容（只恢复模板原始内容，不覆盖填充内容）
         """
-        # 区块配置（原始行号）
+        # 保存 test_result 后面（行90之后）到模板原始最大行的内容
+        # 注意：只保存原始模板中的行，不包括后续可能插入的行
+        template_original_max_row = 90  # test_result 标题行之后的第一个需要恢复的行
+        saved_content = self._save_content_after_row(worksheet, 90, worksheet.max_row)
+
+        # 记录填充开始前的 C-P 列合并单元格
+        merged_cells_before_fill = {
+            str(mr): mr for mr in worksheet.merged_cells.ranges
+            if mr.min_col == 3 and mr.max_col == 16
+        }
+
+        # 区块配置（标题行和填充起始行）
         blocks = [
             BlockConfig(title_row=41, fill_start_row=43, param_name="test_conditions"),
-            BlockConfig(title_row=51, fill_start_row=53, param_name="test_method"),
+            BlockConfig(title_row=50, fill_start_row=52, param_name="test_method"),
             BlockConfig(title_row=60, fill_start_row=62, param_name="others"),
             BlockConfig(title_row=70, fill_start_row=72, param_name="admission_decision_standard"),
-            BlockConfig(title_row=79, fill_start_row=81, param_name="source"),
-            BlockConfig(title_row=85, fill_start_row=None, param_name="test_result", is_last=True),
+            BlockConfig(title_row=80, fill_start_row=82, param_name="source"),
+            BlockConfig(title_row=90, fill_start_row=None, param_name="test_result", is_last=True),
         ]
 
-        cumulative_insert_rows = 0  # 累计插入的行数
+        cumulative_insert_rows = 0
 
         for i, block in enumerate(blocks):
-            # test_result 不需要填充内容
             if block.param_name == "test_result":
                 continue
 
-            # 获取下一区块的标题行（已调整）
             next_block = blocks[i + 1]
             next_title_row_adjusted = next_block.title_row + cumulative_insert_rows
-
-            # 计算当前区块的实际填充起始行（原始位置 + 累计插入行数）
             current_fill_start = block.fill_start_row + cumulative_insert_rows
-
-            # 计算可用行数：下一区块标题行 - 当前填充起始行 - 1（保留间隔）
             available_rows = next_title_row_adjusted - current_fill_start - 1
 
-            # 解析内容
             param_value = parameters.get(block.param_name, "")
             text = str(param_value) if param_value else missing_text
             parts = self._parse_mixed_content(text)
             content_rows = self._calculate_content_rows(parts)
 
-            # 如果需要插入行（在可用空间之后、下一标题行之前插入）
             if content_rows > available_rows:
                 rows_to_insert = content_rows - available_rows
-                insert_row = current_fill_start + available_rows
-                self._insert_rows(worksheet, insert_row, rows_to_insert)
+                insert_row = next_title_row_adjusted
+                # 使用新的插入方法，保护后面的内容
+                self._insert_rows_protected(worksheet, insert_row, rows_to_insert)
                 cumulative_insert_rows += rows_to_insert
+                next_title_row_adjusted = next_block.title_row + cumulative_insert_rows
+                available_rows = next_title_row_adjusted - current_fill_start - 1
 
-            # 重新计算填充起始行（插入后）
-            current_fill_start = block.fill_start_row + cumulative_insert_rows
-
-            # 填充内容
             cell = worksheet.cell(current_fill_start, 3)
             self._apply_filled_background(cell)
             self._fill_mixed_content_with_tables(worksheet, cell, parts)
 
+        # 收集填充过程中新创建的 C-P 列合并单元格
+        new_merged_ranges = []
+        for mr in worksheet.merged_cells.ranges:
+            if mr.min_col == 3 and mr.max_col == 16:
+                range_str = str(mr)
+                if range_str not in merged_cells_before_fill:
+                    new_merged_ranges.append({
+                        'min_row': mr.min_row,
+                        'max_row': mr.max_row,
+                        'min_col': mr.min_col,
+                        'max_col': mr.max_col
+                    })
+
+        # 填充完成后，恢复 test_result 后面的原始内容
+        # 只恢复原始模板中的行（saved_content 中行号 <= template_original_max_row + rows_inserted）
+        # 不覆盖填充区域（行90之前）
+        self._restore_content_after_row(
+            worksheet, 90, cumulative_insert_rows, saved_content,
+            extra_merged_ranges=new_merged_ranges,
+            fill_end_row=90  # 填充结束行，低于此行的不恢复
+        )
+
     def _calculate_content_rows(self, parts: List[Dict[str, Any]]) -> int:
         """
-        计算内容占用的行数
+        计算内容占用的行数（与 _fill_mixed_content_with_tables 逻辑一致）
 
         规则：
         - 每个对象前间隔一行（第一个对象不需要）
-        - 文本：1行（合并单元格）
+        - 文本：1行（合并单元格），空文本跳过
         - 图片：1行
         - 表格：表头1行 + 数据行数
         """
@@ -206,47 +230,177 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
 
         total_rows = 0
         for idx, part in enumerate(parts):
-            # 对象前间隔一行（第一个对象不需要）
+            # 1. 对象前间隔一行（第一个对象不需要）
             if idx > 0:
                 total_rows += 1
 
             if part["type"] == "text":
+                text = part.get("content", "").strip()
+                # 空文本跳过，不占用行数
+                if not text:
+                    continue
                 total_rows += 1
+
             elif part["type"] == "image":
                 total_rows += 1
+
             elif part["type"] == "table":
                 markdown_text = part.get("content", "")
+                if not markdown_text:
+                    continue
                 headers, rows = self._parse_markdown_table(markdown_text)
                 if headers:
                     total_rows += 1 + len(rows)  # 表头 + 数据行
 
         return total_rows
 
-    def _insert_rows(self, worksheet, insert_at_row: int, num_rows: int) -> None:
+    def _insert_rows_protected(self, worksheet, insert_at_row: int, num_rows: int) -> None:
         """
-        在指定位置插入多行
+        保护性插入行（供 _fill_dynamic_blocks 内部使用）
+
+        直接使用标准 insert_rows，后续由 _restore_content_after_row 恢复
 
         Args:
             worksheet: 工作表对象
-            insert_at_row: 插入位置（该行及之后的内容会下移）
+            insert_at_row: 插入位置
             num_rows: 要插入的行数
         """
         if num_rows <= 0:
             return
-
-        # 记录原始最大行
-        original_max_row = worksheet.max_row
-
-        # 取消插入区域及之后的合并单元格（C列到P列）
-        # 插入行会破坏插入点之后的所有行的合并单元格，所以需要取消整个区域的合并
-        max_col = 16  # P列
-        end_row = original_max_row + num_rows  # 插入后的最大行
-
-        # 先取消插入区域的合并单元格
-        self._unmerge_cells_in_range(worksheet, insert_at_row, end_row, 3, max_col)
-
-        # 使用 worksheet.insert_rows 插入行
         worksheet.insert_rows(insert_at_row, amount=num_rows)
+
+    def _save_content_after_row(self, worksheet, after_row: int, max_row: int) -> Dict[str, Any]:
+        """
+        保存指定行之后的所有内容
+
+        Args:
+            worksheet: 工作表对象
+            after_row: 保存此行之后的内容
+            max_row: 最大行号
+
+        Returns:
+            Dict: 保存的内容
+        """
+        saved = {
+            'rows': [],
+            'merged_ranges': [],
+            'column_dimensions': {},
+            'row_dimensions': {}
+        }
+
+        # 保存行数据
+        for row in range(after_row + 1, max_row + 1):
+            row_data = {
+                'row': row,
+                'cells': {},
+                'height': worksheet.row_dimensions[row].height
+            }
+            for col in range(1, worksheet.max_column + 1):
+                cell = worksheet.cell(row, col)
+                row_data['cells'][col] = {
+                    'value': cell.value,
+                    'data_type': cell.data_type,
+                }
+            saved['rows'].append(row_data)
+
+        # 保存合并单元格信息
+        for merged_range in list(worksheet.merged_cells.ranges):
+            if merged_range.min_row > after_row:
+                saved['merged_ranges'].append({
+                    'min_row': merged_range.min_row,
+                    'max_row': merged_range.max_row,
+                    'min_col': merged_range.min_col,
+                    'max_col': merged_range.max_col
+                })
+
+        # 保存列宽
+        for col in range(1, worksheet.max_column + 1):
+            col_letter = get_column_letter(col)
+            if col_letter in worksheet.column_dimensions:
+                saved['column_dimensions'][col] = worksheet.column_dimensions[col_letter].width
+
+        return saved
+
+    def _restore_content_after_row(
+        self, worksheet, after_row: int, rows_inserted: int, saved: Dict[str, Any],
+        extra_merged_ranges: List[Dict[str, int]] = None,
+        fill_end_row: int = None
+    ) -> None:
+        """
+        恢复保存的内容到正确位置
+
+        Args:
+            worksheet: 工作表对象
+            after_row: 原分隔行
+            rows_inserted: 插入的行数
+            saved: 保存的内容
+            extra_merged_ranges: 额外需要恢复的合并单元格列表（用于保留填充过程中新创建的合并）
+            fill_end_row: 填充结束行，低于此行号的恢复内容将被跳过（用于避免覆盖填充内容）
+        """
+        if not saved or not saved.get('rows'):
+            return
+
+        # 恢复合并单元格（先清除受影响的，但保留填充区域）
+        ranges_to_remove = []
+        for merged_range in list(worksheet.merged_cells.ranges):
+            if merged_range.min_row > after_row:
+                # 如果设置了 fill_end_row，跳过填充区域内的合并
+                if fill_end_row is not None and merged_range.min_row <= fill_end_row:
+                    continue
+                ranges_to_remove.append(str(merged_range))
+        for range_str in ranges_to_remove:
+            try:
+                worksheet.unmerge_cells(range_str)
+            except Exception:
+                pass
+
+        # 恢复行数据（跳过填充区域）
+        for row_data in saved['rows']:
+            original_row = row_data['row']
+            new_row = original_row + rows_inserted
+
+            # 跳过填充区域的行
+            if fill_end_row is not None and new_row <= fill_end_row:
+                continue
+
+            # 恢复单元格值（跳过合并单元格中的非左上角单元格）
+            for col, cell_data in row_data['cells'].items():
+                cell = worksheet.cell(new_row, col)
+                # 跳过合并单元格中的非左上角单元格
+                if isinstance(cell, MergedCell):
+                    continue
+                cell.value = cell_data['value']
+
+            # 恢复行高
+            if row_data.get('height'):
+                worksheet.row_dimensions[new_row].height = row_data['height']
+
+        # 恢复合并单元格（跳过填充区域）
+        for merged_info in saved['merged_ranges']:
+            # 跳过填充区域的合并
+            if fill_end_row is not None and merged_info['min_row'] <= fill_end_row:
+                continue
+            try:
+                new_min_row = merged_info['min_row'] + rows_inserted
+                new_max_row = merged_info['max_row'] + rows_inserted
+
+                col_letter_start = get_column_letter(merged_info['min_col'])
+                col_letter_end = get_column_letter(merged_info['max_col'])
+                merged_range_str = f"{col_letter_start}{new_min_row}:{col_letter_end}{new_max_row}"
+                worksheet.merge_cells(merged_range_str)
+            except Exception:
+                pass
+
+        # 恢复额外传入的合并单元格（填充过程中新创建的）
+        if extra_merged_ranges:
+            for merged_info in extra_merged_ranges:
+                try:
+                    col_letter_start = get_column_letter(merged_info['min_col'])
+                    col_letter_end = get_column_letter(merged_info['max_col'])
+                    merged_range_str = f"{col_letter_start}{merged_info['min_row']}:{col_letter_end}{merged_info['max_row']}"
+                    worksheet.merge_cells(merged_range_str)
+                except Exception:
+                    pass
 
     def _set_wrap_text_and_adjust_row_height(self, worksheet, cell) -> None:
         """设置单元格自动换行并动态调整行高"""
