@@ -216,22 +216,7 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         cell = worksheet[cell_addr]
         self._apply_filled_background(cell)
 
-        # 如果只有纯文本，没有表格，则使用原有的单单元格填充方式
-        has_tables = any(part["type"] == "table" for part in parts)
-        
-        if not has_tables:
-            cell.value = text
-            old_alignment = cell.alignment
-            cell.alignment = Alignment(
-                horizontal=old_alignment.horizontal or "left",
-                vertical=old_alignment.vertical or "top",
-                indent=1,
-                wrap_text=True,
-            )
-            self._adjust_row_height_for_text(worksheet, cell.row, cell.column)
-            return
-
-        # 处理混合内容（文本 + 表格）
+        # 统一由 _fill_mixed_content_with_tables 处理（支持纯文本、表格、图片等）
         self._fill_mixed_content_with_tables(worksheet, cell, parts)
 
     def _fill_mixed_content_with_tables(
@@ -284,8 +269,10 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
     def _trim_empty_lines(self, text: str) -> str:
         """剔除文本前后的空行"""
         if not text:
+            print(f"[DEBUG] _trim_empty_lines: 输入为空")
             return ""
         lines = text.split('\n')
+        print(f"[DEBUG] _trim_empty_lines: 原始 {len(lines)} 行")
         # 剔除前后空行
         start_idx = 0
         end_idx = len(lines) - 1
@@ -294,8 +281,11 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         while end_idx >= start_idx and not lines[end_idx].strip():
             end_idx -= 1
         if start_idx > end_idx:
+            print(f"[DEBUG] _trim_empty_lines: 全部都是空行")
             return ""
-        return '\n'.join(lines[start_idx:end_idx + 1])
+        result = '\n'.join(lines[start_idx:end_idx + 1])
+        print(f"[DEBUG] _trim_empty_lines: 处理后 {end_idx - start_idx + 1} 行, 结果长度={len(result)}")
+        return result
 
     def _adjust_row_height_for_merged_text(self, worksheet, row: int, text: str) -> None:
         """
