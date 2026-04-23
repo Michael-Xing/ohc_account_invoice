@@ -80,7 +80,11 @@ class IndividualTestSpecParameters(IndividualTestParameters):
     meas_temperature: str = Field(default="", description="测定温度（模板 L8）")
     meas_humidity: str = Field(default="", description="测定湿度（模板 N8）")
     test_purpose: str = Field(default="", description="试验目的（模板 C37）")
-    test_conditions: str = Field(default="", description="试验条件（模板 C44）")
+    test_conditions: str = Field(default="", description="试验条件（模板 C41标题,C43填充）")
+    test_method: str = Field(default="", description="试验方法（模板 C51标题,C53填充）")
+    others: str = Field(default="", description="其他记录事项（模板 C60标题,C62填充）")
+    admission_decision_standard: str = Field(default="", description="合否判定基准（模板 C70标题,C72填充）")
+    source: str = Field(default="", description="出处（模板 C79标题,C81-C84填充）")
 
 
 class IndividualTestResultParameters(IndividualTestParameters):
@@ -92,7 +96,11 @@ class IndividualTestResultParameters(IndividualTestParameters):
     meas_temperature: str = Field(default="", description="测定温度（模板 L8）")
     meas_humidity: str = Field(default="", description="测定湿度（模板 N8）")
     test_purpose: str = Field(default="", description="试验目的（模板 C37）")
-    test_conditions: str = Field(default="", description="试验条件（模板 C44）")
+    test_conditions: str = Field(default="", description="试验条件（模板 C41标题,C43填充）")
+    test_method: str = Field(default="", description="试验方法（模板 C51标题,C53填充）")
+    others: str = Field(default="", description="其他记录事项（模板 C60标题,C62填充）")
+    admission_decision_standard: str = Field(default="", description="合否判定基准（模板 C70标题,C72填充）")
+    source: str = Field(default="", description="出处（模板 C79标题,C81-C84填充）")
 
 
 class BaseVerificationParameters(BaseTemplateParameters):
@@ -123,6 +131,7 @@ class VerificationResultParameters(BaseVerificationParameters):
     environment_temperature: str = Field(default="", description="环境温度")
     relative_humidity: str = Field(default="", description="相对湿度")
     test_voltage: str = Field(default="", description="试验电压")
+    test_numbers: List[str] = Field(default_factory=list, description="试验编号列表，按表格列向下填充")
     test_names: List[str] = Field(default_factory=list, description="试验名称列表，按表格列向下填充")
     requirements_and_standards: List[str] = Field(default_factory=list, description="适用标准/试验标准列表，按表格列向下填充")
 

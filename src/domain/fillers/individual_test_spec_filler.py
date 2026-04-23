@@ -3,22 +3,41 @@
 要求：
 - 仅填充指定单元格（含合并单元格的左上角单元格）
 - 不影响其它单元格内容与样式
-- 对 C37 / C44 设置左上对齐，并做 2 级缩进
+- 对 C37 设置左上对齐，并做 2 级缩进
 - 支持动态调整行高以完整展示内容
-- 支持在 C44 位置处理 markdown/HTML 表格，将其转换为 Excel 表格插入（C-P 列）
+- 支持在填充位置处理 markdown/HTML 表格，将其转换为 Excel 表格插入（C-P 列）
+- 各标题行（C41, C51, C60, C70, C79）不会被覆盖，内容填充从隔行开始
+- 标题行间的行数随内容动态调整，不够时插入新行，后续标题行自动下移
+- 填充逻辑保持一致（text_block + tables 支持）
 """
 
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from openpyxl import load_workbook
+from openpyxl.cell import MergedCell
 from openpyxl.styles import PatternFill, Alignment, Font, Border, Side
 from openpyxl.utils import get_column_letter
 
 from src.infrastructure.template_service import ExcelTemplateFiller
+
+
+@dataclass
+class BlockConfig:
+    """区块配置"""
+    title_row: int          # 标题行号
+    fill_start_row: int    # 填充起始行号
+    param_name: str        # 参数名
+    is_last: bool = False  # 是否是最后一个区块
+    # 计算结果（动态计算）
+    content_rows: int = 0
+    available_rows: int = 0
+    rows_to_insert: int = 0
+    cumulative_insert_rows: int = 0  # 到此区块为止累计插入的行数
 
 
 class IndividualTestSpecFiller(ExcelTemplateFiller):
@@ -101,12 +120,287 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
             cell_addr="C37",
             text=str(test_purpose) if test_purpose else missing_text,
         )
-        test_conditions = parameters.get("test_conditions")
-        self._set_test_conditions_with_tables(
-            worksheet=worksheet,
-            cell_addr="C44",
-            text=str(test_conditions) if test_conditions else missing_text,
+
+        # 3) 动态区块填充（test_conditions, test_method, others, admission_decision_standard, source）
+        self._fill_dynamic_blocks(worksheet, parameters, missing_text)
+
+    def _fill_dynamic_blocks(self, worksheet, parameters: Dict[str, Any], missing_text: str) -> None:
+        """
+        动态区块填充：根据内容行数动态插入行
+
+        区块定义（原始模板行号）：
+        区块                        标题行  填充起始行
+        test_conditions            C41    C43
+        test_method                C50    C52
+        others                     C60    C62
+        admission_decision_standard C70    C72
+        source                     C80    C82
+        test_result                C90    - (边界，不填充)
+
+        核心逻辑：
+        1. 保存 test_result 后面到模板原始最大行的内容
+        2. 按顺序处理每个区块，计算并插入需要的行
+        3. 填充内容
+        4. 恢复 test_result 后面的原始内容（只恢复模板原始内容，不覆盖填充内容）
+        """
+        # 保存 test_result 后面（行90之后）到模板原始最大行的内容
+        # 注意：只保存原始模板中的行，不包括后续可能插入的行
+        template_original_max_row = 90  # test_result 标题行之后的第一个需要恢复的行
+        saved_content = self._save_content_after_row(worksheet, 90, worksheet.max_row)
+
+        # 记录填充开始前的 C-P 列合并单元格
+        merged_cells_before_fill = {
+            str(mr): mr for mr in worksheet.merged_cells.ranges
+            if mr.min_col == 3 and mr.max_col == 16
+        }
+
+        # 区块配置（标题行和填充起始行）
+        blocks = [
+            BlockConfig(title_row=41, fill_start_row=43, param_name="test_conditions"),
+            BlockConfig(title_row=50, fill_start_row=52, param_name="test_method"),
+            BlockConfig(title_row=60, fill_start_row=62, param_name="others"),
+            BlockConfig(title_row=70, fill_start_row=72, param_name="admission_decision_standard"),
+            BlockConfig(title_row=80, fill_start_row=82, param_name="source"),
+            BlockConfig(title_row=90, fill_start_row=None, param_name="test_result", is_last=True),
+        ]
+
+        cumulative_insert_rows = 0
+
+        for i, block in enumerate(blocks):
+            if block.param_name == "test_result":
+                continue
+
+            next_block = blocks[i + 1]
+            next_title_row_adjusted = next_block.title_row + cumulative_insert_rows
+            current_fill_start = block.fill_start_row + cumulative_insert_rows
+            available_rows = next_title_row_adjusted - current_fill_start - 1
+
+            param_value = parameters.get(block.param_name, "")
+            text = str(param_value) if param_value else missing_text
+            parts = self._parse_mixed_content(text)
+            content_rows = self._calculate_content_rows(parts)
+
+            if content_rows > available_rows:
+                rows_to_insert = content_rows - available_rows
+                insert_row = next_title_row_adjusted
+                # 使用新的插入方法，保护后面的内容
+                self._insert_rows_protected(worksheet, insert_row, rows_to_insert)
+                cumulative_insert_rows += rows_to_insert
+                next_title_row_adjusted = next_block.title_row + cumulative_insert_rows
+                available_rows = next_title_row_adjusted - current_fill_start - 1
+
+            cell = worksheet.cell(current_fill_start, 3)
+            self._apply_filled_background(cell)
+            self._fill_mixed_content_with_tables(worksheet, cell, parts)
+
+        # 收集填充过程中新创建的 C-P 列合并单元格
+        new_merged_ranges = []
+        for mr in worksheet.merged_cells.ranges:
+            if mr.min_col == 3 and mr.max_col == 16:
+                range_str = str(mr)
+                if range_str not in merged_cells_before_fill:
+                    new_merged_ranges.append({
+                        'min_row': mr.min_row,
+                        'max_row': mr.max_row,
+                        'min_col': mr.min_col,
+                        'max_col': mr.max_col
+                    })
+
+        # 填充完成后，恢复 test_result 后面的原始内容
+        # 只恢复原始模板中的行（saved_content 中行号 <= template_original_max_row + rows_inserted）
+        # 不覆盖填充区域（行90之前）
+        self._restore_content_after_row(
+            worksheet, 90, cumulative_insert_rows, saved_content,
+            extra_merged_ranges=new_merged_ranges,
+            fill_end_row=90  # 填充结束行，低于此行的不恢复
         )
+
+    def _calculate_content_rows(self, parts: List[Dict[str, Any]]) -> int:
+        """
+        计算内容占用的行数（与 _fill_mixed_content_with_tables 逻辑一致）
+
+        规则：
+        - 每个对象前间隔一行（第一个对象不需要）
+        - 文本：1行（合并单元格），空文本跳过
+        - 图片：1行
+        - 表格：表头1行 + 数据行数
+        """
+        if not parts:
+            return 0
+
+        total_rows = 0
+        for idx, part in enumerate(parts):
+            # 1. 对象前间隔一行（第一个对象不需要）
+            if idx > 0:
+                total_rows += 1
+
+            if part["type"] == "text":
+                text = part.get("content", "").strip()
+                # 空文本跳过，不占用行数
+                if not text:
+                    continue
+                total_rows += 1
+
+            elif part["type"] == "image":
+                total_rows += 1
+
+            elif part["type"] == "table":
+                markdown_text = part.get("content", "")
+                if not markdown_text:
+                    continue
+                headers, rows = self._parse_markdown_table(markdown_text)
+                if headers:
+                    total_rows += 1 + len(rows)  # 表头 + 数据行
+
+        return total_rows
+
+    def _insert_rows_protected(self, worksheet, insert_at_row: int, num_rows: int) -> None:
+        """
+        保护性插入行（供 _fill_dynamic_blocks 内部使用）
+
+        直接使用标准 insert_rows，后续由 _restore_content_after_row 恢复
+
+        Args:
+            worksheet: 工作表对象
+            insert_at_row: 插入位置
+            num_rows: 要插入的行数
+        """
+        if num_rows <= 0:
+            return
+        worksheet.insert_rows(insert_at_row, amount=num_rows)
+
+    def _save_content_after_row(self, worksheet, after_row: int, max_row: int) -> Dict[str, Any]:
+        """
+        保存指定行之后的所有内容
+
+        Args:
+            worksheet: 工作表对象
+            after_row: 保存此行之后的内容
+            max_row: 最大行号
+
+        Returns:
+            Dict: 保存的内容
+        """
+        saved = {
+            'rows': [],
+            'merged_ranges': [],
+            'column_dimensions': {},
+            'row_dimensions': {}
+        }
+
+        # 保存行数据
+        for row in range(after_row + 1, max_row + 1):
+            row_data = {
+                'row': row,
+                'cells': {},
+                'height': worksheet.row_dimensions[row].height
+            }
+            for col in range(1, worksheet.max_column + 1):
+                cell = worksheet.cell(row, col)
+                row_data['cells'][col] = {
+                    'value': cell.value,
+                    'data_type': cell.data_type,
+                }
+            saved['rows'].append(row_data)
+
+        # 保存合并单元格信息
+        for merged_range in list(worksheet.merged_cells.ranges):
+            if merged_range.min_row > after_row:
+                saved['merged_ranges'].append({
+                    'min_row': merged_range.min_row,
+                    'max_row': merged_range.max_row,
+                    'min_col': merged_range.min_col,
+                    'max_col': merged_range.max_col
+                })
+
+        # 保存列宽
+        for col in range(1, worksheet.max_column + 1):
+            col_letter = get_column_letter(col)
+            if col_letter in worksheet.column_dimensions:
+                saved['column_dimensions'][col] = worksheet.column_dimensions[col_letter].width
+
+        return saved
+
+    def _restore_content_after_row(
+        self, worksheet, after_row: int, rows_inserted: int, saved: Dict[str, Any],
+        extra_merged_ranges: List[Dict[str, int]] = None,
+        fill_end_row: int = None
+    ) -> None:
+        """
+        恢复保存的内容到正确位置
+
+        Args:
+            worksheet: 工作表对象
+            after_row: 原分隔行
+            rows_inserted: 插入的行数
+            saved: 保存的内容
+            extra_merged_ranges: 额外需要恢复的合并单元格列表（用于保留填充过程中新创建的合并）
+            fill_end_row: 填充结束行，低于此行号的恢复内容将被跳过（用于避免覆盖填充内容）
+        """
+        if not saved or not saved.get('rows'):
+            return
+
+        # 恢复合并单元格（先清除受影响的，但保留填充区域）
+        ranges_to_remove = []
+        for merged_range in list(worksheet.merged_cells.ranges):
+            if merged_range.min_row > after_row:
+                # 如果设置了 fill_end_row，跳过填充区域内的合并
+                if fill_end_row is not None and merged_range.min_row <= fill_end_row:
+                    continue
+                ranges_to_remove.append(str(merged_range))
+        for range_str in ranges_to_remove:
+            try:
+                worksheet.unmerge_cells(range_str)
+            except Exception:
+                pass
+
+        # 恢复行数据（跳过填充区域）
+        for row_data in saved['rows']:
+            original_row = row_data['row']
+            new_row = original_row + rows_inserted
+
+            # 跳过填充区域的行
+            if fill_end_row is not None and new_row <= fill_end_row:
+                continue
+
+            # 恢复单元格值（跳过合并单元格中的非左上角单元格）
+            for col, cell_data in row_data['cells'].items():
+                cell = worksheet.cell(new_row, col)
+                # 跳过合并单元格中的非左上角单元格
+                if isinstance(cell, MergedCell):
+                    continue
+                cell.value = cell_data['value']
+
+            # 恢复行高
+            if row_data.get('height'):
+                worksheet.row_dimensions[new_row].height = row_data['height']
+
+        # 恢复合并单元格（跳过填充区域）
+        for merged_info in saved['merged_ranges']:
+            # 跳过填充区域的合并
+            if fill_end_row is not None and merged_info['min_row'] <= fill_end_row:
+                continue
+            try:
+                new_min_row = merged_info['min_row'] + rows_inserted
+                new_max_row = merged_info['max_row'] + rows_inserted
+
+                col_letter_start = get_column_letter(merged_info['min_col'])
+                col_letter_end = get_column_letter(merged_info['max_col'])
+                merged_range_str = f"{col_letter_start}{new_min_row}:{col_letter_end}{new_max_row}"
+                worksheet.merge_cells(merged_range_str)
+            except Exception:
+                pass
+
+        # 恢复额外传入的合并单元格（填充过程中新创建的）
+        if extra_merged_ranges:
+            for merged_info in extra_merged_ranges:
+                try:
+                    col_letter_start = get_column_letter(merged_info['min_col'])
+                    col_letter_end = get_column_letter(merged_info['max_col'])
+                    merged_range_str = f"{col_letter_start}{merged_info['min_row']}:{col_letter_end}{merged_info['max_row']}"
+                    worksheet.merge_cells(merged_range_str)
+                except Exception:
+                    pass
 
     def _set_wrap_text_and_adjust_row_height(self, worksheet, cell) -> None:
         """设置单元格自动换行并动态调整行高"""
@@ -203,6 +497,11 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         """
         设置试验条件文本，支持 markdown 表格转换为 Excel 表格
         内容结构：文本 + 表格 + 文本 + 表格 ...
+        
+        Args:
+            worksheet: 工作表对象
+            cell_addr: 起始单元格地址
+            text: 要填充的文本
         """
         if text == "":
             return
@@ -216,22 +515,7 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         cell = worksheet[cell_addr]
         self._apply_filled_background(cell)
 
-        # 如果只有纯文本，没有表格，则使用原有的单单元格填充方式
-        has_tables = any(part["type"] == "table" for part in parts)
-        
-        if not has_tables:
-            cell.value = text
-            old_alignment = cell.alignment
-            cell.alignment = Alignment(
-                horizontal=old_alignment.horizontal or "left",
-                vertical=old_alignment.vertical or "top",
-                indent=1,
-                wrap_text=True,
-            )
-            self._adjust_row_height_for_text(worksheet, cell.row, cell.column)
-            return
-
-        # 处理混合内容（文本 + 表格）
+        # 统一由 _fill_mixed_content_with_tables 处理（支持纯文本、表格、图片等）
         self._fill_mixed_content_with_tables(worksheet, cell, parts)
 
     def _fill_mixed_content_with_tables(
@@ -241,11 +525,16 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         填充混合内容（文本+表格+图片）
 
         结构：
-        - 从 C44 单元格作为起点
+        - 从指定单元格作为起点
         - 每个对象（文本/表格/图片）间隔1个标准行
-        - 文本：合并 C-R 列，左对齐，自适应行高
+        - 文本：合并 C-P 列，左对齐，自适应行高
         - 图片：下载后按顺序插入单元格
         - 表格：按 markdown/HTML 语法解析后插入
+
+        Args:
+            worksheet: 工作表对象
+            first_cell: 起始单元格
+            parts: 解析后的内容列表
         """
         current_row = first_cell.row
 
@@ -284,8 +573,10 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
     def _trim_empty_lines(self, text: str) -> str:
         """剔除文本前后的空行"""
         if not text:
+            print(f"[DEBUG] _trim_empty_lines: 输入为空")
             return ""
         lines = text.split('\n')
+        print(f"[DEBUG] _trim_empty_lines: 原始 {len(lines)} 行")
         # 剔除前后空行
         start_idx = 0
         end_idx = len(lines) - 1
@@ -294,8 +585,11 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         while end_idx >= start_idx and not lines[end_idx].strip():
             end_idx -= 1
         if start_idx > end_idx:
+            print(f"[DEBUG] _trim_empty_lines: 全部都是空行")
             return ""
-        return '\n'.join(lines[start_idx:end_idx + 1])
+        result = '\n'.join(lines[start_idx:end_idx + 1])
+        print(f"[DEBUG] _trim_empty_lines: 处理后 {end_idx - start_idx + 1} 行, 结果长度={len(result)}")
+        return result
 
     def _adjust_row_height_for_merged_text(self, worksheet, row: int, text: str) -> None:
         """

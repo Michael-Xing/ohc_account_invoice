@@ -142,13 +142,13 @@ class Settings(BaseSettings):
     sentry_environment: Optional[str] = Field(default=None, description="Sentry environment name")
 
     # SSO 认证配置
-    auth_sso_enabled: bool = Field(default=True, description="是否启用 SSO 认证")
+    auth_sso_enabled: bool = Field(default=False, description="是否启用 SSO 认证")
     auth_sso_verify_url: Optional[str] = Field(default=None, description="SSO服务器验证URL（生产环境必填）")
     auth_skip_auth_paths: list[str] = Field(default_factory=lambda: ["/health", "/docs", "/redoc", "/openapi.json", "/"], description="跳过认证的路径")
     auth_timeout: int = Field(default=10, description="SSO验证超时时间（秒）")
 
     # API Key 配置
-    auth_api_key_enabled: bool = Field(default=True, description="是否启用 API Key 认证")
+    auth_api_key_enabled: bool = Field(default=False, description="是否启用 API Key 认证")
     auth_api_key_valid_keys: list[str] = Field(default_factory=list, description="有效的 API Key 列表")
     
     def get_template_path(self, template_type: str) -> Path:
