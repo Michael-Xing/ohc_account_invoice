@@ -1,6 +1,6 @@
 [project]
 name = "ohc-account-invoice"
-version = "0.1.0"
+version = "1.0.5"
 description = "OHC账票生成MCP服务"
 authors = [
     {name = "OHC Team", email = "team@ohc.com"}
@@ -18,8 +18,7 @@ dependencies = [
     "minio>=7.2.0",
     "boto3>=1.28.0",
     "tomli>=2.0.0; python_version < '3.11'",  # Python 3.11+ 使用内置 tomllib
-    # jinja2 removed (not used)
-    # python-multipart removed (no file-upload endpoints)
+    "httpx>=0.25.0",  # HTTP 客户端，用于 SSO 验证
 ]
 
 [project.optional-dependencies]

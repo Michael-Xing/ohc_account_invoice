@@ -14,6 +14,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 from src.config import settings
+from src.interfaces.middleware.auth import AuthMiddleware, create_auth_middleware
 
 # Use uvicorn's logger name so it follows uvicorn log configuration.
 logger = logging.getLogger("uvicorn.error")
@@ -42,6 +43,19 @@ from src.interfaces.routers.system import router as system_router
 app.include_router(templates_router)
 app.include_router(generate_router)
 app.include_router(system_router)
+
+# 注册认证中间件
+auth_middleware_config = create_auth_middleware()
+if auth_middleware_config:
+    app.add_middleware(
+        AuthMiddleware,
+        sso_validator=auth_middleware_config.sso_validator,
+        api_key_validator=auth_middleware_config.api_key_validator,
+        skip_paths=auth_middleware_config.skip_paths,
+    )
+    logger.info("认证中间件已注册")
+else:
+    logger.info("未启用认证中间件")
 
 
 @app.exception_handler(RequestValidationError)

@@ -43,6 +43,7 @@ Thumbs.db
 
 # 项目特定
 generated_files/
+config/config.toml
 *.log
 config_*.env
 !config_example.env

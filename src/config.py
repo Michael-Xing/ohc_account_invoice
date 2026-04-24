@@ -119,6 +119,7 @@ class Settings(BaseSettings):
     aws_secret_access_key: Optional[str] = Field(default=None, description="AWS秘密访问密钥")
     aws_bucket_name: Optional[str] = Field(default=None, description="S3存储桶名称")
     aws_region: str = Field(default="us-east-1", description="AWS区域")
+    s3_endpoint: Optional[str] = Field(default=None, description="S3/MinIO自定义端点（用于MinIO兼容）")
     
     # FastAPI应用配置
     app_name: str = Field(default="OHC账票生成服务", description="应用名称")
@@ -139,6 +140,16 @@ class Settings(BaseSettings):
     # Sentry / monitoring (optional)
     sentry_dsn: Optional[str] = Field(default=None, description="Sentry DSN (optional)")
     sentry_environment: Optional[str] = Field(default=None, description="Sentry environment name")
+
+    # SSO 认证配置
+    auth_sso_enabled: bool = Field(default=False, description="是否启用 SSO 认证")
+    auth_sso_verify_url: Optional[str] = Field(default=None, description="SSO服务器验证URL（生产环境必填）")
+    auth_skip_auth_paths: list[str] = Field(default_factory=lambda: ["/health", "/docs", "/redoc", "/openapi.json", "/"], description="跳过认证的路径")
+    auth_timeout: int = Field(default=10, description="SSO验证超时时间（秒）")
+
+    # API Key 配置
+    auth_api_key_enabled: bool = Field(default=False, description="是否启用 API Key 认证")
+    auth_api_key_valid_keys: list[str] = Field(default_factory=list, description="有效的 API Key 列表")
     
     def get_template_path(self, template_type: str) -> Path:
         """获取模板路径"""
@@ -234,6 +245,9 @@ def _flatten_toml_config(data: Dict[str, Any]) -> Dict[str, Any]:
             for key, value in s3_config.items():
                 result_key = mapping.get(key, f"aws_{key}")
                 result[result_key] = value
+            # 特殊处理：如果S3配置中有endpoint字段，映射到s3_endpoint
+            if "endpoint" in s3_config:
+                result["s3_endpoint"] = s3_config["endpoint"]
     
     # 模板配置
     if "templates" in data:
@@ -256,7 +270,47 @@ def _flatten_toml_config(data: Dict[str, Any]) -> Dict[str, Any]:
             result["sentry_dsn"] = monitoring_config["sentry_dsn"]
         if "sentry_environment" in monitoring_config:
             result["sentry_environment"] = monitoring_config["sentry_environment"]
-    
+
+    # 认证配置
+    if "auth" in data:
+        auth_config = data["auth"]
+        
+        # SSO 配置（支持嵌套 [auth.sso] 和旧的 [auth] 扁平结构）
+        sso_config = auth_config.get("sso", {})
+        if "enabled" in sso_config:
+            result["auth_sso_enabled"] = sso_config["enabled"]
+        elif "enabled" in auth_config:  # 向后兼容旧的扁平结构
+            result["auth_sso_enabled"] = auth_config["enabled"]
+        
+        if "verify_url" in sso_config:
+            result["auth_sso_verify_url"] = sso_config["verify_url"]
+        elif "sso_verify_url" in auth_config:  # 向后兼容旧的扁平结构
+            result["auth_sso_verify_url"] = auth_config["sso_verify_url"]
+        
+        # 跳过认证路径（支持扁平结构 skip_auth_paths 或嵌套结构 skip_auth_paths.paths）
+        if "paths" in sso_config:
+            result["auth_skip_auth_paths"] = sso_config["paths"]
+        elif "skip_auth_paths" in auth_config:
+            skip_paths_value = auth_config["skip_auth_paths"]
+            if isinstance(skip_paths_value, list):
+                result["auth_skip_auth_paths"] = skip_paths_value
+            elif isinstance(skip_paths_value, dict) and "paths" in skip_paths_value:
+                result["auth_skip_auth_paths"] = skip_paths_value["paths"]
+        
+        # 超时配置（读取 [auth.sso] 中的 timeout）
+        if "timeout" in sso_config:
+            timeout_value = sso_config["timeout"]
+            if isinstance(timeout_value, int):
+                result["auth_timeout"] = timeout_value
+
+        # API Key 配置
+        if "api_key" in auth_config:
+            api_key_config = auth_config["api_key"]
+            if "enabled" in api_key_config:
+                result["auth_api_key_enabled"] = api_key_config["enabled"]
+            if "valid_keys" in api_key_config:
+                result["auth_api_key_valid_keys"] = api_key_config["valid_keys"]
+
     return result
 
 
