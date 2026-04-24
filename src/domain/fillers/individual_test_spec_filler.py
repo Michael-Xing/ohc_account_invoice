@@ -1274,10 +1274,13 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         """
         在指定单元格插入图片
 
+        图片将适应 C～I 列的宽度（7列），确保适合人类阅读。
+        图片独占一行。
+
         Args:
             worksheet: 工作表对象
             row: 行号
-            col: 列号（C列 = 3）
+            col: 列号（C列 = 3，但实际使用 C～I 列）
             image_path: 图片路径
         """
         from openpyxl.drawing.image import Image as XLImage
@@ -1286,45 +1289,60 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
             return
 
         try:
-            # 获取列字母
-            col_letter = get_column_letter(col)
-            cell_ref = f"{col_letter}{row}"
+            # 取消该行的合并单元格（针对 C～I 列）
+            self._unmerge_cells_in_range(worksheet, row, row, 3, 9)
 
-            # 取消该行的合并单元格
-            self._unmerge_cells_in_range(worksheet, row, row, 3, 16)
-
-            # 加载图片并调整大小以适应列宽
+            # 加载图片
             img = XLImage(str(image_path))
-
-            # 获取列宽和行高（单位：字符/行）
-            col_width = worksheet.column_dimensions[col_letter].width or 50
-            row_height = worksheet.row_dimensions[row].height or 100
-
-            # 计算图片缩放比例，使其适应单元格
             img_width = img.width
             img_height = img.height
 
-            # 计算宽度缩放比例（基于列宽，约等于字符数 * 7 像素）
-            target_width = col_width * 7
+            # 计算 C～I 列的总宽度（单位：字符数）
+            # Excel 中列宽单位是"字符数"，中文字符约等于 2 个单位
+            total_col_width_chars = 0
+            for col_idx in range(3, 10):  # C=3 到 I=9
+                col_letter = get_column_letter(col_idx)
+                col_width = worksheet.column_dimensions[col_letter].width
+                if col_width and col_width > 0:
+                    total_col_width_chars += col_width
+                else:
+                    total_col_width_chars += 12  # 默认列宽
+
+            # 将字符宽度转换为像素（Excel 中约 7 像素/字符）
+            total_pixel_width = total_col_width_chars * 7
+
+            # 计算人类适合阅读的尺寸
+            # 目标：宽度填满 C～I 列，高度按比例缩放
+            # 最小宽度：300像素，最大宽度：800像素
+            min_width = 300
+            max_width = 800
+            target_width = max(min_width, min(total_pixel_width, max_width))
+
+            # 根据目标宽度计算缩放比例
+            scale = 1.0
             if img_width > target_width:
                 scale = target_width / img_width
-                img_width = int(img_width * scale)
-                img_height = int(img_height * scale)
 
-            # 限制最大高度
-            max_height = 400
-            if img_height > max_height:
-                scale = max_height / img_height
-                img_width = int(img_width * scale)
-                img_height = max_height
+            # 计算缩放后的高度
+            new_width = int(img_width * scale)
+            new_height = int(img_height * scale)
 
-            img.width = img_width
-            img.height = img_height
+            # 设置图片尺寸
+            img.width = new_width
+            img.height = new_height
 
-            # 设置行高以容纳图片
-            worksheet.row_dimensions[row].height = img_height + 5
+            # 设置行高（图片高度 + 上下边距），确保完整展示
+            min_row_height = new_height + 10  # 图片高度 + 上下边距
+            current_height = worksheet.row_dimensions[row].height
+            if not current_height or current_height < min_row_height:
+                worksheet.row_dimensions[row].height = min_row_height
 
-            # 添加图片到工作表
+            # 设置单元格对齐（左上对齐）
+            cell = worksheet.cell(row, 3)
+            cell.alignment = Alignment(horizontal='left', vertical='top')
+
+            # 添加图片到工作表，锚定到 C 列
+            cell_ref = f"C{row}"
             worksheet.add_image(img)
             img.anchor = cell_ref
 
