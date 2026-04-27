@@ -1700,7 +1700,31 @@
           "test_conditions": {
             "type": "string",
             "title": "Test Conditions",
-            "description": "试验条件（模板 C44）",
+            "description": "试验条件（模板 C41标题,C43填充）",
+            "default": ""
+          },
+          "test_method": {
+            "type": "string",
+            "title": "Test Method",
+            "description": "试验方法（模板 C51标题,C53填充）",
+            "default": ""
+          },
+          "others": {
+            "type": "string",
+            "title": "Others",
+            "description": "其他记录事项（模板 C60标题,C62填充）",
+            "default": ""
+          },
+          "admission_decision_standard": {
+            "type": "string",
+            "title": "Admission Decision Standard",
+            "description": "合否判定基准（模板 C70标题,C72填充）",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "出处（模板 C79标题,C81-C84填充）",
             "default": ""
           }
         },
@@ -1808,7 +1832,31 @@
           "test_conditions": {
             "type": "string",
             "title": "Test Conditions",
-            "description": "试验条件（模板 C44）",
+            "description": "试验条件（模板 C41标题,C43填充）",
+            "default": ""
+          },
+          "test_method": {
+            "type": "string",
+            "title": "Test Method",
+            "description": "试验方法（模板 C51标题,C53填充）",
+            "default": ""
+          },
+          "others": {
+            "type": "string",
+            "title": "Others",
+            "description": "其他记录事项（模板 C60标题,C62填充）",
+            "default": ""
+          },
+          "admission_decision_standard": {
+            "type": "string",
+            "title": "Admission Decision Standard",
+            "description": "合否判定基准（模板 C70标题,C72填充）",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "出处（模板 C79标题,C81-C84填充）",
             "default": ""
           }
         },
@@ -1908,10 +1956,10 @@
             "description": "生产地，如果=OMD则填固定值到E22，否则空白",
             "default": ""
           },
-          "ohc_target": {
+          "target_area": {
             "type": "string",
-            "title": "Ohc Target",
-            "description": "是否是OHC 向け，如果=True则填固定值到E24，否则空白",
+            "title": "Target Area",
+            "description": "贩卖国家，多个值用半角逗号连接，包含OHC时填固定值到G19和G26",
             "default": ""
           },
           "sales_channel": {
@@ -1957,6 +2005,25 @@
         "title": "LabelingSpecificationParameters",
         "description": "标签仕样书-仕样确认书参数"
       },
+      "PTFFileNumberMapItem": {
+        "properties": {
+          "file_number": {
+            "type": "string",
+            "title": "File Number",
+            "description": "文件编号",
+            "default": ""
+          },
+          "short_name": {
+            "type": "string",
+            "title": "Short Name",
+            "description": "简称",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "PTFFileNumberMapItem",
+        "description": "PTF INDEX 文件编号与简称"
+      },
       "PTFIndexParameters": {
         "properties": {
           "project_number": {
@@ -2000,11 +2067,25 @@
             "title": "Language",
             "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
             "default": ""
+          },
+          "target_area": {
+            "type": "string",
+            "title": "Target Area",
+            "description": "贩卖国家，多个值用半角逗号连接",
+            "default": ""
+          },
+          "file_number_map": {
+            "items": {
+              "$ref": "#/components/schemas/PTFFileNumberMapItem"
+            },
+            "type": "array",
+            "title": "File Number Map",
+            "description": "文件编号与简称列表，按顺序对应模板中的数据行"
           }
         },
         "type": "object",
         "title": "PTFIndexParameters",
-        "description": "PTF INDEX（`static/templates/excel/zh/PTF INDEX.xlsx`）参数"
+        "description": "PTF INDEX参数"
       },
       "PackagingDesignSpecificationParameters": {
         "properties": {
@@ -2240,18 +2321,6 @@
             "description": "语言代码 (zh/ja/en)，如果不指定则使用默认模板",
             "default": ""
           },
-          "project_scope": {
-            "type": "string",
-            "title": "Project Scope",
-            "description": "项目范围",
-            "default": ""
-          },
-          "project_timeline": {
-            "type": "string",
-            "title": "Project Timeline",
-            "description": "项目时间线",
-            "default": ""
-          },
           "theme_no": {
             "type": "string",
             "title": "Theme No",
@@ -2268,6 +2337,151 @@
             "type": "string",
             "title": "Product Model Name",
             "description": "商品型式名",
+            "default": ""
+          },
+          "sales_name": {
+            "type": "string",
+            "title": "Sales Name",
+            "description": "贩卖名称",
+            "default": ""
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "商品目标",
+            "default": ""
+          },
+          "differentiation": {
+            "type": "string",
+            "title": "Differentiation",
+            "description": "差异化",
+            "default": ""
+          },
+          "design": {
+            "type": "string",
+            "title": "Design",
+            "description": "设计一览",
+            "default": ""
+          },
+          "issue_result": {
+            "type": "string",
+            "title": "Issue Result",
+            "description": "课题分析·对策结果书",
+            "default": ""
+          },
+          "document_drawing_no": {
+            "type": "string",
+            "title": "Document Drawing No",
+            "description": "文件·图纸编号",
+            "default": ""
+          },
+          "document_drawing_rev": {
+            "type": "string",
+            "title": "Document Drawing Rev",
+            "description": "文件·图纸版本",
+            "default": ""
+          },
+          "software": {
+            "type": "string",
+            "title": "Software",
+            "description": "软件开发计划书",
+            "default": ""
+          },
+          "function_module": {
+            "type": "string",
+            "title": "Function Module",
+            "default": ""
+          },
+          "p_plan": {
+            "type": "string",
+            "title": "P Plan",
+            "default": ""
+          },
+          "equipment_plan": {
+            "type": "string",
+            "title": "Equipment Plan",
+            "default": ""
+          },
+          "engineering_plan": {
+            "type": "string",
+            "title": "Engineering Plan",
+            "default": ""
+          },
+          "customer_service": {
+            "type": "string",
+            "title": "Customer Service",
+            "default": ""
+          },
+          "approval_plan": {
+            "type": "string",
+            "title": "Approval Plan",
+            "default": ""
+          },
+          "risk_management": {
+            "type": "string",
+            "title": "Risk Management",
+            "default": ""
+          },
+          "es_verification_plan": {
+            "type": "string",
+            "title": "Es Verification Plan",
+            "default": ""
+          },
+          "es_verification_result": {
+            "type": "string",
+            "title": "Es Verification Result",
+            "default": ""
+          },
+          "igs": {
+            "type": "string",
+            "title": "Igs",
+            "default": ""
+          },
+          "qc_engineering": {
+            "type": "string",
+            "title": "Qc Engineering",
+            "default": ""
+          },
+          "new_product_confirmation": {
+            "type": "string",
+            "title": "New Product Confirmation",
+            "description": "新商品开发确认书",
+            "default": ""
+          },
+          "requirement_spec": {
+            "type": "string",
+            "title": "Requirement Spec",
+            "description": "要求仕样书",
+            "default": ""
+          },
+          "product_design_spec": {
+            "type": "string",
+            "title": "Product Design Spec",
+            "description": "产品设计仕样书",
+            "default": ""
+          },
+          "schedule": {
+            "type": "string",
+            "title": "Schedule",
+            "description": "日程表",
+            "default": ""
+          },
+          "doc_record_list": {
+            "type": "string",
+            "title": "Doc Record List",
+            "description": "作成文件·记录一览表",
+            "default": ""
+          },
+          "target_fc": {
+            "type": "string",
+            "title": "Target Fc",
+            "description": "开发目标FC",
+            "default": ""
+          },
+          "color_instruction_record": {
+            "type": "string",
+            "title": "Color Instruction Record",
+            "description": "颜色指示相关记录",
             "default": ""
           }
         },
@@ -2563,6 +2777,14 @@
             "description": "阶段",
             "default": "ES"
           },
+          "test_list": {
+            "items": {
+              "$ref": "#/components/schemas/VerificationTestItem"
+            },
+            "type": "array",
+            "title": "Test List",
+            "description": "试验列表，按表格列向下填充（每项对应模板一行）"
+          },
           "theme_no": {
             "type": "string",
             "title": "Theme No",
@@ -2587,39 +2809,17 @@
             "description": "商品型式名",
             "default": ""
           },
-          "environment_temperature": {
+          "condition": {
             "type": "string",
-            "title": "Environment Temperature",
-            "description": "环境温度",
+            "title": "Condition",
+            "description": "条件",
             "default": ""
           },
-          "relative_humidity": {
+          "doubt_condition": {
             "type": "string",
-            "title": "Relative Humidity",
-            "description": "相对湿度",
+            "title": "Doubt Condition",
+            "description": "疑问条件",
             "default": ""
-          },
-          "test_voltage": {
-            "type": "string",
-            "title": "Test Voltage",
-            "description": "试验电压",
-            "default": ""
-          },
-          "test_names": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Test Names",
-            "description": "试验名称列表，按表格列向下填充"
-          },
-          "requirements_and_standards": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Requirements And Standards",
-            "description": "适用标准/试验标准列表，按表格列向下填充"
           }
         },
         "type": "object",
@@ -2681,6 +2881,14 @@
             "description": "阶段",
             "default": "ES"
           },
+          "test_list": {
+            "items": {
+              "$ref": "#/components/schemas/VerificationTestItem"
+            },
+            "type": "array",
+            "title": "Test List",
+            "description": "试验列表，按表格列向下填充（每项对应模板一行）"
+          },
           "theme_no": {
             "type": "string",
             "title": "Theme No",
@@ -2705,44 +2913,65 @@
             "description": "商品型式名",
             "default": ""
           },
-          "environment_temperature": {
+          "condition": {
             "type": "string",
-            "title": "Environment Temperature",
-            "description": "环境温度",
+            "title": "Condition",
+            "description": "条件",
             "default": ""
           },
-          "relative_humidity": {
+          "doubt_condition": {
             "type": "string",
-            "title": "Relative Humidity",
-            "description": "相对湿度",
+            "title": "Doubt Condition",
+            "description": "疑问条件",
             "default": ""
           },
-          "test_voltage": {
+          "verification_plan": {
             "type": "string",
-            "title": "Test Voltage",
-            "description": "试验电压",
+            "title": "Verification Plan",
+            "description": "验证计划书编号",
             "default": ""
-          },
-          "test_names": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Test Names",
-            "description": "试验名称列表，按表格列向下填充"
-          },
-          "requirements_and_standards": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Requirements And Standards",
-            "description": "适用标准/试验标准列表，按表格列向下填充"
           }
         },
         "type": "object",
         "title": "VerificationResultParameters",
         "description": "验证结果书参数"
+      },
+      "VerificationTestItem": {
+        "properties": {
+          "test_number": {
+            "type": "string",
+            "title": "Test Number",
+            "description": "试验编号",
+            "default": ""
+          },
+          "test_name": {
+            "type": "string",
+            "title": "Test Name",
+            "description": "试验名称",
+            "default": ""
+          },
+          "requirement_and_standard": {
+            "type": "string",
+            "title": "Requirement And Standard",
+            "description": "适用标准/试验标准",
+            "default": ""
+          },
+          "individual_test_spec_number": {
+            "type": "string",
+            "title": "Individual Test Spec Number",
+            "description": "个别试验要项书编号",
+            "default": ""
+          },
+          "individual_test_result_number": {
+            "type": "string",
+            "title": "Individual Test Result Number",
+            "description": "个别试验结果书编号",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "VerificationTestItem",
+        "description": "验证计划/结果书-试验项"
       }
     }
   }
