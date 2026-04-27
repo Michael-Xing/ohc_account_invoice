@@ -59,10 +59,19 @@ class DHFIndexParameters(BaseTemplateParameters):
     file_list: List[FileListItem] = Field(default_factory=list, description="文件列表")
 
 
+class PTFFileNumberMapItem(NullToDefaultModel):
+    """PTF INDEX 文件编号与简称"""
+    file_number: str = Field(default="", description="文件编号")
+    short_name: str = Field(default="", description="简称")
+
+
 class PTFIndexParameters(BaseTemplateParameters):
     """PTF INDEX参数"""
     target_area: str = Field(default="", description="贩卖国家，多个值用半角逗号连接")
-    file_numbers: List[str] = Field(default_factory=list, description="文件编号列表，按顺序依次填充到模板对应行")
+    file_number_map: List[PTFFileNumberMapItem] = Field(
+        default_factory=list,
+        description="文件编号与简称列表，按顺序对应模板中的数据行",
+    )
 
 
 
@@ -103,9 +112,22 @@ class IndividualTestResultParameters(IndividualTestParameters):
     source: str = Field(default="", description="出处（模板 C79标题,C81-C84填充）")
 
 
+class VerificationTestItem(NullToDefaultModel):
+    """验证计划/结果书-试验项"""
+    test_number: str = Field(default="", description="试验编号")
+    test_name: str = Field(default="", description="试验名称")
+    requirement_and_standard: str = Field(default="", description="适用标准/试验标准")
+    individual_test_spec_number: str = Field(default="", description="个别试验要项书编号")
+    individual_test_result_number: str = Field(default="", description="个别试验结果书编号")
+
+
 class BaseVerificationParameters(BaseTemplateParameters):
     """验证计划/结果书公共参数"""
     phase: Literal["WS", "ES", "PP"] = Field(default="ES", description="阶段")
+    test_list: List[VerificationTestItem] = Field(
+        default_factory=list,
+        description="试验列表，按表格列向下填充（每项对应模板一行）",
+    )
 
 
 class VerificationPlanParameters(BaseVerificationParameters):
@@ -114,12 +136,8 @@ class VerificationPlanParameters(BaseVerificationParameters):
     theme_name: str = Field(default="", description="项目名称")
     sales_name: str = Field(default="", description="贩卖名称")
     product_model_name: str = Field(default="", description="商品型式名")
-    environment_temperature: str = Field(default="", description="环境温度")
-    relative_humidity: str = Field(default="", description="相对湿度")
-    test_voltage: str = Field(default="", description="试验电压")
-    test_numbers: List[str] = Field(default_factory=list, description="试验编号列表，按表格列向下填充")
-    test_names: List[str] = Field(default_factory=list, description="试验名称列表，按表格列向下填充")
-    requirements_and_standards: List[str] = Field(default_factory=list, description="适用标准/试验标准列表，按表格列向下填充")
+    condition: str = Field(default="", description="条件")
+    doubt_condition: str = Field(default="", description="疑问条件")
 
 
 class VerificationResultParameters(BaseVerificationParameters):
@@ -128,12 +146,9 @@ class VerificationResultParameters(BaseVerificationParameters):
     theme_name: str = Field(default="", description="项目名称")
     sales_name: str = Field(default="", description="贩卖名称")
     product_model_name: str = Field(default="", description="商品型式名")
-    environment_temperature: str = Field(default="", description="环境温度")
-    relative_humidity: str = Field(default="", description="相对湿度")
-    test_voltage: str = Field(default="", description="试验电压")
-    test_numbers: List[str] = Field(default_factory=list, description="试验编号列表，按表格列向下填充")
-    test_names: List[str] = Field(default_factory=list, description="试验名称列表，按表格列向下填充")
-    requirements_and_standards: List[str] = Field(default_factory=list, description="适用标准/试验标准列表，按表格列向下填充")
+    condition: str = Field(default="", description="条件")
+    doubt_condition: str = Field(default="", description="疑问条件")
+    verification_plan: str = Field(default="", description="验证计划书编号")  # 验证结果书独有
 
 
 class BasicSpecificationServiceEnvironmentConditions(NullToDefaultModel):

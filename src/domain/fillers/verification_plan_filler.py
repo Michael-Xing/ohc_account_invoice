@@ -11,6 +11,7 @@ from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
 
 from src.infrastructure.template_service import TemplateFillerStrategy
+from src.interfaces.schemas.templates import VerificationTestItem
 
 logger = logging.getLogger(__name__)
 
@@ -26,25 +27,18 @@ class VerificationPlanFiller(TemplateFillerStrategy):
         try:
             doc = Document(template_path)
 
-            test_numbers = self._normalize_list_field(parameters.get("test_numbers"))
-            if test_numbers:
-                self._fill_list_column(doc, "{{test_numbers}}", test_numbers)
+            for table in doc.tables:
+                table.autofit = False
 
-            test_names = self._normalize_list_field(parameters.get("test_names"))
-            if test_names:
-                self._fill_list_column(doc, "{{test_names}}", test_names)
-
-            requirements_and_standards = self._normalize_list_field(parameters.get("requirements_and_standards"))
-            if requirements_and_standards:
-                self._fill_list_column(doc, "{{requirements_and_standards}}", requirements_and_standards)
+            test_columns = self._extract_test_columns(parameters.get("test_list"))
+            for field, values in test_columns.items():
+                if values:
+                    self._fill_list_column(doc, f"{{{{{field}}}}}", values)
 
             flat_parameters = self._flatten_parameters(parameters)
-            if not test_numbers:
-                flat_parameters["test_numbers"] = self._missing_text()
-            if not test_names:
-                flat_parameters["test_names"] = self._missing_text()
-            if not requirements_and_standards:
-                flat_parameters["requirements_and_standards"] = self._missing_text()
+            for field in VerificationTestItem.model_fields:
+                if not test_columns.get(field):
+                    flat_parameters[field] = self._missing_text()
             self._fallback_text_replace(doc, flat_parameters)
 
             doc.save(output_path)
@@ -54,29 +48,36 @@ class VerificationPlanFiller(TemplateFillerStrategy):
             return False
 
     # ------------------------------------------------------------------
-    # 列表字段 → 表格列填充
+    # test_list -> 按字段拆分的列值
     # ------------------------------------------------------------------
 
-    def _normalize_list_field(self, value: Any) -> List[str]:
-        if value is None:
-            return []
-        if isinstance(value, list):
-            normalized: List[str] = []
-            for item in value:
-                if item is None:
-                    normalized.append(self._missing_text())
+    def _extract_test_columns(self, test_list: Any) -> Dict[str, List[str]]:
+        """将 test_list 按字段名拆成 {field: [行值]}，空值用兜底文案补齐以保持行对齐。"""
+        columns: Dict[str, List[str]] = {}
+        if not test_list or not isinstance(test_list, list):
+            return columns
+
+        for item in test_list:
+            if isinstance(item, dict):
+                data = item
+            elif hasattr(item, "model_dump"):
+                data = item.model_dump()
+            elif item is None:
+                data = {}
+            else:
+                data = vars(item)
+
+            for field, raw in data.items():
+                if raw is None or (isinstance(raw, str) and raw.strip() == ""):
+                    text = self._missing_text()
                 else:
-                    text = str(item)
-                    if text.strip() == "":
-                        normalized.append(self._missing_text())
-                    else:
-                        normalized.append(text)
-            return normalized
-        if isinstance(value, str):
-            if value.strip() == "":
-                return [self._missing_text()]
-            return [value]
-        return []
+                    text = str(raw)
+                columns.setdefault(field, []).append(text)
+        return columns
+
+    # ------------------------------------------------------------------
+    # 列表字段 → 表格列填充
+    # ------------------------------------------------------------------
 
     def _fill_list_column(self, doc: Document, placeholder: str, values: List[str]) -> None:
         for table in doc.tables:
@@ -258,7 +259,7 @@ class VerificationPlanFiller(TemplateFillerStrategy):
 
     def _flatten_parameters(self, parameters: Dict[str, Any]) -> Dict[str, str]:
         flat: Dict[str, str] = {}
-        list_fields = {"test_numbers", "test_names", "requirements_and_standards"}
+        list_fields = {"test_list"}
         for key, value in parameters.items():
             if key in list_fields:
                 continue
