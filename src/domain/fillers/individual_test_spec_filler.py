@@ -91,8 +91,8 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
             "test_number": "K3",  # 合并后单元格 K3
             "theme_no": "D5",  # 合并后单元格 D5
             "product_model": "K5",  # 合并后单元格 K5
-            "meas_temperature": "L8",  # 合并后单元格 L8
-            "meas_humidity": "N8",  # 合并后单元格 N8
+            # "meas_temperature": "L8",  # 合并后单元格 L8
+            # "meas_humidity": "N8",  # 合并后单元格 N8
         }
 
         for key, addr in mapping.items():
@@ -438,7 +438,7 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
             column_width = 15  # 默认列宽
         
         # 获取字体大小，如果未设置则使用默认值
-        font_size = 11  # 默认字体大小
+        font_size = 9  # 默认字体大小
         if cell.font and cell.font.size:
             font_size = cell.font.size
         
@@ -620,7 +620,7 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
             total_width = 120  # 默认总宽度
 
         # 获取字体大小
-        font_size = 11  # 默认字体大小
+        font_size = 9  # 默认字体大小
         cell = worksheet.cell(row, 3)
         if cell.font and cell.font.size:
             font_size = cell.font.size
@@ -731,7 +731,7 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         )
 
         # 获取字体大小
-        font_size = 11  # 默认字体大小
+        font_size = 9  # 默认字体大小
         cell = worksheet.cell(start_row, 3)
         if cell.font and cell.font.size:
             font_size = cell.font.size
