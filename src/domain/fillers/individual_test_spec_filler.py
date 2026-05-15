@@ -248,7 +248,7 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
                 markdown_text = part.get("content", "")
                 if not markdown_text:
                     continue
-                headers, rows = self._parse_markdown_table(markdown_text)
+                headers, rows, _ = self._parse_markdown_table(markdown_text)
                 if headers:
                     total_rows += 1 + len(rows)  # 表头 + 数据行
 
@@ -702,7 +702,7 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         Returns:
             int: 插入的表格总行数
         """
-        headers, rows = self._parse_markdown_table(markdown_text)
+        headers, rows, merge_info = self._parse_markdown_table(markdown_text)
         if not headers:
             return 0
 
@@ -784,7 +784,73 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
                 cell = worksheet.cell(start_row + row_idx, col_idx + 3)
                 self._apply_filled_background(cell)
 
+        # 执行单元格合并（处理 rowspan 和 colspan）
+        self._apply_table_merges(worksheet, start_row, merge_info, num_cols, len(rows))
+
         return total_rows
+
+    def _apply_table_merges(
+        self, worksheet, start_row: int, merge_info: List[Dict[str, Any]], num_cols: int, num_data_rows: int
+    ) -> None:
+        """
+        应用表格中的合并单元格
+
+        Args:
+            worksheet: 工作表对象
+            start_row: 表格起始行
+            merge_info: 合并信息列表
+            num_cols: 表格列数
+            num_data_rows: 数据行数（不含表头）
+        """
+        for merge in merge_info:
+            row_idx = merge['row']
+            col_idx = merge['col']
+            rowspan = merge['rowspan']
+            colspan = merge['colspan']
+
+            # 计算实际 Excel 行号和列号（从 start_row 和列 C 开始）
+            excel_row = start_row + row_idx
+            excel_col = 3 + col_idx  # C列 = 3
+
+            # 跳过超出表格范围的合并
+            total_table_rows = 1 + num_data_rows  # 表头 + 数据行
+            if col_idx + colspan > num_cols:
+                continue
+            if row_idx + rowspan > total_table_rows:
+                continue
+
+            # 如果只有一个单元格，不需要合并
+            if rowspan == 1 and colspan == 1:
+                continue
+
+            # 计算合并范围
+            min_row = excel_row
+            max_row = excel_row + rowspan - 1
+            min_col = excel_col
+            max_col = excel_col + colspan - 1
+
+            # 执行合并
+            try:
+                col_letter_start = get_column_letter(min_col)
+                col_letter_end = get_column_letter(max_col)
+                merge_range = f"{col_letter_start}{min_row}:{col_letter_end}{max_row}"
+                worksheet.merge_cells(merge_range)
+
+                # 设置合并后单元格的对齐和边框
+                cell = worksheet.cell(min_row, min_col)
+                cell.alignment = Alignment(
+                    horizontal='center' if colspan > 1 else 'left',
+                    vertical='center',
+                    wrap_text=True
+                )
+                cell.border = Border(
+                    left=Side(style='thin'),
+                    right=Side(style='thin'),
+                    top=Side(style='thin'),
+                    bottom=Side(style='thin')
+                )
+            except Exception as e:
+                print(f"[WARNING] 合并单元格失败: {merge_range}, 错误: {e}")
 
     def _calculate_row_height_for_cells(
         self, cells: List[str], col_widths: List[float], font_size: float, is_header: bool = False
@@ -1043,7 +1109,7 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         
         return True
 
-    def _parse_markdown_table(self, markdown_text: str) -> Tuple[List[str], List[List[str]]]:
+    def _parse_markdown_table(self, markdown_text: str) -> Tuple[List[str], List[List[str]], List[Dict[str, Any]]]:
         """
         解析 markdown 或 HTML 表格文本为表头和数据行
 
@@ -1055,7 +1121,10 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
             markdown_text: 表格文本
 
         Returns:
-            Tuple[List[str], List[List[str]]]: (表头列表, 数据行列表)
+            Tuple[List[str], List[List[str]], List[Dict[str, Any]]]: 
+            - 表头列表
+            - 数据行列表
+            - 合并信息列表（Markdown表格为空）
         """
         # 检查是否是 HTML 表格
         if re.search(r'<table', markdown_text, re.IGNORECASE):
@@ -1063,12 +1132,12 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
 
         lines = [line.strip() for line in markdown_text.splitlines() if line.strip()]
         if len(lines) < 2:
-            return [], []
+            return [], [], []
 
         header_line = lines[0]
         separator_line = lines[1]
         if "|" not in header_line or "|" not in separator_line:
-            return [], []
+            return [], [], []
 
         headers = [cell.strip() for cell in header_line.strip("|").split("|")]
         rows: List[List[str]] = []
@@ -1082,9 +1151,10 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
                 cells = cells[: len(headers)]
             rows.append(cells)
 
-        return headers, rows
+        # Markdown表格没有合并信息
+        return headers, rows, []
 
-    def _parse_html_table(self, html_text: str) -> Tuple[List[str], List[List[str]]]:
+    def _parse_html_table(self, html_text: str) -> Tuple[List[str], List[List[str]], List[Dict[str, Any]]]:
         """
         解析 HTML 表格为表头和数据行
 
@@ -1096,22 +1166,32 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
             html_text: HTML 表格文本
 
         Returns:
-            Tuple[List[str], List[List[str]]]: (表头列表, 数据行列表)
+            Tuple[List[str], List[List[str]], List[Dict[str, Any]]]: 
+            - 表头列表
+            - 数据行列表（已展开 rowspan/colspan）
+            - 合并信息列表，每个元素包含:
+              - row: 行索引（0表示表头）
+              - col: 列索引
+              - rowspan: 向下合并行数
+              - colspan: 向右合并列数
         """
         # 移除 <table> 标签外的内容
         table_match = re.search(r'<table[^>]*>(.*?)</table>', html_text, re.DOTALL | re.IGNORECASE)
         if not table_match:
-            return [], []
+            return [], [], []
 
         table_content = table_match.group(1)
 
         # 匹配所有 tr 标签
         tr_matches = re.findall(r'<tr[^>]*>(.*?)</tr>', table_content, re.DOTALL | re.IGNORECASE)
         if not tr_matches:
-            return [], []
+            return [], [], []
 
         # 用于存储展开后的所有行
         all_rows: List[List[str]] = []
+        
+        # 存储合并信息: [{row, col, rowspan, colspan}, ...]
+        merge_info: List[Dict[str, Any]] = []
 
         # 存储需要向下填充的值（rowspan）
         rowspan_map: List[Dict[int, Tuple[str, int]]] = []  # row_idx -> {col_idx: (value, remaining)}
@@ -1153,9 +1233,22 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
                 while col_idx < len(current_row):
                     col_idx += 1
 
-                # 添加单元格内容
-                for _ in range(colspan):
-                    current_row.append(cell_text)
+                # 记录合并信息（仅当 rowspan > 1 或 colspan > 1 时）
+                if rowspan > 1 or colspan > 1:
+                    merge_info.append({
+                        'row': tr_idx,
+                        'col': col_idx,
+                        'rowspan': rowspan,
+                        'colspan': colspan
+                    })
+
+                # 添加单元格内容（只填一次）
+                current_row.append(cell_text)
+                col_idx += 1
+
+                # 对于 colspan > 1，添加空占位符（会被合并）
+                for _ in range(colspan - 1):
+                    current_row.append("")
                     col_idx += 1
 
                 # 处理 rowspan（向下扩展）
@@ -1170,7 +1263,7 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
             all_rows.append(current_row)
 
         if not all_rows:
-            return [], []
+            return [], [], []
 
         # 找出最大列数
         max_cols = max(len(row) for row in all_rows)
@@ -1184,7 +1277,7 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         headers = all_rows[0]
         rows = all_rows[1:]
 
-        return headers, rows
+        return headers, rows, merge_info
 
     def _strip_html_tags(self, text: str) -> str:
         """移除 HTML 标签，保留文本内容"""
