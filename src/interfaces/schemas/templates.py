@@ -135,7 +135,7 @@ class VerificationPlanParameters(BaseVerificationParameters):
     theme_no: str = Field(default="", description="项目NO")
     theme_name: str = Field(default="", description="项目名称")
     sales_name: str = Field(default="", description="贩卖名称")
-    product_model_name: str = Field(default="", description="商品型式名")
+    product_model: str = Field(default="", description="商品型式名")
     condition: str = Field(default="", description="条件")
     doubt_condition: str = Field(default="", description="疑问条件")
 
