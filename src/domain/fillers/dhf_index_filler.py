@@ -78,7 +78,7 @@ class DHFIndexFiller(ExcelTemplateFiller):
         
         # 设置最小和最大行高限制
         min_height = font_size * 1.2  # 最小行高
-        max_height = font_size * 25   # 最大行高（防止过高）
+        max_height = font_size * 300   # 最大行高（允许长文本完整显示）
         row_height = max(min_height, min(row_height, max_height))
         
         # 设置行高（如果当前行高小于计算出的行高，则更新）

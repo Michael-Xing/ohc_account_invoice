@@ -103,10 +103,12 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
             if str(val) == "":
                 cell = worksheet[addr]
                 cell.value = missing_text
+                cell.font = Font(size=9)
                 self._apply_filled_background(cell)
             else:
                 cell = worksheet[addr]
                 cell.value = str(val)
+                cell.font = Font(size=9)
                 self._apply_filled_background(cell)
 
             # 为 product_model (K5) 动态调整行高
@@ -465,7 +467,7 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         
         # 设置最小和最大行高限制
         min_height = font_size * 1.2
-        max_height = font_size * 25
+        max_height = font_size * 300
         row_height = max(min_height, min(row_height, max_height))
         
         # 设置行高（如果当前行高小于计算出的行高，则更新）
@@ -481,6 +483,7 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         cell = worksheet[cell_addr]
         cell.value = text
         self._apply_filled_background(cell)
+        cell.font = Font(size=9)
 
         # 设置对齐（左对齐）和换行
         cell.alignment = Alignment(
@@ -648,7 +651,8 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
 
         # 设置最小和最大行高限制
         min_height = font_size * 1.5
-        max_height = font_size * 30
+        # 文本类型使用更大的限制，允许长文本完整显示
+        max_height = font_size * 300  # 约2700点，足够显示长文本
         row_height = max(min_height, min(row_height, max_height))
 
         worksheet.row_dimensions[row].height = row_height
@@ -675,6 +679,7 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         start_cell_addr = cell_range.split(":")[0]
         cell = worksheet[start_cell_addr]
         cell.value = text
+        cell.font = Font(size=9)
         self._apply_filled_background(cell)
 
         # 设置对齐
@@ -750,7 +755,7 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
         for col_idx, header in enumerate(headers, start=3):
             cell = worksheet.cell(start_row, col_idx)
             cell.value = header
-            cell.font = Font(bold=True)
+            cell.font = Font(bold=True, size=9)
             cell.border = thin_border
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
@@ -760,23 +765,9 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
                 cell = worksheet.cell(start_row + row_idx, col_idx + 3)
                 val = row_data[col_idx] if col_idx < len(row_data) else ""
                 cell.value = val
+                cell.font = Font(size=9)
                 cell.border = thin_border
                 cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
-
-        # 设置行高（根据内容动态调整）
-        # 表头行高
-        header_height = self._calculate_row_height_for_cells(
-            headers, col_widths, font_size, is_header=True
-        )
-        worksheet.row_dimensions[start_row].height = header_height
-
-        # 数据行高
-        for row_idx, row_data in enumerate(rows, start=1):
-            row_cells = [row_data[i] if i < len(row_data) else "" for i in range(num_cols)]
-            data_height = self._calculate_row_height_for_cells(
-                row_cells, col_widths, font_size, is_header=False
-            )
-            worksheet.row_dimensions[start_row + row_idx].height = data_height
 
         # 应用高亮背景
         for row_idx in range(total_rows):
@@ -784,10 +775,225 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
                 cell = worksheet.cell(start_row + row_idx, col_idx + 3)
                 self._apply_filled_background(cell)
 
-        # 执行单元格合并（处理 rowspan 和 colspan）
+        # 先执行单元格合并（处理 rowspan 和 colspan）
         self._apply_table_merges(worksheet, start_row, merge_info, num_cols, len(rows))
 
+        # 合并后计算并设置行高（考虑合并单元格的影响）
+        self._calculate_and_set_table_row_heights(
+            worksheet, start_row, headers, rows, merge_info, col_widths, font_size
+        )
+
         return total_rows
+
+    def _calculate_and_set_table_row_heights(
+        self, worksheet, start_row: int, headers: List[str], rows: List[List[str]],
+        merge_info: List[Dict[str, Any]], col_widths: List[float], font_size: float
+    ) -> None:
+        """
+        计算并设置表格每行的行高（考虑合并单元格）
+
+        对于包含合并单元格的行，需要根据所有被合并列中最长的内容来计算行高
+
+        Args:
+            worksheet: 工作表对象
+            start_row: 表格起始行
+            headers: 表头列表
+            rows: 数据行列表
+            merge_info: 合并信息列表
+            col_widths: 各列宽度列表
+            font_size: 字体大小
+        """
+        # 构建单元格内容的2D数组（用于行高计算）
+        all_rows_content = [headers] + rows
+        num_cols = len(headers)
+
+        # 计算每行每列的宽度（考虑 colspan）
+        col_span_widths = self._calculate_col_span_widths(merge_info, col_widths, num_cols)
+
+        # 设置表头行高
+        header_height = self._calculate_row_height_for_list(
+            headers, col_widths, font_size, is_header=True
+        )
+        worksheet.row_dimensions[start_row].height = header_height
+
+        # 设置数据行高
+        for row_idx, row_data in enumerate(rows, start=1):
+            excel_row = start_row + row_idx
+
+            # 获取该行的合并范围
+            row_merges = [m for m in merge_info if m['row'] == row_idx]
+
+            # 计算该行需要的最大行高
+            max_height = font_size * 2  # 最小行高
+
+            if row_merges:
+                # 有合并单元格，需要考虑合并范围
+                for merge in row_merges:
+                    merge_col = merge['col']
+                    merge_colspan = merge['colspan']
+
+                    # 获取合并单元格跨越的所有列的宽度
+                    total_merge_width = sum(col_widths[merge_col:merge_col + merge_colspan])
+
+                    # 获取该行被合并单元格占据的列索引范围
+                    merged_cols = set(range(merge_col, merge_col + merge_colspan))
+
+                    # 获取该行在合并单元格中的内容
+                    cell_content = row_data[merge_col] if merge_col < len(row_data) else ""
+
+                    # 计算该内容需要的行高
+                    content_height = self._calculate_single_cell_height(
+                        cell_content, total_merge_width, font_size
+                    )
+                    max_height = max(max_height, content_height)
+
+                # 同时检查该行非合并单元格的内容
+                for col_idx in range(num_cols):
+                    if col_idx not in {m['col'] for m in row_merges}:
+                        # 这是一个非合并单元格
+                        cell_content = row_data[col_idx] if col_idx < len(row_data) else ""
+                        content_height = self._calculate_single_cell_height(
+                            cell_content, col_widths[col_idx], font_size
+                        )
+                        max_height = max(max_height, content_height)
+            else:
+                # 无合并单元格，使用原有逻辑
+                row_cells = [row_data[i] if i < len(row_data) else "" for i in range(num_cols)]
+                max_height = self._calculate_row_height_for_list(
+                    row_cells, col_widths, font_size, is_header=False
+                )
+
+            # 设置最小和最大行高限制
+            min_height = font_size * 1.5
+            # 表格行使用更大的限制，允许长文本完整显示
+            max_height_limit = font_size * 30
+            final_height = max(min_height, min(max_height, max_height_limit))
+
+            worksheet.row_dimensions[excel_row].height = final_height
+
+    def _calculate_col_span_widths(
+        self, merge_info: List[Dict[str, Any]], col_widths: List[float], num_cols: int
+    ) -> List[float]:
+        """
+        计算每列的"计算宽度"（考虑colspan影响）
+
+        对于被colspan占据的列，需要分配宽度
+
+        Args:
+            merge_info: 合并信息列表
+            col_widths: 原始列宽列表
+            num_cols: 列数
+
+        Returns:
+            每列的计算宽度列表
+        """
+        # 复制原始列宽
+        calculated_widths = list(col_widths)
+
+        # 处理所有colspan
+        for merge in merge_info:
+            col_idx = merge['col']
+            colspan = merge['colspan']
+
+            if col_idx + colspan > num_cols:
+                continue
+
+            # 计算合并区域的总宽度
+            total_width = sum(col_widths[col_idx:col_idx + colspan])
+
+            # 将总宽度分配给起始列
+            calculated_widths[col_idx] = total_width
+
+        return calculated_widths
+
+    def _calculate_single_cell_height(
+        self, text: str, col_width: float, font_size: float
+    ) -> float:
+        """
+        计算单个单元格需要的行高
+
+        Args:
+            text: 单元格文本
+            col_width: 列宽
+            font_size: 字体大小
+
+        Returns:
+            需要的行高
+        """
+        if not text:
+            return font_size * 1.5
+
+        # 计算每行可容纳的字符数（考虑中文字符占2个位置）
+        chars_per_line = int(col_width * 1.7)
+        if chars_per_line <= 0:
+            chars_per_line = 10
+
+        # 计算需要的行数
+        lines = text.split('\n')
+        total_lines = 0
+        for line in lines:
+            if line:
+                line_count = (len(line) + chars_per_line - 1) // chars_per_line
+                total_lines += max(1, line_count)
+            else:
+                total_lines += 1
+
+        if total_lines == 0:
+            total_lines = 1
+
+        # 计算行高
+        row_height = total_lines * font_size * 1.5
+
+        return row_height
+
+    def _calculate_row_height_for_list(
+        self, cells: List[str], col_widths: List[float], font_size: float, is_header: bool = False
+    ) -> float:
+        """
+        根据单元格内容列表计算需要的行高
+
+        Args:
+            cells: 单元格内容列表
+            col_widths: 对应列宽列表
+            font_size: 字体大小
+            is_header: 是否为表头行
+
+        Returns:
+            需要的行高
+        """
+        if not cells:
+            return font_size * 2
+
+        # 计算每列每行可容纳的字符数
+        chars_per_col = [int(w * 1.7) for w in col_widths]
+
+        # 计算每列需要的行数
+        max_lines = 1
+        for i, cell_text in enumerate(cells):
+            if i >= len(chars_per_col):
+                break
+            if not cell_text:
+                continue
+            chars_per_line = chars_per_col[i]
+            if chars_per_line <= 0:
+                chars_per_line = 10
+            lines_needed = (len(cell_text) + chars_per_line - 1) // chars_per_line
+            max_lines = max(max_lines, lines_needed)
+
+        # 计算行高
+        line_height = font_size * 1.5
+        row_height = max_lines * line_height
+
+        # 设置最小和最大行高限制
+        min_height = font_size * 1.5
+        max_height = font_size * 10
+        row_height = max(min_height, min(row_height, max_height))
+
+        # 表头行高增加一些
+        if is_header:
+            row_height = max(row_height, font_size * 2.5)
+
+        return row_height
 
     def _apply_table_merges(
         self, worksheet, start_row: int, merge_info: List[Dict[str, Any]], num_cols: int, num_data_rows: int
@@ -838,9 +1044,10 @@ class IndividualTestSpecFiller(ExcelTemplateFiller):
 
                 # 设置合并后单元格的对齐和边框
                 cell = worksheet.cell(min_row, min_col)
+                cell.font = Font(size=9)
                 cell.alignment = Alignment(
                     horizontal='center' if colspan > 1 else 'left',
-                    vertical='center',
+                    vertical='top',  # 垂直顶部对齐，确保内容完整显示
                     wrap_text=True
                 )
                 cell.border = Border(
