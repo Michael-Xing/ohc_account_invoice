@@ -304,12 +304,17 @@ class TemplateService:
         
         # 从parameters中获取阶段信息，追加到display_name
         phase = None
+        test_number = None
         if parameters:
             phase = parameters.get("phase")
-        
-        # 如果有阶段信息，追加到display_name后面
-        if phase:
-            display_name = f"{display_name}({phase})"
+            test_number = parameters.get("test_number")
+
+        # 个别试验要项书/结果书：格式改为 {phase}{模板名}({test_number})
+        # 例如: WS个别试验结果书(BP-001)
+        if phase and template_name in ("INDIVIDUAL_TEST_SPEC", "INDIVIDUAL_TEST_RESULT") and test_number:
+            display_name = f"{phase}{display_name}({test_number})"
+        elif phase:
+            display_name = f"{phase}{display_name}"
         
         info = {
             "name": template_name,
