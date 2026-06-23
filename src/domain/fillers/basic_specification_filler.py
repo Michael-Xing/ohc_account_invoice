@@ -16,12 +16,6 @@ from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor, Cm, Inches
 
 from src.infrastructure.template_service import TemplateFillerStrategy
-from src.infrastructure.word_image_utils import (
-    clear_cell,
-    normalize_image_urls,
-    insert_images_into_cell,
-    insert_images_at_block,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +40,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
 
     # 派生的商品型号表字段占位符
     PRODUCT_MODEL_TABLE_FIELD = "product_model_table"
-    
+
     # 需要行首缩进4字符的字段
     INDENT_4_CHARS_FIELDS = {
         "dimensions_and_weight",
@@ -56,13 +50,12 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         "durability",
     }
 
-
     def fill_template(
-        self,
-        template_path: Path,
-        parameters: Dict[str, Any],
-        output_path: Path,
-        language: Optional[str] = None,
+            self,
+            template_path: Path,
+            parameters: Dict[str, Any],
+            output_path: Path,
+            language: Optional[str] = None,
     ) -> bool:
         """填充基本规格书模板"""
         self._set_language(language)
@@ -136,35 +129,35 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                         is_table_field = key in self.MARKDOWN_TABLE_FIELDS
                         is_image_field = key in self.IMAGE_LIST_FIELDS
                         is_special_field = is_table_field or is_image_field or key == self.PRODUCT_MODEL_TABLE_FIELD
-                        
+
                         if is_table_field:
                             markdown_text = str(self._get_param(parameters, key) or "").strip()
                             if markdown_text:
-                                clear_cell(cell)
+                                self._clear_cell(cell)
                                 self._insert_markdown_table_into_cell(cell, markdown_text, merge_same_column=False)
                         elif key == self.PRODUCT_MODEL_TABLE_FIELD:
                             rows = parameters.get(self.PRODUCT_MODEL_TABLE_FIELD) or []
                             if rows:
-                                clear_cell(cell)
+                                self._clear_cell(cell)
                                 self._insert_product_model_table(cell, rows)
                         elif is_image_field:
-                            images = normalize_image_urls(self._get_param(parameters, key))
+                            images = self._normalize_image_urls(self._get_param(parameters, key))
                             if images:
-                                clear_cell(cell)
-                                insert_images_into_cell(cell, images)
+                                self._clear_cell(cell)
+                                self._insert_images_into_cell(cell, images)
                                 # 占位符已通过 clear_cell 清除，无需再次清理
                                 continue
                         elif not is_special_field:
                             # 非特殊字段：检测是否是 markdown 表格
                             value = self._get_param(parameters, key)
                             markdown_text = str(value or "").strip()
-                            
+
                             # 如果值是默认文本，跳过表格检测
                             if markdown_text and not self._is_missing_text(markdown_text):
                                 if self._is_markdown_table(markdown_text):
                                     # 是表格，插入表格
                                     logger.info(f"在表格单元格中检测到 markdown 表格字段: {key}")
-                                    clear_cell(cell)
+                                    self._clear_cell(cell)
                                     self._insert_markdown_table_into_cell(cell, markdown_text, merge_same_column=False)
                                     continue  # 已处理，跳过后续清理
                                 else:
@@ -182,13 +175,13 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                                         is_bold = first_run.font.bold
                                         is_italic = first_run.font.italic
                                         font_color = first_run.font.color
-                                        
+
                                         new_text = paragraph.text.replace(f"{{{{{key}}}}}", "")
-                                        
+
                                         # 清空所有 runs
                                         for run in list(paragraph.runs):
                                             run.clear()
-                                        
+
                                         # 用原格式创建新文本
                                         if new_text:
                                             new_run = paragraph.add_run(new_text)
@@ -248,7 +241,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                 elif is_image_field:
                     # 3）图片列表字段：在段落位置插入图片（无论是否独占一行）
                     image_param = self._get_param(parameters, key)
-                    images = normalize_image_urls(image_param)
+                    images = self._normalize_image_urls(image_param)
                     print(f"调试: 字段 {key} 的原始值: {image_param}, 提取的图片URLs: {images}")
                     if images:
                         # 在删除之前保存插入位置
@@ -256,7 +249,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                         # 删除占位符段落
                         parent.remove(parent_element)
                         # 在指定位置插入图片
-                        insert_images_at_block(doc, parent, insert_idx, images)
+                        self._insert_images_at_block(doc, parent, insert_idx, images)
                     else:
                         print(f"警告: 字段 {key} 没有找到有效的图片URL，原始值: {image_param}")
                         # 即使没有图片，也要删除占位符，避免被 _fallback_text_replace 处理
@@ -268,7 +261,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                     # 对于非特殊字段，需要检测内容是 markdown 表格还是普通 markdown 文本
                     value = self._get_param(parameters, key)
                     markdown_text = str(value or "").strip()
-                    
+
                     # 如果为空，使用默认文本
                     if self._is_missing_text(markdown_text):
                         markdown_text = self._missing_text()
@@ -276,18 +269,19 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                         insert_idx = parent.index(parent_element)
                         parent.remove(parent_element)
                         indent_4_chars = key in self.INDENT_4_CHARS_FIELDS
-                        self._render_markdown_block(doc, parent, insert_idx, markdown_text, indent_4_chars=indent_4_chars)
+                        self._render_markdown_block(doc, parent, insert_idx, markdown_text,
+                                                    indent_4_chars=indent_4_chars)
                         break
-                    
+
                     # 检测内容类型：纯表格、混合内容（文本+表格）、或纯文本
                     parts = self._parse_mixed_markdown(markdown_text)
                     has_table = any(part["type"] == "table" for part in parts)
                     has_text = any(part["type"] == "text" for part in parts)
-                    
+
                     insert_idx = parent.index(parent_element)
                     parent.remove(parent_element)
                     indent_4_chars = key in self.INDENT_4_CHARS_FIELDS
-                    
+
                     if has_table and not has_text:
                         # 纯表格内容，使用专门的表格插入方法
                         logger.info(f"字段 {key} 是纯 markdown 表格，使用表格插入方法")
@@ -296,17 +290,19 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                     elif has_table and has_text:
                         # 混合内容（文本+表格），使用混合渲染方法
                         logger.info(f"字段 {key} 包含混合内容（文本+表格），使用混合渲染方法")
-                        self._render_markdown_block(doc, parent, insert_idx, markdown_text, indent_4_chars=indent_4_chars)
+                        self._render_markdown_block(doc, parent, insert_idx, markdown_text,
+                                                    indent_4_chars=indent_4_chars)
                     else:
                         # 纯文本内容，使用 markdown 渲染方法
                         logger.debug(f"字段 {key} 是纯文本 markdown，内容预览: {markdown_text[:100]}...")
-                        self._render_markdown_block(doc, parent, insert_idx, markdown_text, indent_4_chars=indent_4_chars)
+                        self._render_markdown_block(doc, parent, insert_idx, markdown_text,
+                                                    indent_4_chars=indent_4_chars)
                     break  # 处理完这个段落，跳出循环
                 elif not is_special_field:
                     # 非独占一行的占位符，且不是特殊字段：尝试处理 markdown（但不处理表格，因为表格需要独占一行）
                     value = self._get_param(parameters, key)
                     markdown_text = str(value or "").strip()
-                    
+
                     # 如果包含 markdown 格式（列表、加粗等），需要特殊处理
                     if markdown_text and not self._is_missing_text(markdown_text):
                         # 检查是否包含 markdown 列表或其他格式
@@ -339,7 +335,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
             # 合并所有 runs 的文本
             full_text = paragraph.text
             new_text = full_text
-            
+
             # 检查替换后的文本是否包含 markdown 表格
             # 如果包含表格，跳过替换（表格应该在前面的处理中已经处理）
             for key, value in flat_parameters.items():
@@ -423,7 +419,8 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                     for run in paragraph.runs:
                         self._apply_font(run, bold=run.bold)
 
-    def _insert_product_model_table_at_block(self, doc: Document, parent, insert_idx: int, rows: List[Dict[str, str]]) -> None:
+    def _insert_product_model_table_at_block(self, doc: Document, parent, insert_idx: int,
+                                             rows: List[Dict[str, str]]) -> None:
         """在文档块级位置插入商品型号表"""
         headers = ["销售名称", "Catalog number", "OHQ商品型式名", "Basic UDI-DI code", "医疗器械类别分类"]
         table = doc.add_table(rows=1 + len(rows), cols=len(headers))
@@ -450,21 +447,21 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                 for paragraph in cell_item.paragraphs:
                     for run in paragraph.runs:
                         self._apply_font(run, bold=run.bold)
-        
+
         # 应用表格样式（边框、换行处理）
         self._apply_table_style(table)
-        
+
         # 在表格前后添加缩进段落（首尾各缩进2字符）
         # 先插入表格前的缩进段落
         indent_para_before = doc.add_paragraph()
         indent_para_before.paragraph_format.left_indent = Cm(0.74)
         indent_para_before.paragraph_format.right_indent = Cm(0.74)
-        
+
         # 插入表格
         tbl_element = table._element
         parent.insert(insert_idx, indent_para_before._element)
         parent.insert(insert_idx + 1, tbl_element)
-        
+
         # 插入表格后的缩进段落（尾部缩进4字符）
         indent_para_after = doc.add_paragraph()
         indent_para_after.paragraph_format.left_indent = Cm(0.74)
@@ -502,12 +499,12 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                 for paragraph in cell_item.paragraphs:
                     for run in paragraph.runs:
                         self._apply_font(run, bold=run.bold)
-        
+
         # 应用表格样式（边框、缩进、换行处理）
         self._apply_table_style(table)
 
     def _insert_markdown_table_at_block(
-        self, doc: Document, parent, insert_idx: int, markdown_text: str, merge_same_column: bool
+            self, doc: Document, parent, insert_idx: int, markdown_text: str, merge_same_column: bool
     ) -> None:
         """在文档块级位置插入 markdown 表格（包含前后缩进段落）"""
         # 先插入表格前的缩进段落
@@ -515,62 +512,170 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         indent_para_before.paragraph_format.left_indent = Cm(0.74)
         indent_para_before.paragraph_format.right_indent = Cm(0.74)
         parent.insert(insert_idx, indent_para_before._element)
-        
+
         # 插入表格（在 insert_idx + 1 位置）
         self._insert_markdown_table_at_position(doc, parent, insert_idx + 1, markdown_text, merge_same_column)
-        
+
         # 插入表格后的缩进段落（尾部缩进4字符）
         indent_para_after = doc.add_paragraph()
         indent_para_after.paragraph_format.left_indent = Cm(0.74)
         indent_para_after.paragraph_format.right_indent = Cm(1.48)  # 4字符 = 1.48cm
         parent.insert(insert_idx + 2, indent_para_after._element)
 
+    def _insert_images_into_cell(self, cell, image_urls: List[str]) -> None:
+        """将多张图片插入到同一个单元格中，按给定顺序，保持原始比例"""
+        for url in image_urls:
+            try:
+                content = self._download_image(url)
+                if not content:
+                    continue
+                image_stream = io.BytesIO(content)
+                paragraph = cell.add_paragraph()
+                run = paragraph.add_run()
+                # 添加图片，保持原始比例（不指定宽度和高度）
+                run.add_picture(image_stream)
+            except Exception:
+                # 单张图片失败不中断整体处理
+                continue
 
+    def _insert_images_at_block(self, doc: Document, parent, insert_idx: int, image_urls: List[str]) -> None:
+        """在文档块级位置插入多张图片，按给定顺序，宽度适配word文档，首行缩进2字符，尾部缩进4字符，保持宽高比"""
+        elements_to_insert = []
+
+        # 获取文档页面宽度（减去左右边距）
+        section = doc.sections[0]
+        page_width = section.page_width
+        left_margin = section.left_margin
+        right_margin = section.right_margin
+        # 可用宽度 = 页面宽度 - 左边距 - 右边距 - 首行缩进(2字符) - 尾部缩进(4字符)
+        available_width = page_width - left_margin - right_margin - Cm(0.74) - Cm(1.48)
+
+        for url in image_urls:
+            try:
+                content = self._download_image(url)
+                if not content:
+                    print(f"警告: 图片下载失败或内容为空: {url}")
+                    continue
+
+                # 计算可用宽度（EMU 单位转换为 Cm）
+                # 1 cm = 360000 EMU
+                available_width_cm = available_width / 360000.0
+
+                if available_width_cm <= 0:
+                    print(f"警告: 可用宽度计算错误: {available_width_cm} cm，使用默认宽度 10cm")
+                    available_width_cm = 10.0
+
+                # 尝试使用 PIL 读取图片尺寸以计算缩放比例
+                target_width_cm = None
+                target_height_cm = None
+                try:
+                    from PIL import Image
+                    img_stream_for_size = io.BytesIO(content)
+                    img = Image.open(img_stream_for_size)
+                    img_width, img_height = img.size
+                    img_stream_for_size.close()  # 关闭用于读取尺寸的流
+
+                    if img_width > 0:
+                        # 将图片像素尺寸转换为厘米（假设图片是 96 DPI，1英寸 = 2.54cm，1英寸 = 96像素）
+                        # 1像素 = 2.54/96 cm ≈ 0.026458333 cm
+                        img_width_cm = img_width * 2.54 / 96.0
+                        img_height_cm = img_height * 2.54 / 96.0
+
+                        # 计算缩放比例（以可用宽度为准）
+                        scale_ratio = available_width_cm / img_width_cm
+                        target_width_cm = available_width_cm
+                        target_height_cm = img_height_cm * scale_ratio
+                    else:
+                        print(f"警告: 图片宽度为0: {url}，使用默认尺寸")
+                        target_width_cm = available_width_cm
+                        target_height_cm = available_width_cm  # 默认正方形
+                except ImportError:
+                    # PIL 不可用，使用默认宽度，让 python-docx 自动计算高度
+                    print(f"警告: PIL 模块不可用，使用默认宽度 {available_width_cm:.2f}cm，高度自动计算")
+                    target_width_cm = available_width_cm
+                    target_height_cm = None  # 不指定高度，让 python-docx 保持宽高比
+                except Exception as e:
+                    # 读取图片尺寸失败，使用默认尺寸
+                    print(f"警告: 读取图片尺寸失败: {str(e)}，使用默认尺寸")
+                    target_width_cm = available_width_cm
+                    target_height_cm = None  # 不指定高度，让 python-docx 保持宽高比
+
+                # 创建新的流对象用于插入图片
+                image_stream_for_insert = io.BytesIO(content)
+
+                paragraph = doc.add_paragraph()
+                # 设置首行缩进2字符，尾部缩进4字符
+                paragraph.paragraph_format.left_indent = Cm(0.74)
+                paragraph.paragraph_format.right_indent = Cm(1.48)
+                run = paragraph.add_run()
+                # 添加图片，指定宽度和高度（保持宽高比）
+                if target_height_cm is not None:
+                    run.add_picture(image_stream_for_insert, width=Cm(target_width_cm), height=Cm(target_height_cm))
+                else:
+                    # 只指定宽度，让 python-docx 自动计算高度以保持宽高比
+                    run.add_picture(image_stream_for_insert, width=Cm(target_width_cm))
+                image_stream_for_insert.close()  # 关闭流
+
+                elements_to_insert.append(paragraph._element)
+                if target_height_cm is not None:
+                    print(f"成功插入图片: {url}, 尺寸: {target_width_cm:.2f}cm x {target_height_cm:.2f}cm")
+                else:
+                    print(f"成功插入图片: {url}, 尺寸: {target_width_cm:.2f}cm x 自动")
+            except Exception as e:
+                # 单张图片失败不中断整体处理
+                import traceback
+                print(f"错误: 插入图片失败 {url}: {str(e)}")
+                traceback.print_exc()
+                continue
+
+        # 将所有图片段落按顺序插入到指定位置
+        for idx, element in enumerate(elements_to_insert):
+            parent.insert(insert_idx + idx, element)
 
     def _parse_mixed_markdown(self, markdown_text: str) -> List[Dict[str, Any]]:
         """解析混合的 markdown 内容，识别文本段落和表格部分
-        
+
         返回一个列表，每个元素是一个字典：
         - type: 'text' 或 'table'
         - content: 对应的内容（文本字符串或表格的 markdown 字符串）
         """
         if not markdown_text:
             return []
-        
+
         lines = markdown_text.splitlines()
         parts = []
         current_text_lines = []
         i = 0
-        
+
         while i < len(lines):
             line = lines[i]
             line_stripped = line.strip()
-            
+
             # 检查从当前行开始是否是表格的开始
             # 表格需要至少2行：表头行和分隔符行
             if i + 1 < len(lines):
                 next_line_stripped = lines[i + 1].strip()
                 # 检查是否是表格的开始（表头行和分隔符行）
-                if ("|" in line_stripped and "|" in next_line_stripped and 
-                    re.search(r'[-:]+', next_line_stripped)):
+                if ("|" in line_stripped and "|" in next_line_stripped and
+                        re.search(r'[-:]+', next_line_stripped)):
                     # 先保存之前的文本内容
                     if current_text_lines:
                         text_content = "\n".join(current_text_lines)
                         if text_content.strip():
                             parts.append({"type": "text", "content": text_content})
                         current_text_lines = []
-                    
+
                     # 收集表格的所有行
                     table_lines = [line]
                     i += 1
                     table_lines.append(lines[i])
                     i += 1
-                    
+
                     # 继续收集表格的数据行（直到遇到非表格行或空行）
                     while i < len(lines):
                         current_line = lines[i]
                         current_line_stripped = current_line.strip()
-                        
+
                         # 如果遇到空行，检查下一行是否是表格的继续
                         if not current_line_stripped:
                             # 空行可能是表格的一部分（表格中间的空行），也可能是表格的结束
@@ -588,7 +693,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                             else:
                                 # 没有下一行了，表格结束
                                 break
-                        
+
                         # 如果当前行包含 |，可能是表格的数据行
                         if "|" in current_line_stripped:
                             table_lines.append(current_line)
@@ -596,7 +701,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                         else:
                             # 当前行不是表格行，表格结束
                             break
-                    
+
                     # 保存表格内容
                     table_content = "\n".join(table_lines)
                     if self._is_markdown_table(table_content):
@@ -607,42 +712,43 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                         logger.debug(f"检测到的表格格式无效，作为文本处理")
                         current_text_lines.extend(table_lines)
                     continue
-            
+
             # 不是表格，作为文本处理
             current_text_lines.append(line)
             i += 1
-        
+
         # 保存最后的文本内容
         if current_text_lines:
             text_content = "\n".join(current_text_lines)
             if text_content.strip():
                 parts.append({"type": "text", "content": text_content})
-        
+
         # 记录解析结果
         if parts:
             part_types = [part["type"] for part in parts]
             logger.debug(f"解析混合 markdown 完成，共 {len(parts)} 个部分: {', '.join(part_types)}")
-        
+
         return parts
 
-    def _render_markdown_block(self, doc: Document, parent, insert_idx: int, markdown_text: str, indent_4_chars: bool = False) -> None:
+    def _render_markdown_block(self, doc: Document, parent, insert_idx: int, markdown_text: str,
+                               indent_4_chars: bool = False) -> None:
         """将 markdown 文本渲染为一组段落/列表/表格，插入到指定位置
-        
+
         支持混合内容：文本段落 + 表格 + 文本段落
         """
         # 解析混合内容
         parts = self._parse_mixed_markdown(markdown_text)
-        
+
         if not parts:
             # 如果没有解析出任何内容，插入一个空段落
             p = doc.add_paragraph("")
             self._apply_paragraph_style(p, indent_4_chars=indent_4_chars)
             parent.insert(insert_idx, p._element)
             return
-        
+
         # 记录当前插入位置
         current_idx = insert_idx
-        
+
         for part in parts:
             if part["type"] == "text":
                 # 处理文本内容
@@ -660,11 +766,12 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                 indent_para_before.paragraph_format.right_indent = Cm(0.74)
                 parent.insert(current_idx, indent_para_before._element)
                 current_idx += 1
-                
+
                 # 插入表格
-                self._insert_markdown_table_at_position(doc, parent, current_idx, table_content, merge_same_column=False)
+                self._insert_markdown_table_at_position(doc, parent, current_idx, table_content,
+                                                        merge_same_column=False)
                 current_idx += 1  # 表格本身占一个位置
-                
+
                 # 插入表格后的缩进段落
                 indent_para_after = doc.add_paragraph()
                 indent_para_after.paragraph_format.left_indent = Cm(0.74)
@@ -724,7 +831,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         return elements
 
     def _insert_markdown_table_at_position(
-        self, doc: Document, parent, insert_idx: int, markdown_text: str, merge_same_column: bool
+            self, doc: Document, parent, insert_idx: int, markdown_text: str, merge_same_column: bool
     ) -> None:
         """在文档指定位置插入 markdown 表格（不添加前后缩进段落）"""
         headers, rows = self._parse_markdown_table(markdown_text)
@@ -756,10 +863,10 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                 for paragraph in cell_item.paragraphs:
                     for run in paragraph.runs:
                         self._apply_font(run, bold=run.bold)
-        
+
         # 应用表格样式（边框、换行处理）
         self._apply_table_style(table)
-        
+
         # 插入表格
         tbl_element = table._element
         parent.insert(insert_idx, tbl_element)
@@ -770,7 +877,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         pattern = re.compile(r"\*\*(.+?)\*\*")
         for match in pattern.finditer(text):
             if match.start() > pos:
-                normal_text = text[pos : match.start()]
+                normal_text = text[pos: match.start()]
                 if normal_text:
                     run = paragraph.add_run(normal_text)
                     self._apply_font(run, bold=False)
@@ -823,20 +930,20 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         if tbl_pr is None:
             tbl_pr = OxmlElement("w:tblPr")
             table._element.insert(0, tbl_pr)
-        
+
         # 设置左缩进（2字符 = 0.74cm = 420 twips）
         # 1cm = 567 twips, 0.74cm ≈ 420 twips
         tbl_ind = OxmlElement("w:tblInd")
         tbl_ind.set(qn("w:w"), "420")  # 420 twips = 0.74cm
         tbl_ind.set(qn("w:type"), "dxa")
         tbl_pr.append(tbl_ind)
-        
+
         # 设置表格边框为黑色
         tbl_borders = OxmlElement("w:tblBorders")
         border_style = "single"
         border_size = "4"  # 0.5pt
         border_color = "000000"  # 黑色
-        
+
         for border_name in ["top", "left", "bottom", "right", "insideH", "insideV"]:
             border = OxmlElement(f"w:{border_name}")
             border.set(qn("w:val"), border_style)
@@ -844,9 +951,9 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
             border.set(qn("w:space"), "0")
             border.set(qn("w:color"), border_color)
             tbl_borders.append(border)
-        
+
         tbl_pr.append(tbl_borders)
-        
+
         # 处理单元格中的 <br> 换行符，转换为 Word 换行
         for row in table.rows:
             for cell in row.cells:
@@ -891,7 +998,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
 
     def _is_markdown_table(self, markdown_text: str) -> bool:
         """检测文本是否是 markdown 表格格式
-        
+
         要求：
         - 至少包含2行（表头和分隔符）
         - 表头和分隔符都包含 | 分隔符
@@ -900,42 +1007,42 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         """
         if not markdown_text:
             return False
-        
+
         lines = [line.strip() for line in markdown_text.splitlines() if line.strip()]
         if len(lines) < 2:
             return False
-        
+
         # 检查前两行是否符合 markdown 表格格式
         header_line = lines[0]
         separator_line = lines[1]
-        
+
         # 必须包含 | 分隔符
         if "|" not in header_line or "|" not in separator_line:
             return False
-        
+
         # 检查表头行的格式：应该包含至少一个 |，且 | 的数量应该合理（至少2个，表示至少1列）
         header_pipes = header_line.count("|")
         if header_pipes < 2:
             return False
-        
+
         # 分隔符行应该包含 - 或 : 用于对齐
         # 允许分隔符行只包含 - 和 |，或者包含 : 和 |
         if not re.search(r'[-:]+', separator_line):
             return False
-        
+
         # 验证分隔符行的格式：应该主要是 - 或 :，可能包含 | 分隔符
         # 例如：| --- | --- | 或 |:---|:---:|---:| 或 ---|---
         separator_clean = separator_line.replace("|", "").replace(" ", "")
         if not re.search(r'[-:]{2,}', separator_clean):
             return False
-        
+
         # 检查分隔符行的 | 数量是否与表头行匹配（允许相差1，因为可能有首尾的 |）
         separator_pipes = separator_line.count("|")
         if abs(header_pipes - separator_pipes) > 1:
             # 如果数量差异太大，可能不是表格
             logger.debug(f"表头行和分隔符行的 | 数量不匹配: 表头={header_pipes}, 分隔符={separator_pipes}")
             # 但仍然继续检查，因为有些表格格式可能不同
-        
+
         # 如果有数据行，检查数据行是否也包含 | 分隔符
         # 但允许没有数据行（只有表头和分隔符也是有效的表格）
         if len(lines) >= 3:
@@ -948,7 +1055,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
             # 如果有数据行但没有包含 | 的行，可能不是表格
             # 但为了兼容性，我们仍然认为它是表格（可能数据行为空）
             # 这里不做严格检查，只要有表头和分隔符就认为是表格
-        
+
         logger.debug(f"检测到 markdown 表格: 表头行='{header_line[:50]}...', 分隔符行='{separator_line[:50]}...'")
         return True
 
@@ -956,27 +1063,27 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         """检测文本是否包含 markdown 格式（列表、加粗、标题等）"""
         if not text:
             return False
-        
+
         # 检测无序列表
         if re.search(r'^[-*]\s+', text, re.MULTILINE):
             return True
-        
+
         # 检测有序列表
         if re.search(r'^\d+\.\s+', text, re.MULTILINE):
             return True
-        
+
         # 检测标题
         if re.search(r'^#+\s+', text, re.MULTILINE):
             return True
-        
+
         # 检测加粗（**text**）
         if re.search(r'\*\*[^*]+\*\*', text):
             return True
-        
+
         # 检测表格（包含 | 的行）
         if self._is_markdown_table(text):
             return True
-        
+
         return False
 
     def _parse_markdown_table(self, markdown_text: str) -> Tuple[List[str], List[List[str]]]:
@@ -1005,6 +1112,82 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
 
         return headers, rows
 
+    def _normalize_image_urls(self, value: Any) -> List[str]:
+        """将入参中的图片字段整理为 URL 列表，并做简单清洗
+
+        支持多种输入格式：
+        - 列表: ['url1', 'url2']
+        - 字符串格式的列表: "['url1', 'url2']"
+        - 单个 URL 字符串: "https://..."
+        - 包含多个 URL 的字符串: "url1 url2" 或 "url1, url2"
+        """
+        urls: List[str] = []
+
+        if value is None:
+            return urls
+
+        # 如果已经是列表，直接使用
+        if isinstance(value, list):
+            candidates = value
+        elif isinstance(value, str):
+            # 尝试解析字符串格式的列表（如 "['url1', 'url2']"）
+            try:
+                parsed = ast.literal_eval(value)
+                if isinstance(parsed, list):
+                    candidates = parsed
+                else:
+                    candidates = [value]
+            except (ValueError, SyntaxError):
+                # 解析失败，尝试用正则表达式提取 URL
+                pattern = re.compile(r"https?://[^\s\)\]\'\"]+")
+                found = pattern.findall(value)
+                if found:
+                    candidates = found
+                else:
+                    # 如果正则也没找到，假设整个字符串就是一个 URL
+                    candidates = [value]
+        else:
+            candidates = []
+
+        # 处理候选 URL，提取并清洗
+        pattern = re.compile(r"https?://[^\s\)\]\'\"]+")
+        for item in candidates:
+            if not item:
+                continue
+            text = str(item).strip()
+            # 移除可能的引号
+            text = text.strip("'\"")
+            # 从文本中抽取 URL
+            found = pattern.findall(text)
+            if found:
+                urls.extend(found)
+            elif text.startswith("http://") or text.startswith("https://"):
+                # 文本本身就是 URL
+                urls.append(text)
+
+        # 去重并返回
+        return list(dict.fromkeys(urls))  # 保持顺序的去重
+
+    def _download_image(self, url: str) -> bytes:
+        """下载图片内容，失败时返回空字节串"""
+        try:
+            req = urllib.request.Request(
+                url,
+                headers={
+                    # Some hosts block requests without UA
+                    "User-Agent": "ohc-account-invoice/1.0 (+python urllib)",
+                },
+                method="GET",
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                status = getattr(resp, "status", None)
+                if status is not None and int(status) != 200:
+                    return b""
+                return resp.read()
+        except Exception:
+            return b""
+        return b""
+
     def _extract_placeholders(self, text: str) -> List[str]:
         """从文本中提取 {{var}} 形式的占位符变量名"""
         if not text:
@@ -1013,13 +1196,13 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
 
     def _get_param(self, parameters: Dict[str, Any], key: str) -> Any:
         """支持从嵌套对象中取值的简单访问（仅支持一层嵌套）
-        
+
         返回值规则：
         - 对于表格字段和图片字段：如果值为空，返回空字符串（不插入内容）
         - 对于其他字段：如果值为空，返回默认文本
         """
         value = None
-        
+
         # 先从顶层参数中查找
         if key in parameters:
             value = parameters[key]
@@ -1028,7 +1211,8 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
             nested_mappings = {
                 "power_supply": ("service_environment_conditions", "power_supply"),
                 "use_temperature_humidity_range": ("service_environment_conditions", "use_temperature_humidity_range"),
-                "storage_and_transport_conditions": ("service_environment_conditions", "storage_and_transport_conditions"),
+                "storage_and_transport_conditions": (
+                "service_environment_conditions", "storage_and_transport_conditions"),
                 "durability": ("service_environment_conditions", "durability"),
                 "definitions_of_basic_safety": ("safety_protection_info", "definitions_of_basic_safety"),
                 "device_classification": ("safety_protection_info", "device_classification"),
@@ -1051,17 +1235,17 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                 parent_val = parameters.get(parent_key)
                 if isinstance(parent_val, dict):
                     value = parent_val.get(child_key)
-        
+
         # 检查是否是特殊字段（表格字段或图片字段）
         is_table_field = key in self.MARKDOWN_TABLE_FIELDS or key == self.PRODUCT_MODEL_TABLE_FIELD
         is_image_field = key in self.IMAGE_LIST_FIELDS
-        
+
         # 对于表格字段和图片字段，如果值为空，返回空字符串（不插入内容）
         if is_table_field or is_image_field:
             if value is None or (isinstance(value, str) and value.strip() == ""):
                 return ""
             return value
-        
+
         # 对于其他字段，如果值为空，返回默认文本
         if value is None or (isinstance(value, str) and value.strip() == ""):
             return self._missing_text()
@@ -1072,7 +1256,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         flat: Dict[str, str] = {}
         # 排除图片列表字段和表格字段，避免被兜底替换处理
         excluded_fields = self.IMAGE_LIST_FIELDS | self.MARKDOWN_TABLE_FIELDS | {self.PRODUCT_MODEL_TABLE_FIELD}
-        
+
         for key, value in parameters.items():
             # 跳过图片列表字段和表格字段
             if key in excluded_fields:
@@ -1098,6 +1282,15 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                 # 如果值为 None，使用默认文本
                 flat[key] = self._missing_text()
         return flat
+
+    def _clear_cell(self, cell) -> None:
+        """清空单元格内容"""
+        cell.text = ""
+        # 清除所有段落，保留一个空段落作为插入锚点
+        for para in list(cell.paragraphs):
+            p_element = para._element
+            p_element.getparent().remove(p_element)
+        cell.add_paragraph("")
 
     def _insert_after(self, parent, paragraph, previous_element):
         """在指定元素之后插入段落，如果 previous_element 为空则附加到末尾"""
