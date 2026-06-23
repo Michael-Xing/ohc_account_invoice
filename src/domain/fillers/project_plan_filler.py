@@ -1,24 +1,30 @@
 """项目计划书（Word）填充器"""
 
 from copy import deepcopy
+import io
 import logging
 import re
+import urllib.request
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from docx import Document
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from docx.shared import Pt, RGBColor
+from docx.shared import Cm, Pt, RGBColor
 
 from src.infrastructure.template_service import TemplateFillerStrategy
-from src.infrastructure.word_image_utils import (
-    clear_cell,
-    pure_image_urls,
-    replace_placeholder_with_images,
-)
 
 logger = logging.getLogger(__name__)
+
+_MD_IMAGE_RE = re.compile(r"!\[image\]\((https?://[^)\s]+)\)", re.IGNORECASE)
+_URL_RE = re.compile(r"https?://[^\s\)\]\'\"]+")
+_IMAGE_DOWNLOAD_FAILED_PREFIX = {
+    "zh": "图片下载失败，需人工确认。地址：",
+    "ja": "画像のダウンロードに失敗しました。要手動確認。URL：",
+    "en": "Image download failed; manual confirmation required. URL: ",
+}
+_FILL_COLOR = RGBColor(115, 159, 215)
 
 
 class ProjectPlanFiller(TemplateFillerStrategy):
@@ -27,29 +33,19 @@ class ProjectPlanFiller(TemplateFillerStrategy):
     MARKDOWN_TABLE_FIELDS = {"function_module"}
 
     def fill_template(self, template_path: Path, parameters: Dict[str, Any], output_path: Path, language: Optional[str] = None) -> bool:
-        """填充项目计划书模板。
-
-        整体流程：
-        Step 1: markdown 混合字段（function_module 等）→ 文本 + 表格渲染
-        Step 2: 图片 URL 字段 → 定位占位符后下载并插图（或下载失败兜底）
-        Step 3: 其余字段 → 普通 {{key}} 文本替换（已处理图片字段除外）
-        """
+        """填充项目计划书模板"""
         self._set_language(language)
         non_empty_fields = [k for k, v in parameters.items() if v]
         logger.info("[ProjectPlanFiller] 填充字段: %s", non_empty_fields)
         try:
             doc = Document(template_path)
 
-            # Step 1: markdown 字段（文本 + 表格，不走图片流程）
             self._process_markdown_table_fields(doc, parameters)
 
-            # Step 2: 识别纯 URL 图片字段，替换模板占位符
-            processed_image_keys = self._process_image_placeholders(doc, parameters)
+            processed_image_keys = self._process_image_fields(doc, parameters)
 
-            # Step 3: 其余占位符文本替换（exclude 已插图字段，避免 URL 被当文字写入）
-            self._fallback_text_replace(
-                doc, self._flatten_parameters(parameters, exclude=processed_image_keys)
-            )
+            flat_parameters = self._flatten_parameters(parameters, exclude=processed_image_keys)
+            self._fallback_text_replace(doc, flat_parameters)
 
             doc.save(output_path)
             return True
@@ -62,19 +58,17 @@ class ProjectPlanFiller(TemplateFillerStrategy):
     # ------------------------------------------------------------------
 
     def _process_markdown_table_fields(self, doc: Document, parameters: Dict[str, Any]) -> None:
-        """处理 MARKDOWN_TABLE_FIELDS（如 function_module）：将 markdown 文本/表格渲染到 Word"""
+        """扫描段落和表格单元格，将 MARKDOWN_TABLE_FIELDS 中的占位符替换为混合内容"""
         for field in self.MARKDOWN_TABLE_FIELDS:
             placeholder = f"{{{{{field}}}}}"
             md_text = str(parameters.get(field) or "").strip()
             if not md_text:
                 continue
 
-            # 拆分为 text / table 片段
             parts = self._parse_mixed_markdown(md_text)
             if not parts:
                 continue
 
-            # 优先在正文段落中定位占位符
             for paragraph in list(doc.paragraphs):
                 if placeholder in paragraph.text:
                     parent = paragraph._element.getparent()
@@ -83,13 +77,12 @@ class ProjectPlanFiller(TemplateFillerStrategy):
                     self._render_mixed_at_position(doc, parent, idx, parts)
                     break
             else:
-                # 段落未命中则在表格单元格中查找
                 for table in doc.tables:
                     found = False
                     for row in table.rows:
                         for cell in row.cells:
                             if placeholder in (cell.text or ""):
-                                clear_cell(cell)
+                                self._clear_cell(cell)
                                 self._render_mixed_into_cell(doc, cell, parts)
                                 found = True
                                 break
@@ -98,83 +91,33 @@ class ProjectPlanFiller(TemplateFillerStrategy):
                     if found:
                         break
 
+                    if found:
+                        break
+
     # ------------------------------------------------------------------
-    # 图片占位符处理（先识别图片字段，再替换模板占位符）
+    # 图片字段处理（正文段落：![image](url) / 纯 URL / 图文混排）
     # ------------------------------------------------------------------
 
-    def _process_image_placeholders(self, doc: Document, parameters: Dict[str, Any]) -> set:
-        """筛出图片 URL 字段，在模板中定位 {{key}} 并插入图片，返回已成功处理的字段名。
-
-        对每个参数字段：
-        Step 1: 跳过 MARKDOWN_TABLE_FIELDS（如 function_module，走 markdown 渲染）
-        Step 2: pure_image_urls 判断并解析纯 URL / URL 列表
-        Step 3: replace_placeholder_with_images 定位占位符 → 下载 → 插图或兜底
-        Step 4: 成功处理则加入 processed_keys，后续文本替换时跳过
-        """
+    def _process_image_fields(self, doc: Document, parameters: Dict[str, Any]) -> set:
         processed_keys: set = set()
         for key, raw in self._build_param_lookup(parameters).items():
             if key in self.MARKDOWN_TABLE_FIELDS:
                 continue
-            urls = pure_image_urls(raw)
-            if not urls:
+            segments = self._parse_image_segments(raw)
+            if not any(seg["type"] == "image" for seg in segments):
                 continue
             placeholder = f"{{{{{key}}}}}"
-            if replace_placeholder_with_images(
-                doc,
-                placeholder,
-                urls,
-                self._language,
-                replace_in_paragraph_fn=self._replace_image_fallback_in_paragraph,
-                replace_in_cell_fn=self._replace_image_fallback_in_cell,
-                insert_block_paragraph_fn=self._insert_image_fallback_paragraph,
-                insert_cell_paragraph_fn=self._insert_image_fallback_in_cell,
-            ):
+            inserted = self._replace_body_placeholder_with_images(doc, placeholder, segments)
+            if inserted is not None:
                 processed_keys.add(key)
-                logger.info("[ProjectPlanFiller] 字段 %s 识别为图片，已处理 %d 个URL", key, len(urls))
+                logger.info(
+                    "[ProjectPlanFiller] 字段 %s 已处理，插入 %d 张图片",
+                    key,
+                    inserted,
+                )
         return processed_keys
 
-    def _replace_image_fallback_in_paragraph(self, paragraph, placeholder: str, text: str) -> None:
-        """图片下载失败兜底：与普通字段填充相同的字体 + 蓝色样式"""
-        key = placeholder[2:-2]
-        self._replace_in_paragraph(paragraph, {key: text})
-
-    def _replace_image_fallback_in_cell(self, cell, placeholder: str, text: str) -> None:
-        """图片下载失败兜底（单元格）：与普通字段填充相同的字体 + 蓝色样式"""
-        for para in cell.paragraphs:
-            if placeholder in (para.text or ""):
-                self._replace_image_fallback_in_paragraph(para, placeholder, text)
-                return
-        if placeholder in (cell.text or ""):
-            self._set_cell_value(cell, cell.text.replace(placeholder, text))
-
-    def _insert_image_fallback_paragraph(
-        self, doc: Document, parent, insert_idx: int, text: str, reference_paragraph=None
-    ) -> None:
-        """部分 URL 下载失败：在图片后追加与普通填充值同风格的兜底段落"""
-        paragraph = doc.add_paragraph()
-        parent.insert(insert_idx, paragraph._element)
-        self._write_image_fallback_text(paragraph, text, reference_paragraph)
-
-    def _insert_image_fallback_in_cell(self, cell, text: str, reference_paragraph=None) -> None:
-        """部分 URL 下载失败：在单元格图片后追加与普通填充值同风格的兜底段落"""
-        self._write_image_fallback_text(cell.add_paragraph(), text, reference_paragraph)
-
-    def _write_image_fallback_text(self, paragraph, text: str, reference_paragraph=None) -> None:
-        font = {}
-        if reference_paragraph is not None and reference_paragraph.runs:
-            font = self._extract_run_font_from_run(reference_paragraph.runs[0])
-        self._write_filled_text_in_paragraph(paragraph, text, font)
-
-    def _write_filled_text_in_paragraph(self, paragraph, text: str, font: Optional[Dict] = None) -> None:
-        """将整段文字按填充值样式写入（继承字体 + 蓝色）"""
-        for run in list(paragraph.runs):
-            run.clear()
-        new_run = paragraph.add_run(text)
-        self._apply_font(new_run, font or {})
-        new_run.font.color.rgb = RGBColor(115, 159, 215)
-
     def _build_param_lookup(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """将参数展平为一层 dict，供占位符 key 查找（支持一层嵌套）"""
         lookup: Dict[str, Any] = {}
         for key, value in parameters.items():
             if isinstance(value, dict):
@@ -183,6 +126,185 @@ class ProjectPlanFiller(TemplateFillerStrategy):
             else:
                 lookup[key] = value
         return lookup
+
+    def _parse_image_segments(self, value: Any) -> List[Dict[str, Any]]:
+        """将字段值拆分为按顺序排列的 text / image 片段"""
+        if value is None:
+            return []
+        if isinstance(value, list):
+            segments: List[Dict[str, Any]] = []
+            for item in value:
+                url = str(item).strip().strip("'\"")
+                if url.startswith("http://") or url.startswith("https://"):
+                    segments.append({"type": "image", "url": url})
+            return segments
+
+        text = str(value)
+        if not text.strip():
+            return []
+
+        spans: List[Tuple[int, int, str]] = []
+        for match in _MD_IMAGE_RE.finditer(text):
+            spans.append((match.start(), match.end(), match.group(1)))
+
+        occupied = [(start, end) for start, end, _ in spans]
+        for match in _URL_RE.finditer(text):
+            start, end = match.start(), match.end()
+            if any(start >= o_start and end <= o_end for o_start, o_end in occupied):
+                continue
+            if any(not (end <= o_start or start >= o_end) for o_start, o_end in occupied):
+                continue
+            spans.append((start, end, match.group(0)))
+
+        spans.sort(key=lambda item: item[0])
+        segments = []
+        pos = 0
+        for start, end, url in spans:
+            if start > pos:
+                segments.append({"type": "text", "content": text[pos:start]})
+            segments.append({"type": "image", "url": url})
+            pos = end
+        if pos < len(text):
+            segments.append({"type": "text", "content": text[pos:]})
+
+        return [seg for seg in segments if seg["type"] != "text" or seg["content"]]
+
+    def _replace_body_placeholder_with_images(
+        self, doc: Document, placeholder: str, segments: List[Dict[str, Any]]
+    ) -> Optional[int]:
+        """在正文段落中定位占位符并渲染图文片段，返回成功插入的图片数；未找到占位符返回 None"""
+        for paragraph in list(doc.paragraphs):
+            if placeholder not in (paragraph.text or ""):
+                continue
+            ref_font = self._extract_run_font_from_run(paragraph.runs[0]) if paragraph.runs else {}
+            parent = paragraph._element.getparent()
+            insert_idx = parent.index(paragraph._element)
+            parent.remove(paragraph._element)
+            inserted = self._render_image_segments_at_position(doc, parent, insert_idx, segments, ref_font)
+            return inserted
+        return None
+
+    def _render_image_segments_at_position(
+        self,
+        doc: Document,
+        parent,
+        insert_idx: int,
+        segments: List[Dict[str, Any]],
+        ref_font: Dict[str, Any],
+    ) -> int:
+        inserted = 0
+        cur = insert_idx
+        for segment in segments:
+            if segment["type"] == "text":
+                cur += self._insert_text_segment_elements(doc, parent, cur, segment["content"], ref_font)
+            else:
+                content = self._download_image(segment["url"])
+                if content:
+                    paragraph = self._create_scaled_image_paragraph(doc, content)
+                    parent.insert(cur, paragraph._element)
+                    cur += 1
+                    inserted += 1
+                else:
+                    logger.warning("图片下载失败: %s", segment["url"])
+                    fallback = self._format_image_fallback(segment["url"])
+                    paragraph = doc.add_paragraph("")
+                    self._append_filled_inline(paragraph, fallback, ref_font)
+                    parent.insert(cur, paragraph._element)
+                    cur += 1
+        return inserted
+
+    def _insert_text_segment_elements(
+        self, doc: Document, parent, insert_idx: int, text: str, ref_font: Dict[str, Any]
+    ) -> int:
+        if not text:
+            return 0
+        count = 0
+        for raw_line in text.splitlines():
+            paragraph = doc.add_paragraph("")
+            if raw_line:
+                self._append_filled_inline(paragraph, raw_line, ref_font)
+            parent.insert(insert_idx + count, paragraph._element)
+            count += 1
+        return count
+
+    def _append_filled_inline(self, paragraph, text: str, ref_font: Dict[str, Any]) -> None:
+        """填充值样式：继承模板字体 + 蓝色，支持 **加粗**"""
+        pos = 0
+        for match in re.finditer(r"\*\*(.+?)\*\*", text):
+            if match.start() > pos:
+                run = paragraph.add_run(text[pos:match.start()])
+                self._apply_font(run, ref_font)
+                run.font.color.rgb = _FILL_COLOR
+            run = paragraph.add_run(match.group(1))
+            self._apply_font(run, ref_font)
+            run.font.color.rgb = _FILL_COLOR
+            run.font.bold = True
+            pos = match.end()
+        if pos < len(text):
+            run = paragraph.add_run(text[pos:])
+            self._apply_font(run, ref_font)
+            run.font.color.rgb = _FILL_COLOR
+
+    def _create_scaled_image_paragraph(self, doc: Document, content: bytes):
+        section = doc.sections[0]
+        available_width = (
+            section.page_width
+            - section.left_margin
+            - section.right_margin
+            - Cm(0.74)
+            - Cm(1.48)
+        )
+        available_width_cm = available_width / 360000.0
+        if available_width_cm <= 0:
+            available_width_cm = 10.0
+
+        target_width_cm = available_width_cm
+        target_height_cm = None
+        try:
+            from PIL import Image
+
+            img_stream = io.BytesIO(content)
+            img = Image.open(img_stream)
+            img_width, img_height = img.size
+            img_stream.close()
+            if img_width > 0:
+                img_width_cm = img_width * 2.54 / 96.0
+                img_height_cm = img_height * 2.54 / 96.0
+                scale_ratio = available_width_cm / img_width_cm
+                target_width_cm = available_width_cm
+                target_height_cm = img_height_cm * scale_ratio
+        except Exception:
+            target_height_cm = None
+
+        paragraph = doc.add_paragraph()
+        paragraph.paragraph_format.left_indent = Cm(0.74)
+        paragraph.paragraph_format.right_indent = Cm(1.48)
+        run = paragraph.add_run()
+        image_stream = io.BytesIO(content)
+        if target_height_cm is not None:
+            run.add_picture(image_stream, width=Cm(target_width_cm), height=Cm(target_height_cm))
+        else:
+            run.add_picture(image_stream, width=Cm(target_width_cm))
+        return paragraph
+
+    def _download_image(self, url: str) -> bytes:
+        try:
+            req = urllib.request.Request(
+                url,
+                headers={"User-Agent": "ohc-account-invoice/1.0 (+python urllib)"},
+                method="GET",
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                status = getattr(resp, "status", None)
+                if status is not None and int(status) != 200:
+                    return b""
+                return resp.read()
+        except Exception:
+            return b""
+
+    def _format_image_fallback(self, url: str) -> str:
+        prefix = _IMAGE_DOWNLOAD_FAILED_PREFIX.get(self._language, _IMAGE_DOWNLOAD_FAILED_PREFIX["zh"])
+        return prefix + url
 
     # ------------------------------------------------------------------
     # 混合 Markdown 解析
@@ -201,19 +323,16 @@ class ProjectPlanFiller(TemplateFillerStrategy):
         while i < len(lines):
             line_stripped = lines[i].strip()
 
-            # 识别 markdown 表格：表头行 + 分隔符行（|---|）
             if i + 1 < len(lines):
                 next_stripped = lines[i + 1].strip()
                 if ("|" in line_stripped and "|" in next_stripped
                         and re.search(r'[-:]+', next_stripped)):
-                    # 表格前的文本先入缓冲
                     if text_buf:
                         joined = "\n".join(text_buf)
                         if joined.strip():
                             parts.append({"type": "text", "content": joined})
                         text_buf = []
 
-                    # 收集表格所有行
                     table_lines = [lines[i], lines[i + 1]]
                     i += 2
                     while i < len(lines):
@@ -236,7 +355,6 @@ class ProjectPlanFiller(TemplateFillerStrategy):
             text_buf.append(lines[i])
             i += 1
 
-        # 收尾：剩余文本作为最后一个 text 片段
         if text_buf:
             joined = "\n".join(text_buf)
             if joined.strip():
@@ -259,7 +377,6 @@ class ProjectPlanFiller(TemplateFillerStrategy):
                     self._insert_md_table_at(doc, parent, cur, headers, rows)
                     cur += 1
             else:
-                # 文本片段：逐段插入并推进索引
                 elements = self._render_text_to_elements(doc, part["content"])
                 for el in elements:
                     parent.insert(cur, el)
@@ -289,14 +406,12 @@ class ProjectPlanFiller(TemplateFillerStrategy):
         lines = [line.strip() for line in markdown_text.splitlines() if line.strip()]
         if len(lines) < 2:
             return [], []
-        # 第 1 行表头，第 2 行分隔符
         header_line = lines[0]
         separator_line = lines[1]
         if "|" not in header_line or "|" not in separator_line:
             return [], []
         headers = [c.strip() for c in header_line.strip("|").split("|")]
         rows: List[List[str]] = []
-        # 第 3 行起为数据行
         for line in lines[2:]:
             if "|" not in line:
                 continue
@@ -311,12 +426,10 @@ class ProjectPlanFiller(TemplateFillerStrategy):
     def _insert_md_table_at(self, doc: Document, parent, insert_idx: int,
                             headers: List[str], rows: List[List[str]]) -> None:
         tbl = doc.add_table(rows=1 + len(rows), cols=len(headers))
-        # 表头行
         for i, h in enumerate(headers):
             run = tbl.rows[0].cells[i].paragraphs[0].add_run(h)
             self._apply_table_font(run, bold=True)
         self._apply_header_row_style(tbl.rows[0])
-        # 数据行
         for r_idx, vals in enumerate(rows, start=1):
             for c_idx, val in enumerate(vals):
                 self._append_markdown_inline(tbl.rows[r_idx].cells[c_idx].paragraphs[0], val)
@@ -398,6 +511,13 @@ class ProjectPlanFiller(TemplateFillerStrategy):
     # 单元格/样式工具
     # ------------------------------------------------------------------
 
+    def _clear_cell(self, cell) -> None:
+        cell.text = ""
+        for para in list(cell.paragraphs):
+            p_el = para._element
+            p_el.getparent().remove(p_el)
+        cell.add_paragraph("")
+
     def _apply_table_font(self, run, bold: bool = False) -> None:
         run.font.name = "微软雅黑"
         run._element.rPr.rFonts.set(qn("w:eastAsia"), "微软雅黑")
@@ -431,18 +551,15 @@ class ProjectPlanFiller(TemplateFillerStrategy):
     # ------------------------------------------------------------------
 
     def _fallback_text_replace(self, doc: Document, flat_parameters: Dict[str, str]) -> None:
-        # 正文
         for paragraph in doc.paragraphs:
             self._replace_in_paragraph(paragraph, flat_parameters)
 
-        # 表格单元格
         for table in doc.tables:
             for row in table.rows:
                 for cell in row.cells:
                     for paragraph in cell.paragraphs:
                         self._replace_in_paragraph(paragraph, flat_parameters)
 
-        # 页眉 / 页脚
         for section in doc.sections:
             if section.header:
                 for paragraph in section.header.paragraphs:
@@ -471,8 +588,9 @@ class ProjectPlanFiller(TemplateFillerStrategy):
             r"\{\{(" + "|".join(re.escape(k) for k in flat_parameters) + r")\}\}"
         )
 
-        # 1. 按占位符拆分：普通文字 / 填充值
+        # 对整段拼合文本做拆分，确保跨 run 场景也能精确定位
         parts = placeholder_re.split(full_text)
+        # parts: [普通文字, key, 普通文字, key, ...]
         segments: List[Tuple[str, bool]] = []
         for i, part in enumerate(parts):
             if i % 2 == 0:
@@ -485,7 +603,6 @@ class ProjectPlanFiller(TemplateFillerStrategy):
 
         font = self._extract_run_font_from_run(paragraph.runs[0]) if paragraph.runs else {}
 
-        # 2. 清空原 runs，按段重建（填充值着蓝色）
         for run in list(paragraph.runs):
             run.clear()
 
@@ -591,10 +708,8 @@ class ProjectPlanFiller(TemplateFillerStrategy):
         skip = exclude or set()
         flat: Dict[str, str] = {}
         for key, value in parameters.items():
-            # markdown 混合字段已在前面单独处理
             if key in self.MARKDOWN_TABLE_FIELDS or key in skip:
                 continue
-            # 一层嵌套对象：子键展平到顶层
             if isinstance(value, dict):
                 for sub_key, sub_val in value.items():
                     if sub_key in skip:
