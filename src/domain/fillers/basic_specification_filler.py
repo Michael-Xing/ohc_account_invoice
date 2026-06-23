@@ -16,6 +16,12 @@ from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor, Cm, Inches
 
 from src.infrastructure.template_service import TemplateFillerStrategy
+from src.infrastructure.word_image_utils import (
+    clear_cell,
+    normalize_image_urls,
+    insert_images_into_cell,
+    insert_images_at_block,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -134,18 +140,18 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                         if is_table_field:
                             markdown_text = str(self._get_param(parameters, key) or "").strip()
                             if markdown_text:
-                                self._clear_cell(cell)
+                                clear_cell(cell)
                                 self._insert_markdown_table_into_cell(cell, markdown_text, merge_same_column=False)
                         elif key == self.PRODUCT_MODEL_TABLE_FIELD:
                             rows = parameters.get(self.PRODUCT_MODEL_TABLE_FIELD) or []
                             if rows:
-                                self._clear_cell(cell)
+                                clear_cell(cell)
                                 self._insert_product_model_table(cell, rows)
                         elif is_image_field:
-                            images = self._normalize_image_urls(self._get_param(parameters, key))
+                            images = normalize_image_urls(self._get_param(parameters, key))
                             if images:
-                                self._clear_cell(cell)
-                                self._insert_images_into_cell(cell, images)
+                                clear_cell(cell)
+                                insert_images_into_cell(cell, images)
                                 # 占位符已通过 clear_cell 清除，无需再次清理
                                 continue
                         elif not is_special_field:
@@ -158,7 +164,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                                 if self._is_markdown_table(markdown_text):
                                     # 是表格，插入表格
                                     logger.info(f"在表格单元格中检测到 markdown 表格字段: {key}")
-                                    self._clear_cell(cell)
+                                    clear_cell(cell)
                                     self._insert_markdown_table_into_cell(cell, markdown_text, merge_same_column=False)
                                     continue  # 已处理，跳过后续清理
                                 else:
@@ -242,7 +248,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                 elif is_image_field:
                     # 3）图片列表字段：在段落位置插入图片（无论是否独占一行）
                     image_param = self._get_param(parameters, key)
-                    images = self._normalize_image_urls(image_param)
+                    images = normalize_image_urls(image_param)
                     print(f"调试: 字段 {key} 的原始值: {image_param}, 提取的图片URLs: {images}")
                     if images:
                         # 在删除之前保存插入位置
@@ -250,7 +256,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                         # 删除占位符段落
                         parent.remove(parent_element)
                         # 在指定位置插入图片
-                        self._insert_images_at_block(doc, parent, insert_idx, images)
+                        insert_images_at_block(doc, parent, insert_idx, images)
                     else:
                         print(f"警告: 字段 {key} 没有找到有效的图片URL，原始值: {image_param}")
                         # 即使没有图片，也要删除占位符，避免被 _fallback_text_replace 处理
@@ -519,115 +525,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         indent_para_after.paragraph_format.right_indent = Cm(1.48)  # 4字符 = 1.48cm
         parent.insert(insert_idx + 2, indent_para_after._element)
 
-    def _insert_images_into_cell(self, cell, image_urls: List[str]) -> None:
-        """将多张图片插入到同一个单元格中，按给定顺序，保持原始比例"""
-        for url in image_urls:
-            try:
-                content = self._download_image(url)
-                if not content:
-                    continue
-                image_stream = io.BytesIO(content)
-                paragraph = cell.add_paragraph()
-                run = paragraph.add_run()
-                # 添加图片，保持原始比例（不指定宽度和高度）
-                run.add_picture(image_stream)
-            except Exception:
-                # 单张图片失败不中断整体处理
-                continue
 
-    def _insert_images_at_block(self, doc: Document, parent, insert_idx: int, image_urls: List[str]) -> None:
-        """在文档块级位置插入多张图片，按给定顺序，宽度适配word文档，首行缩进2字符，尾部缩进4字符，保持宽高比"""
-        elements_to_insert = []
-        
-        # 获取文档页面宽度（减去左右边距）
-        section = doc.sections[0]
-        page_width = section.page_width
-        left_margin = section.left_margin
-        right_margin = section.right_margin
-        # 可用宽度 = 页面宽度 - 左边距 - 右边距 - 首行缩进(2字符) - 尾部缩进(4字符)
-        available_width = page_width - left_margin - right_margin - Cm(0.74) - Cm(1.48)
-        
-        for url in image_urls:
-            try:
-                content = self._download_image(url)
-                if not content:
-                    print(f"警告: 图片下载失败或内容为空: {url}")
-                    continue
-                
-                # 计算可用宽度（EMU 单位转换为 Cm）
-                # 1 cm = 360000 EMU
-                available_width_cm = available_width / 360000.0
-                
-                if available_width_cm <= 0:
-                    print(f"警告: 可用宽度计算错误: {available_width_cm} cm，使用默认宽度 10cm")
-                    available_width_cm = 10.0
-                
-                # 尝试使用 PIL 读取图片尺寸以计算缩放比例
-                target_width_cm = None
-                target_height_cm = None
-                try:
-                    from PIL import Image
-                    img_stream_for_size = io.BytesIO(content)
-                    img = Image.open(img_stream_for_size)
-                    img_width, img_height = img.size
-                    img_stream_for_size.close()  # 关闭用于读取尺寸的流
-                    
-                    if img_width > 0:
-                        # 将图片像素尺寸转换为厘米（假设图片是 96 DPI，1英寸 = 2.54cm，1英寸 = 96像素）
-                        # 1像素 = 2.54/96 cm ≈ 0.026458333 cm
-                        img_width_cm = img_width * 2.54 / 96.0
-                        img_height_cm = img_height * 2.54 / 96.0
-                        
-                        # 计算缩放比例（以可用宽度为准）
-                        scale_ratio = available_width_cm / img_width_cm
-                        target_width_cm = available_width_cm
-                        target_height_cm = img_height_cm * scale_ratio
-                    else:
-                        print(f"警告: 图片宽度为0: {url}，使用默认尺寸")
-                        target_width_cm = available_width_cm
-                        target_height_cm = available_width_cm  # 默认正方形
-                except ImportError:
-                    # PIL 不可用，使用默认宽度，让 python-docx 自动计算高度
-                    print(f"警告: PIL 模块不可用，使用默认宽度 {available_width_cm:.2f}cm，高度自动计算")
-                    target_width_cm = available_width_cm
-                    target_height_cm = None  # 不指定高度，让 python-docx 保持宽高比
-                except Exception as e:
-                    # 读取图片尺寸失败，使用默认尺寸
-                    print(f"警告: 读取图片尺寸失败: {str(e)}，使用默认尺寸")
-                    target_width_cm = available_width_cm
-                    target_height_cm = None  # 不指定高度，让 python-docx 保持宽高比
-                
-                # 创建新的流对象用于插入图片
-                image_stream_for_insert = io.BytesIO(content)
-                
-                paragraph = doc.add_paragraph()
-                # 设置首行缩进2字符，尾部缩进4字符
-                paragraph.paragraph_format.left_indent = Cm(0.74)
-                paragraph.paragraph_format.right_indent = Cm(1.48)
-                run = paragraph.add_run()
-                # 添加图片，指定宽度和高度（保持宽高比）
-                if target_height_cm is not None:
-                    run.add_picture(image_stream_for_insert, width=Cm(target_width_cm), height=Cm(target_height_cm))
-                else:
-                    # 只指定宽度，让 python-docx 自动计算高度以保持宽高比
-                    run.add_picture(image_stream_for_insert, width=Cm(target_width_cm))
-                image_stream_for_insert.close()  # 关闭流
-                
-                elements_to_insert.append(paragraph._element)
-                if target_height_cm is not None:
-                    print(f"成功插入图片: {url}, 尺寸: {target_width_cm:.2f}cm x {target_height_cm:.2f}cm")
-                else:
-                    print(f"成功插入图片: {url}, 尺寸: {target_width_cm:.2f}cm x 自动")
-            except Exception as e:
-                # 单张图片失败不中断整体处理
-                import traceback
-                print(f"错误: 插入图片失败 {url}: {str(e)}")
-                traceback.print_exc()
-                continue
-        
-        # 将所有图片段落按顺序插入到指定位置
-        for idx, element in enumerate(elements_to_insert):
-            parent.insert(insert_idx + idx, element)
 
     def _parse_mixed_markdown(self, markdown_text: str) -> List[Dict[str, Any]]:
         """解析混合的 markdown 内容，识别文本段落和表格部分
@@ -1107,82 +1005,6 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
 
         return headers, rows
 
-    def _normalize_image_urls(self, value: Any) -> List[str]:
-        """将入参中的图片字段整理为 URL 列表，并做简单清洗
-        
-        支持多种输入格式：
-        - 列表: ['url1', 'url2']
-        - 字符串格式的列表: "['url1', 'url2']"
-        - 单个 URL 字符串: "https://..."
-        - 包含多个 URL 的字符串: "url1 url2" 或 "url1, url2"
-        """
-        urls: List[str] = []
-        
-        if value is None:
-            return urls
-        
-        # 如果已经是列表，直接使用
-        if isinstance(value, list):
-            candidates = value
-        elif isinstance(value, str):
-            # 尝试解析字符串格式的列表（如 "['url1', 'url2']"）
-            try:
-                parsed = ast.literal_eval(value)
-                if isinstance(parsed, list):
-                    candidates = parsed
-                else:
-                    candidates = [value]
-            except (ValueError, SyntaxError):
-                # 解析失败，尝试用正则表达式提取 URL
-                pattern = re.compile(r"https?://[^\s\)\]\'\"]+")
-                found = pattern.findall(value)
-                if found:
-                    candidates = found
-                else:
-                    # 如果正则也没找到，假设整个字符串就是一个 URL
-                    candidates = [value]
-        else:
-            candidates = []
-
-        # 处理候选 URL，提取并清洗
-        pattern = re.compile(r"https?://[^\s\)\]\'\"]+")
-        for item in candidates:
-            if not item:
-                continue
-            text = str(item).strip()
-            # 移除可能的引号
-            text = text.strip("'\"")
-            # 从文本中抽取 URL
-            found = pattern.findall(text)
-            if found:
-                urls.extend(found)
-            elif text.startswith("http://") or text.startswith("https://"):
-                # 文本本身就是 URL
-                urls.append(text)
-        
-        # 去重并返回
-        return list(dict.fromkeys(urls))  # 保持顺序的去重
-
-    def _download_image(self, url: str) -> bytes:
-        """下载图片内容，失败时返回空字节串"""
-        try:
-            req = urllib.request.Request(
-                url,
-                headers={
-                    # Some hosts block requests without UA
-                    "User-Agent": "ohc-account-invoice/1.0 (+python urllib)",
-                },
-                method="GET",
-            )
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                status = getattr(resp, "status", None)
-                if status is not None and int(status) != 200:
-                    return b""
-                return resp.read()
-        except Exception:
-            return b""
-        return b""
-
     def _extract_placeholders(self, text: str) -> List[str]:
         """从文本中提取 {{var}} 形式的占位符变量名"""
         if not text:
@@ -1276,15 +1098,6 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                 # 如果值为 None，使用默认文本
                 flat[key] = self._missing_text()
         return flat
-
-    def _clear_cell(self, cell) -> None:
-        """清空单元格内容"""
-        cell.text = ""
-        # 清除所有段落，保留一个空段落作为插入锚点
-        for para in list(cell.paragraphs):
-            p_element = para._element
-            p_element.getparent().remove(p_element)
-        cell.add_paragraph("")
 
     def _insert_after(self, parent, paragraph, previous_element):
         """在指定元素之后插入段落，如果 previous_element 为空则附加到末尾"""
