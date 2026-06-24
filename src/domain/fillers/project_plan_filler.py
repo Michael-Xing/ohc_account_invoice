@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 _MD_IMAGE_RE = re.compile(r"!\[image\]\(([^)\s]+)\)", re.IGNORECASE)
 _URL_RE = re.compile(r"https?://[^\s\)\]\'\"]+")
+_BR_RE = re.compile(r"<br\s*/?>", re.IGNORECASE)
 _IMAGE_DOWNLOAD_FAILED_PREFIX = {
     "zh": "图片下载失败，需人工确认。地址：",
     "ja": "画像のダウンロードに失敗しました。要手動確認。URL：",
@@ -576,8 +577,22 @@ class ProjectPlanFiller(TemplateFillerStrategy):
 
         return elements
 
+    def _normalize_line_breaks(self, text: str) -> str:
+        """将 <br> / <br/> 归一化为 \\n"""
+        return _BR_RE.sub("\n", text)
+
     def _append_markdown_inline(self, paragraph, text: str) -> None:
-        """处理行内 markdown（**加粗**）"""
+        """处理行内 markdown（**加粗**、<br> / \\n 换行）"""
+        text = self._normalize_line_breaks(text)
+        lines = text.split("\n")
+        for idx, line in enumerate(lines):
+            if idx > 0:
+                paragraph.add_run().add_break()
+            if line:
+                self._append_markdown_bold_runs(paragraph, line)
+
+    def _append_markdown_bold_runs(self, paragraph, text: str) -> None:
+        """单行内 **加粗** 渲染（table 字体）"""
         pos = 0
         for match in re.finditer(r"\*\*(.+?)\*\*", text):
             if match.start() > pos:
