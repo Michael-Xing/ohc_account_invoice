@@ -334,7 +334,7 @@ class ProjectPlanParameters(BaseTemplateParameters):
     sales_name: str = Field(default="", description="贩卖名称")
     target: str = Field(default="", description="商品目标")
     differentiation: str = Field(default="", description="差异化")
-    design: str = Field(default="", description="设计一览")
+    # design: str = Field(default="", description="设计一览")
     # product_requirement: str = Field(default="", description="产品要件书")
     issue_result: str = Field(default="", description="课题分析·对策结果书")
     document_drawing_no: str = Field(default="", description="文件·图纸编号")
