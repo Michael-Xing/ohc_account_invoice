@@ -17,7 +17,7 @@ from src.infrastructure.template_service import TemplateFillerStrategy
 
 logger = logging.getLogger(__name__)
 
-_MD_IMAGE_RE = re.compile(r"!\[image\]\((https?://[^)\s]+)\)", re.IGNORECASE)
+_MD_IMAGE_RE = re.compile(r"!\[image\]\(([^)\s]+)\)", re.IGNORECASE)
 _URL_RE = re.compile(r"https?://[^\s\)\]\'\"]+")
 _IMAGE_DOWNLOAD_FAILED_PREFIX = {
     "zh": "图片下载失败，需人工确认。地址：",
@@ -73,8 +73,9 @@ class ProjectPlanFiller(TemplateFillerStrategy):
                 if placeholder in paragraph.text:
                     parent = paragraph._element.getparent()
                     idx = list(parent).index(paragraph._element)
+                    ref_font = self._extract_run_font_from_run(paragraph.runs[0]) if paragraph.runs else {}
                     parent.remove(paragraph._element)
-                    self._render_mixed_at_position(doc, parent, idx, parts)
+                    self._render_mixed_at_position(doc, parent, idx, parts, ref_font)
                     break
             else:
                 for table in doc.tables:
@@ -88,9 +89,6 @@ class ProjectPlanFiller(TemplateFillerStrategy):
                                 break
                         if found:
                             break
-                    if found:
-                        break
-
                     if found:
                         break
 
@@ -198,19 +196,9 @@ class ProjectPlanFiller(TemplateFillerStrategy):
             if segment["type"] == "text":
                 cur += self._insert_text_segment_elements(doc, parent, cur, segment["content"], ref_font)
             else:
-                content = self._download_image(segment["url"])
-                if content:
-                    paragraph = self._create_scaled_image_paragraph(doc, content)
-                    parent.insert(cur, paragraph._element)
-                    cur += 1
-                    inserted += 1
-                else:
-                    logger.warning("图片下载失败: %s", segment["url"])
-                    fallback = self._format_image_fallback(segment["url"])
-                    paragraph = doc.add_paragraph("")
-                    self._append_filled_inline(paragraph, fallback, ref_font)
-                    parent.insert(cur, paragraph._element)
-                    cur += 1
+                added, imgs = self._insert_image_block_at(doc, parent, cur, segment["url"], ref_font)
+                cur += added
+                inserted += imgs
         return inserted
 
     def _insert_text_segment_elements(
@@ -366,10 +354,17 @@ class ProjectPlanFiller(TemplateFillerStrategy):
     # 混合内容渲染
     # ------------------------------------------------------------------
 
-    def _render_mixed_at_position(self, doc: Document, parent, insert_idx: int,
-                                  parts: List[Dict[str, Any]]) -> None:
-        """在文档块级位置依次渲染 text/table 片段"""
+    def _render_mixed_at_position(
+        self,
+        doc: Document,
+        parent,
+        insert_idx: int,
+        parts: List[Dict[str, Any]],
+        ref_font: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """在文档块级位置依次渲染 text/table 片段（text 片段内支持图片）"""
         cur = insert_idx
+        ref_font = ref_font or {}
         for part in parts:
             if part["type"] == "table":
                 headers, rows = self._parse_markdown_table(part["content"])
@@ -377,26 +372,114 @@ class ProjectPlanFiller(TemplateFillerStrategy):
                     self._insert_md_table_at(doc, parent, cur, headers, rows)
                     cur += 1
             else:
-                elements = self._render_text_to_elements(doc, part["content"])
-                for el in elements:
-                    parent.insert(cur, el)
-                    cur += 1
+                segments = self._parse_image_segments(part["content"])
+                if any(seg["type"] == "image" for seg in segments):
+                    cur += self._render_text_with_images_at_position(
+                        doc, parent, cur, segments, ref_font, markdown_style=True
+                    )
+                else:
+                    elements = self._render_text_to_elements(doc, part["content"])
+                    for el in elements:
+                        parent.insert(cur, el)
+                        cur += 1
 
-    def _render_mixed_into_cell(self, doc: Document, cell,
-                                parts: List[Dict[str, Any]]) -> None:
-        """在单元格内依次渲染 text/table 片段"""
+    def _render_mixed_into_cell(self, doc: Document, cell, parts: List[Dict[str, Any]]) -> None:
+        """在单元格内依次渲染 text/table 片段（text 片段内支持图片）"""
         for part in parts:
             if part["type"] == "table":
                 headers, rows = self._parse_markdown_table(part["content"])
                 if headers:
                     self._insert_md_table_into_cell(cell, headers, rows)
             else:
-                for raw_line in part["content"].splitlines():
+                segments = self._parse_image_segments(part["content"])
+                if any(seg["type"] == "image" for seg in segments):
+                    self._render_text_with_images_into_cell(doc, cell, segments)
+                else:
+                    for raw_line in part["content"].splitlines():
+                        line = raw_line.strip()
+                        if not line:
+                            continue
+                        p = cell.add_paragraph("")
+                        self._append_markdown_inline(p, line)
+
+    def _render_text_with_images_at_position(
+        self,
+        doc: Document,
+        parent,
+        insert_idx: int,
+        segments: List[Dict[str, Any]],
+        ref_font: Dict[str, Any],
+        markdown_style: bool = False,
+    ) -> int:
+        """渲染 text/image 混排片段，返回插入的元素数量"""
+        cur = insert_idx
+        for segment in segments:
+            if segment["type"] == "text":
+                elements = self._render_text_to_elements(doc, segment["content"])
+                for el in elements:
+                    parent.insert(cur, el)
+                    cur += 1
+            else:
+                added, _ = self._insert_image_block_at(
+                    doc, parent, cur, segment["url"], ref_font, markdown_style=markdown_style
+                )
+                cur += added
+        return cur - insert_idx
+
+    def _render_text_with_images_into_cell(
+        self, doc: Document, cell, segments: List[Dict[str, Any]]
+    ) -> None:
+        for segment in segments:
+            if segment["type"] == "text":
+                for raw_line in segment["content"].splitlines():
                     line = raw_line.strip()
                     if not line:
                         continue
                     p = cell.add_paragraph("")
                     self._append_markdown_inline(p, line)
+            else:
+                self._insert_image_into_cell(doc, cell, segment["url"])
+
+    def _insert_image_block_at(
+        self,
+        doc: Document,
+        parent,
+        insert_idx: int,
+        url: str,
+        ref_font: Dict[str, Any],
+        markdown_style: bool = False,
+    ) -> Tuple[int, int]:
+        """下载并插入单张图片（或失败兜底），返回 (新增块级元素数, 成功插入图片数)"""
+        content = self._download_image(url)
+        if content:
+            paragraph = self._create_scaled_image_paragraph(doc, content)
+            parent.insert(insert_idx, paragraph._element)
+            return 1, 1
+
+        logger.warning("图片下载失败: %s", url)
+        fallback = self._format_image_fallback(url)
+        paragraph = doc.add_paragraph("")
+        if markdown_style:
+            self._append_markdown_inline(paragraph, fallback)
+        else:
+            self._append_filled_inline(paragraph, fallback, ref_font)
+        parent.insert(insert_idx, paragraph._element)
+        return 1, 0
+
+    def _insert_image_into_cell(self, doc: Document, cell, url: str) -> None:
+        content = self._download_image(url)
+        paragraph = cell.add_paragraph("")
+        if content:
+            run = paragraph.add_run()
+            section = doc.sections[0]
+            available_width = section.page_width - section.left_margin - section.right_margin
+            available_width_cm = max(available_width / 360000.0, 1.0)
+            image_stream = io.BytesIO(content)
+            run.add_picture(image_stream, width=Cm(available_width_cm))
+            return
+
+        logger.warning("图片下载失败: %s", url)
+        self._append_markdown_inline(paragraph, self._format_image_fallback(url))
 
     # ------------------------------------------------------------------
     # Markdown 表格解析与插入
