@@ -28,6 +28,7 @@ _IMAGE_DOWNLOAD_FAILED_PREFIX = {
     "ja": "画像のダウンロードに失敗しました。要手動確認。URL：",
     "en": "Image download failed; manual confirmation required. URL: ",
 }
+_HTML_TABLE_RE = re.compile(r"<table[^>]*>.*?</table>", re.DOTALL | re.IGNORECASE)
 _FILL_COLOR = RGBColor(115, 159, 215)
 
 
@@ -333,16 +334,33 @@ class ProjectPlanFiller(TemplateFillerStrategy):
         """将混排文本拆分为 text / table / image 片段（支持 Markdown 管道表与 HTML 表格）"""
         if not text:
             return []
+        # 含 HTML 表格时先按 <table>...</table> 切块（支持多行、标签分行、与文字混排）
+        if re.search(r"<\s*table\b", text, re.IGNORECASE):
+            return self._parse_mixed_content_with_html_tables(text)
+        return self._parse_mixed_content_lines(text)
+
+    def _parse_mixed_content_with_html_tables(self, text: str) -> List[Dict[str, Any]]:
+        """从文本中提取所有 HTML 表格块，表前/表后内容继续按行解析"""
+        parts: List[Dict[str, Any]] = []
+        last_end = 0
+        for match in _HTML_TABLE_RE.finditer(text):
+            before = text[last_end:match.start()]
+            if before.strip():
+                parts.extend(self._parse_mixed_content_lines(before))
+            parts.append({"type": "table", "content": match.group(0).strip()})
+            last_end = match.end()
+        remaining = text[last_end:]
+        if remaining.strip():
+            parts.extend(self._parse_mixed_content_lines(remaining))
+        return parts
+
+    def _parse_mixed_content_lines(self, text: str) -> List[Dict[str, Any]]:
+        """逐行解析：Markdown 管道表、独立图片行、普通文本（不含 HTML table 块）"""
+        if not text:
+            return []
 
         parts: List[Dict[str, Any]] = []
-        # 尚未遇到表格/图片时累积的普通文本行
         current_text_lines: List[str] = []
-
-        # 快捷路径：整段内容只有一个 HTML 表格，无需逐行扫描
-        if re.search(r"<table[^>]*>.*?</table>", text, re.DOTALL | re.IGNORECASE):
-            html_tables = re.findall(r"<table[^>]*>.*?</table>", text, re.DOTALL | re.IGNORECASE)
-            if html_tables and len(html_tables) == 1 and text.strip() == html_tables[0].strip():
-                return [{"type": "table", "content": text.strip()}]
 
         lines = text.splitlines()
         i = 0
@@ -354,7 +372,6 @@ class ProjectPlanFiller(TemplateFillerStrategy):
             # --- 类型 A：独立占一行的图片（行内还有文字则走默认 text 分支，由 _parse_image_segments 拆分）---
             image_url = self._extract_image_url(line_stripped)
             if image_url and self._is_standalone_image_line(line_stripped):
-                # 先 flush 前面累积的文本
                 if current_text_lines:
                     text_content = "\n".join(current_text_lines)
                     if text_content.strip():
@@ -364,29 +381,7 @@ class ProjectPlanFiller(TemplateFillerStrategy):
                 i += 1
                 continue
 
-            # --- 类型 B：HTML 表格（可能跨多行，用 table 开闭标签计数确定边界）---
-            if re.search(r"<tr[^>]*>.*?</tr>", line_stripped, re.DOTALL | re.IGNORECASE):
-                table_content_parts: List[str] = []
-                table_depth = 0
-                while i < len(lines):
-                    current_line = lines[i]
-                    table_content_parts.append(current_line)
-                    table_depth += len(re.findall(r"<table[^>]*>", current_line, re.IGNORECASE))
-                    table_depth -= len(re.findall(r"</table>", current_line, re.IGNORECASE))
-                    i += 1
-                    # depth 归零且近期行含 </table> 表示表格结束
-                    if table_depth == 0 and "</table>" in "".join(table_content_parts[-5:]):
-                        break
-
-                if current_text_lines:
-                    text_content = "\n".join(current_text_lines)
-                    if text_content.strip():
-                        parts.append({"type": "text", "content": text_content})
-                    current_text_lines = []
-                parts.append({"type": "table", "content": "\n".join(table_content_parts)})
-                continue
-
-            # --- 类型 C：Markdown 管道表（表头 + --- 分隔行 + 数据行）---
+            # --- 类型 B：Markdown 管道表（表头 + --- 分隔行 + 数据行）---
             if i + 1 < len(lines):
                 next_line_stripped = lines[i + 1].strip()
                 if ("|" in line_stripped and "|" in next_line_stripped
@@ -402,7 +397,6 @@ class ProjectPlanFiller(TemplateFillerStrategy):
                     while i < len(lines):
                         current_line = lines[i]
                         current_line_stripped = current_line.strip()
-                        # 空行后若下一行仍以 | 开头，视为表格内空行
                         if not current_line_stripped:
                             if i + 1 < len(lines) and "|" in lines[i + 1].strip():
                                 table_lines.append(current_line)
@@ -419,15 +413,12 @@ class ProjectPlanFiller(TemplateFillerStrategy):
                     if self._is_markdown_table(table_content):
                         parts.append({"type": "table", "content": table_content})
                     else:
-                        # 误判为表格时退回普通文本
                         current_text_lines.extend(table_lines)
                     continue
 
-            # --- 默认：普通文本行，继续累积 ---
             current_text_lines.append(line)
             i += 1
 
-        # 末尾 flush 剩余文本
         if current_text_lines:
             text_content = "\n".join(current_text_lines)
             if text_content.strip():
@@ -690,62 +681,66 @@ class ProjectPlanFiller(TemplateFillerStrategy):
         rowspan_map: List[Dict[int, Tuple[str, int]]] = []
 
         for tr_idx, tr_content in enumerate(tr_matches):
-            td_matches = re.findall(
-                r"<t[hd][^>]*(?:/>|>(.*?)</t[hd]>)", tr_content, re.DOTALL | re.IGNORECASE
-            )
-            if not td_matches:
-                continue
-
             current_row: List[str] = []
             col_idx = 0
 
             # 本行开头：填入上一行 rowspan 延续下来的占位单元格
             if tr_idx < len(rowspan_map):
-                for prev_col_idx in range(len(current_row), max(rowspan_map[tr_idx].keys(), default=0) + 1):
-                    if prev_col_idx in rowspan_map[tr_idx]:
+                for prev_col_idx in sorted(rowspan_map[tr_idx].keys()):
+                    while len(current_row) < prev_col_idx:
+                        current_row.append("")
+                    if prev_col_idx >= len(current_row):
+                        current_row.extend([""] * (prev_col_idx - len(current_row) + 1))
+                    if prev_col_idx < len(current_row) and current_row[prev_col_idx] == "":
                         value, remaining = rowspan_map[tr_idx][prev_col_idx]
-                        current_row.append(value)
+                        current_row[prev_col_idx] = value
                         if remaining > 1:
                             if tr_idx + 1 >= len(rowspan_map):
                                 rowspan_map.append({})
                             rowspan_map[tr_idx + 1][prev_col_idx] = (value, remaining - 1)
 
-            for td_content in td_matches:
-                rowspan_attr = re.search(r'rowspan=["\']?(\d+)', td_content, re.IGNORECASE)
-                colspan_attr = re.search(r'colspan=["\']?(\d+)', td_content, re.IGNORECASE)
+            for cell_match in re.finditer(
+                r"<t[hd]([^>]*)>(.*?)</t[hd]>", tr_content, re.DOTALL | re.IGNORECASE
+            ):
+                attrs = cell_match.group(1)
+                inner_html = cell_match.group(2)
+                rowspan_attr = re.search(r'rowspan=["\']?(\d+)', attrs, re.IGNORECASE)
+                colspan_attr = re.search(r'colspan=["\']?(\d+)', attrs, re.IGNORECASE)
                 rowspan = int(rowspan_attr.group(1)) if rowspan_attr else 1
                 colspan = int(colspan_attr.group(1)) if colspan_attr else 1
-                cell_text = self._strip_html_tags(td_content).strip()
+                cell_text = self._strip_html_tags(inner_html).strip()
 
-                # 跳过已被 rowspan 占用的列位置
-                while col_idx < len(current_row):
+                while col_idx < len(current_row) and current_row[col_idx] != "":
                     col_idx += 1
+                while len(current_row) < col_idx:
+                    current_row.append("")
 
+                cell_col = col_idx
                 if rowspan > 1 or colspan > 1:
                     merge_info.append({
                         "row": tr_idx,
-                        "col": col_idx,
+                        "col": cell_col,
                         "rowspan": rowspan,
                         "colspan": colspan,
                     })
 
                 current_row.append(cell_text)
                 col_idx += 1
-                # colspan>1 时在逻辑网格中占位，合并时由 Word merge 消掉
                 for _ in range(colspan - 1):
                     current_row.append("")
                     col_idx += 1
 
-                # 记录 rowspan 向下延续
                 if rowspan > 1:
                     if tr_idx + 1 >= len(rowspan_map):
                         rowspan_map.append({})
                     for offset in range(1, rowspan):
-                        if tr_idx + offset >= len(rowspan_map):
+                        target_row = tr_idx + offset
+                        while target_row >= len(rowspan_map):
                             rowspan_map.append({})
-                        rowspan_map[tr_idx + offset][len(current_row) - 1] = (cell_text, rowspan - offset)
+                        rowspan_map[target_row][cell_col] = (cell_text, rowspan - offset)
 
-            all_rows.append(current_row)
+            if current_row:
+                all_rows.append(current_row)
 
         if not all_rows:
             return [], [], []
