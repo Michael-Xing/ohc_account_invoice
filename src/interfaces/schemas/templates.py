@@ -151,112 +151,61 @@ class VerificationResultParameters(BaseVerificationParameters):
     verification_plan: str = Field(default="", description="验证计划书编号")  # 验证结果书独有
 
 
-class BasicSpecificationServiceEnvironmentConditions(NullToDefaultModel):
-    """基本规格书-使用环境及条件"""
-    power_supply: str = Field(default="", description="电源")  # 使用环境及条件-电源
-    use_temperature_humidity_range: str = Field(default="", description="使用湿度范围")  # 使用环境及条件-使用温湿度范围
-    storage_and_transport_conditions: str = Field(default="", description="存储和运输环境")  # 使用环境及条件-存储和运输环境
-    durability: str = Field(default="", description="耐久性")  # 使用环境及条件-耐久性
-
-
-class BasicSpecificationSafetyProtectionInfo(NullToDefaultModel):
-    """基本规格书-安全保护信息"""
-    definitions_of_basic_safety: str = Field(default="", description="安全本质性能的定义(IEC60601-1中的基本性能)")  # 安全本质性能定义
-    device_classification: str = Field(default="", description="安全设备分类")  # 安全设备分类
-    equipment_safety_protection_and_warnings: str = Field(default="", description="对机器安全的保护和警告简述")  # 设备安全保护与警告
-    safety_protection: str = Field(default="", description="安全防护")  # 安全防护
-    safety_warning: str = Field(default="", description="安全警告")  # 安全警告
-    biological_alarms: str = Field(default="", description="生理学警报")  # 生理学警报
-    technical_alarms: str = Field(default="", description="技术警报")  # 技术警报
-
-
-class BasicSpecificationVariousSettings(NullToDefaultModel):
-    """基本规格书-各种设置"""
-    default_equipment_setting: str = Field(default="", description="默认出场设置")  # 设备默认出厂设置
-    date_time_settings: str = Field(default="", description="时间和日期设置")  # 时间日期设置
-
-
-class BasicSpecificationMaintenanceAndDisposal(NullToDefaultModel):
-    """基本规格书-保存维护和废弃处理"""
-    maintenance: str = Field(default="", description="维护保存")  # 日常维护与保存
-    disposal: str = Field(default="", description="废弃处理")  # 废弃处理
-
-
 class BasicSpecificationParameters(BaseTemplateParameters):
     """基本规格书参数"""
-    # 基本信息类字段
-    product_model: str = Field(default="", description="商品型号，使用'/'分割，多值用于生成机种表和其他位置")  # 商品型号
-    sales_name: str = Field(default="", description="贩卖名称，使用'/'分割，多值用于生成机种表和其他位置")  # 贩卖名称
-    theme_no: str = Field(default="", description="项目NO")  # 项目编号
-    production_area: str = Field(default="", description="生产地")  # 生产地
 
-    # 参考文件和适用范围
-    reference_document: str = Field(default="", description="参考文件")  # 参考文件
-    scope: str = Field(default="", description="适用范围")  # 适用范围
+    # ========== 基本信息 ==========
+    product_model: str = Field(default="", description="商品型号，使用'/'分割，多值用于生成机种表和其他位置")
+    sales_name: str = Field(default="", description="贩卖名称，使用'/'分割，多值用于生成机种表和其他位置")
+    theme_no: str = Field(default="", description="项目NO")
+    production_area: str = Field(default="", description="生产地")
 
-    # 术语定义（Markdown表格）
-    definition_term_table: str = Field(default="", description="术语定义，Markdown表格，需转换为Word表格")  # 术语定义表格
+    # ========== 产品概述 ==========
+    product_overview: str = Field(default="", description="产品设计规格书中的产品概述，支持Markdown语法")
 
-    # 使用目的与对象
-    use_purpose: str = Field(default="", description="使用目的，支持Markdown语法")  # 使用目的
-    intended_patients: str = Field(default="", description="对象患者，支持Markdown语法")  # 对象患者
-    intended_user: str = Field(default="", description="使用对象，支持Markdown语法")  # 使用对象
-    environment: str = Field(default="", description="适用环境，支持Markdown语法")  # 适用环境
-    use_type: str = Field(default="", description="使用种类/医疗目的，支持Markdown语法")  # 使用种类/医疗目的
+    # ========== 参考文件和适用范围 ==========
+    reference_document: str = Field(default="", description="参考文件")
+    scope: str = Field(default="", description="适用范围，支持Markdown语法")
 
-    # 机能构成（Markdown表格）
-    component_table: str = Field(default="", description="机能构成，Markdown表格，需转换为Word表格")  # 机能构成表格
+    # ========== 术语定义 ==========
+    definition_term_table: str = Field(default="", description="定义术语，支持Markdown语法")
 
-    # 外观图片列表（字符串形式，例如 "['image_url1', 'image_url2']"，在使用时会转换为列表）
-    appearance_image: str = Field(default="", description="外观图URL列表字符串，将下载并按顺序插入到同一占位符位置")  # 外观图片URL列表
+    # ========== 使用目的与对象 ==========
+    use_purpose: str = Field(default="", description="商品目的/使用范围，支持Markdown语法")
+    intended_patients: str = Field(default="", description="目标用户或患者，支持Markdown语法")
+    intended_user: str = Field(default="", description="使用者或操作者，支持Markdown语法")
+    environment: str = Field(default="", description="使用场所，支持Markdown语法")
 
-    # 其他规格信息
-    dimensions_and_weight: str = Field(default="", description="尺寸及重量，支持Markdown语法")  # 尺寸及重量
-    regulations_and_standards: str = Field(default="", description="政策法规，支持Markdown语法")  # 政策法规
+    # ========== 尺寸及重量 ==========
+    dimensions: str = Field(default="", description="尺寸，支持Markdown语法")
+    weight: str = Field(default="", description="质量，支持Markdown语法")
 
-    # 使用环境及条件
-    service_environment_conditions: BasicSpecificationServiceEnvironmentConditions = Field(
-        default_factory=BasicSpecificationServiceEnvironmentConditions,
-        description="使用环境及条件",
-    )
+    # ========== 法律法规及标准 ==========
+    regulations_and_standards: str = Field(default="", description="法律法规及标准，支持Markdown语法")
 
-    # 材料与附属品
-    main_unit: str = Field(default="", description="材料主题，支持Markdown语法")  # 设备本体相关说明
-    accessories: str = Field(default="", description="附属品，支持Markdown语法")  # 附属品说明
+    # ========== 附带品或附件 ==========
+    accessories: str = Field(default="", description="附带品或附件，支持Markdown语法")
 
-    # 安全保护信息
-    safety_protection_info: BasicSpecificationSafetyProtectionInfo = Field(
-        default_factory=BasicSpecificationSafetyProtectionInfo,
-        description="安全保护信息",
-    )
+    # ========== 机能及性能 ==========
+    performance_table: str = Field(default="", description="机能及性能，支持Markdown语法")
 
-    # 各种设置
-    various_settings: BasicSpecificationVariousSettings = Field(
-        default_factory=BasicSpecificationVariousSettings,
-        description="各种设置",
-    )
+    # ========== 安全性和风险评估 ==========
+    safety_protection_info: str = Field(default="", description="安全性和风险评估，支持Markdown语法")
 
-    # 标签与包装
-    labeling: str = Field(default="", description="标签，支持Markdown语法")  # 标签信息
-    packaging: str = Field(default="", description="打包说明，支持Markdown语法")  # 打包说明
+    # ========== 出厂设定 ==========
+    various_settings: str = Field(default="", description="出厂设定，支持Markdown语法")
 
-    # 保存维护和废弃处理
-    maintenance_and_disposal: BasicSpecificationMaintenanceAndDisposal = Field(
-        default_factory=BasicSpecificationMaintenanceAndDisposal,
-        description="保存维护和废弃处理",
-    )
+    # ========== 维修和保养 & 废弃处理 ==========
+    maintenance: str = Field(default="", description="维修和保养，支持Markdown语法")
+    disposal: str = Field(default="", description="废弃处理，支持Markdown语法")
 
-    # 功能说明（Markdown表格）
-    function_table: str = Field(default="", description="功能说明，Markdown表格，需转换为Word表格")  # 功能说明表格
-
-    # 功能块结构图（字符串形式，例如 "['image_url1', 'image_url2']"，在使用时会转换为列表）
-    function_block_image: str = Field(default="", description="功能块图URL列表字符串，将下载并按顺序插入到同一占位符位置")  # 功能块图URL列表
-
-    # 功能模块（Markdown表格，列项相同内容需要合并单元格）
-    function_block_table: str = Field(default="", description="功能模块，Markdown表格，需转换为Word表格并按列合并相同内容")  # 功能模块表格
-
-    # 性能说明（Markdown表格，列项相同内容需要合并单元格）
-    performance_table: str = Field(default="", description="性能说明，Markdown表格，需转换为Word表格并按列合并相同内容")  # 性能说明表格
+    # ========== 文件编号 ==========
+    dimensional_number: str = Field(default="", description="外形尺寸图文件编号")
+    dustomer_specific_numner: str = Field(default="", description="客先仕样图")
+    packing_instructions_number: str = Field(default="", description="梱包说明图")
+    igs_number: str = Field(default="", description="IGS")
+    instruction_manual_number: str = Field(default="", description="使用说明书图纸")
+    packing_specification_number: str = Field(default="", description="包装仕样图文件编号")
 
 
 class FollowUpDRMinutesParameters(BaseTemplateParameters):

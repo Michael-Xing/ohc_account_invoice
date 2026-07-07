@@ -26,28 +26,19 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
     # 需要转换为 Word 表格的 markdown 字段
     MARKDOWN_TABLE_FIELDS = {
         "definition_term_table",
-        "component_table",
-        "function_table",
-        "function_block_table",
         "performance_table",
     }
 
     # 图片列表字段
-    IMAGE_LIST_FIELDS = {
-        "appearance_image",
-        "function_block_image",
-    }
+    IMAGE_LIST_FIELDS = set()
 
     # 派生的商品型号表字段占位符
     PRODUCT_MODEL_TABLE_FIELD = "product_model_table"
 
     # 需要行首缩进4字符的字段
     INDENT_4_CHARS_FIELDS = {
-        "dimensions_and_weight",
-        "power_supply",
-        "use_temperature_humidity_range",
-        "storage_and_transport_conditions",
-        "durability",
+        "dimensions",
+        "weight",
     }
 
     def fill_template(
@@ -116,6 +107,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
 
     def _process_tables(self, doc: Document, parameters: Dict[str, Any]) -> None:
         """处理所有表格中的占位符：markdown表格、商品型号表、图片等"""
+        target_fields = {"definition_term_table", "performance_table", "scope"}
         for table in doc.tables:
             for row in table.rows:
                 for cell in row.cells:
@@ -124,17 +116,31 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                     if not placeholders:
                         continue
 
+                    target_hits = sorted(set(placeholders) & target_fields)
+                    if target_hits:
+                        logger.info("表格单元格命中目标占位符: %s, 单元格文本: %s", target_hits, repr(text[:200]))
+
                     for placeholder in placeholders:
                         key = placeholder
                         is_table_field = key in self.MARKDOWN_TABLE_FIELDS
                         is_image_field = key in self.IMAGE_LIST_FIELDS
                         is_special_field = is_table_field or is_image_field or key == self.PRODUCT_MODEL_TABLE_FIELD
 
+                        if key in target_fields:
+                            logger.info(
+                                "表格字段 %s 处理前: is_table_field=%s, value_exists=%s",
+                                key,
+                                is_table_field,
+                                key in parameters and parameters[key] not in (None, ""),
+                            )
+
                         if is_table_field:
                             markdown_text = str(self._get_param(parameters, key) or "").strip()
                             if markdown_text:
                                 self._clear_cell(cell)
                                 self._insert_markdown_table_into_cell(cell, markdown_text, merge_same_column=False)
+                                if key in target_fields:
+                                    logger.info("表格字段 %s 已插入单元格表格", key)
                         elif key == self.PRODUCT_MODEL_TABLE_FIELD:
                             rows = parameters.get(self.PRODUCT_MODEL_TABLE_FIELD) or []
                             if rows:
@@ -148,20 +154,20 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                                 # 占位符已通过 clear_cell 清除，无需再次清理
                                 continue
                         elif not is_special_field:
-                            # 非特殊字段：检测是否是 markdown 表格
                             value = self._get_param(parameters, key)
                             markdown_text = str(value or "").strip()
 
-                            # 如果值是默认文本，跳过表格检测
                             if markdown_text and not self._is_missing_text(markdown_text):
                                 if self._is_markdown_table(markdown_text):
-                                    # 是表格，插入表格
                                     logger.info(f"在表格单元格中检测到 markdown 表格字段: {key}")
                                     self._clear_cell(cell)
                                     self._insert_markdown_table_into_cell(cell, markdown_text, merge_same_column=False)
-                                    continue  # 已处理，跳过后续清理
+                                    continue
                                 else:
                                     logger.debug(f"字段 {key} 不是 markdown 表格，内容预览: {markdown_text[:100]}...")
+
+                            self._replace_placeholder_in_cell(cell, key, markdown_text)
+                            continue
 
                         # 占位符处理完，避免重复文本留在单元格中（只在段落级别清理，保留格式）
                         if f"{{{{{key}}}}}" in cell.text:
@@ -191,19 +197,24 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                                                 new_run.font.size = font_size
                                             new_run.font.bold = is_bold
                                             new_run.font.italic = is_italic
-                                            if font_color:
-                                                new_run.font.color = font_color
+                                            if font_color and font_color.rgb:
+                                                new_run.font.color.rgb = font_color.rgb
                                     else:
                                         # 没有 run，直接替换
                                         paragraph.text = paragraph.text.replace(f"{{{{{key}}}}}", "")
 
     def _process_paragraphs(self, doc: Document, parameters: Dict[str, Any]) -> None:
         """处理文档中普通段落的占位符，将 markdown 文本转换为段落/列表/加粗等结构"""
+        target_fields = {"definition_term_table", "performance_table", "scope"}
         for paragraph in list(doc.paragraphs):
             text = paragraph.text or ""
             placeholders = self._extract_placeholders(text)
             if not placeholders:
                 continue
+
+            target_hits = sorted(set(placeholders) & target_fields)
+            if target_hits:
+                logger.info("段落命中目标占位符: %s, 段落文本: %s", target_hits, repr(text[:200]))
 
             # 处理每个占位符
             for placeholder in placeholders:
@@ -219,6 +230,15 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                 is_image_field = key in self.IMAGE_LIST_FIELDS
                 is_special_field = is_table_field or is_image_field
 
+                if key in target_fields:
+                    logger.info(
+                        "目标字段 %s 处理前: is_table_field=%s, is_standalone=%s, value_exists=%s",
+                        key,
+                        is_table_field,
+                        is_standalone,
+                        key in parameters and parameters[key] not in (None, ""),
+                    )
+
                 # 1）如果是 markdown 表格类字段或派生的商品型号表，占位符独占一行时直接在该位置插入 Word 表格
                 if is_table_field and is_standalone:
                     # 在删除之前保存插入位置
@@ -230,14 +250,50 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                         rows = parameters.get(self.PRODUCT_MODEL_TABLE_FIELD) or []
                         if rows:
                             self._insert_product_model_table_at_block(doc, parent, insert_idx, rows)
+                        else:
+                            p = doc.add_paragraph("")
+                            self._apply_paragraph_style(p, indent_4_chars=False)
+                            parent.insert(insert_idx, p._element)
                     else:
                         value = self._get_param(parameters, key)
                         markdown_text = str(value or "").strip()
                         if markdown_text:
-                            # 不再进行列合并
-                            merge_same = False
-                            self._insert_markdown_table_at_block(doc, parent, insert_idx, markdown_text, merge_same)
+                            parts = self._parse_mixed_markdown(markdown_text)
+                            has_table = any(part["type"] == "table" for part in parts)
+                            has_text = any(part["type"] == "text" for part in parts)
+                            if has_table and has_text:
+                                logger.info("字段 %s 独占但为混合内容，使用混合渲染", key)
+                                self._render_markdown_block(doc, parent, insert_idx, markdown_text, indent_4_chars=False)
+                            else:
+                                # 不再进行列合并
+                                merge_same = False
+                                self._insert_markdown_table_at_block(doc, parent, insert_idx, markdown_text, merge_same)
+                        else:
+                            markdown_text = self._missing_text()
+                            p = doc.add_paragraph("")
+                            self._apply_paragraph_style(p, indent_4_chars=False)
+                            parent.insert(insert_idx, p._element)
+                    if key in target_fields:
+                        logger.info("字段 %s 已按独占表格字段处理", key)
                     break  # 处理完这个段落，跳出循环
+                elif is_table_field:
+                    # 表格字段即使不是独占占位符，也按混合 markdown 渲染，避免带标题内容被跳过
+                    value = self._get_param(parameters, key)
+                    markdown_text = str(value or "").strip()
+                    insert_idx = parent.index(parent_element)
+                    parent.remove(parent_element)
+                    if self._is_missing_text(markdown_text):
+                        markdown_text = self._missing_text()
+                    try:
+                        self._render_markdown_block(doc, parent, insert_idx, markdown_text, indent_4_chars=False)
+                    except Exception:
+                        logger.exception("字段 %s 非独占表格字段渲染失败", key)
+                        fallback_p = doc.add_paragraph("")
+                        self._apply_paragraph_style(fallback_p, indent_4_chars=False)
+                        parent.insert(insert_idx, fallback_p._element)
+                    if key in target_fields:
+                        logger.info("字段 %s 已按非独占表格字段处理", key)
+                    break
                 elif is_image_field:
                     # 3）图片列表字段：在段落位置插入图片（无论是否独占一行）
                     image_param = self._get_param(parameters, key)
@@ -299,19 +355,20 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                                                     indent_4_chars=indent_4_chars)
                     break  # 处理完这个段落，跳出循环
                 elif not is_special_field:
-                    # 非独占一行的占位符，且不是特殊字段：尝试处理 markdown（但不处理表格，因为表格需要独占一行）
                     value = self._get_param(parameters, key)
                     markdown_text = str(value or "").strip()
 
-                    # 如果包含 markdown 格式（列表、加粗等），需要特殊处理
                     if markdown_text and not self._is_missing_text(markdown_text):
-                        # 检查是否包含 markdown 列表或其他格式
                         if self._contains_markdown_formatting(markdown_text):
-                            # 对于非独占一行的占位符，如果包含 markdown 格式，需要替换整个段落
-                            # 这里我们简化处理：如果包含列表等复杂格式，提示需要独占一行
-                            # 否则按普通文本处理（在 _fallback_text_replace 中处理）
-                            pass  # 让 _fallback_text_replace 处理简单情况
-                    break  # 处理完这个段落，跳出循环
+                            pass
+
+                    self._replace_placeholder_in_paragraph(
+                        paragraph,
+                        key,
+                        markdown_text,
+                        indent_4_chars=key in self.INDENT_4_CHARS_FIELDS,
+                    )
+                    break
 
     def _fallback_text_replace(self, doc: Document, flat_parameters: Dict[str, str]) -> None:
         """兜底的纯文本占位符替换，避免遗漏简单字符串场景，同时保留原有格式"""
@@ -320,10 +377,8 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
             """检查文本是否包含占位符"""
             if not text:
                 return False
-            # 排除图片列表字段和表格字段的占位符
-            excluded_fields = self.IMAGE_LIST_FIELDS | self.MARKDOWN_TABLE_FIELDS | {self.PRODUCT_MODEL_TABLE_FIELD}
             for key in flat_parameters.keys():
-                if key not in excluded_fields and f"{{{{{key}}}}}" in text:
+                if f"{{{{{key}}}}}" in text:
                     return True
             return False
 
@@ -736,14 +791,24 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
 
         支持混合内容：文本段落 + 表格 + 文本段落
         """
+        target_field_names = {"performance_table", "definition_term_table", "scope"}
+        logger.info(
+            "开始渲染 markdown block，长度=%d，插入位置=%s",
+            len(markdown_text or ""),
+            insert_idx,
+        )
         # 解析混合内容
         parts = self._parse_mixed_markdown(markdown_text)
+        logger.info("解析后的 parts 数量=%d", len(parts))
+        for idx, part in enumerate(parts):
+            logger.debug("part[%d]: type=%s, preview=%s", idx, part.get("type"), repr((part.get("content") or "")[:120]))
 
         if not parts:
             # 如果没有解析出任何内容，插入一个空段落
             p = doc.add_paragraph("")
             self._apply_paragraph_style(p, indent_4_chars=indent_4_chars)
             parent.insert(insert_idx, p._element)
+            logger.info("parts 为空，已插入空段落")
             return
 
         # 记录当前插入位置
@@ -897,7 +962,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         run.font.name = "微软雅黑"
         run._element.rPr.rFonts.set(qn("w:eastAsia"), "微软雅黑")
         run.font.size = Pt(10)
-        run.font.color.rgb = RGBColor(115, 159, 215)  # RGB(115, 159, 215)
+        run.font.color.rgb = RGBColor(115, 159, 215)
         run.font.bold = bool(bold)
 
     def _apply_paragraph_style(self, paragraph, indent_4_chars: bool = False) -> None:
@@ -1204,37 +1269,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         value = None
 
         # 先从顶层参数中查找
-        if key in parameters:
-            value = parameters[key]
-        else:
-            # 针对已知嵌套结构的简单展开映射
-            nested_mappings = {
-                "power_supply": ("service_environment_conditions", "power_supply"),
-                "use_temperature_humidity_range": ("service_environment_conditions", "use_temperature_humidity_range"),
-                "storage_and_transport_conditions": (
-                "service_environment_conditions", "storage_and_transport_conditions"),
-                "durability": ("service_environment_conditions", "durability"),
-                "definitions_of_basic_safety": ("safety_protection_info", "definitions_of_basic_safety"),
-                "device_classification": ("safety_protection_info", "device_classification"),
-                "equipment_safety_protection_and_warnings": (
-                    "safety_protection_info",
-                    "equipment_safety_protection_and_warnings",
-                ),
-                "safety_protection": ("safety_protection_info", "safety_protection"),
-                "safety_warning": ("safety_protection_info", "safety_warning"),
-                "biological_alarms": ("safety_protection_info", "biological_alarms"),
-                "technical_alarms": ("safety_protection_info", "technical_alarms"),
-                "default_equipment_setting": ("various_settings", "default_equipment_setting"),
-                "date_time_settings": ("various_settings", "date_time_settings"),
-                "maintenance": ("maintenance_and_disposal", "maintenance"),
-                "disposal": ("maintenance_and_disposal", "disposal"),
-            }
-
-            if key in nested_mappings:
-                parent_key, child_key = nested_mappings[key]
-                parent_val = parameters.get(parent_key)
-                if isinstance(parent_val, dict):
-                    value = parent_val.get(child_key)
+        value = parameters.get(key)
 
         # 检查是否是特殊字段（表格字段或图片字段）
         is_table_field = key in self.MARKDOWN_TABLE_FIELDS or key == self.PRODUCT_MODEL_TABLE_FIELD
@@ -1282,6 +1317,58 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                 # 如果值为 None，使用默认文本
                 flat[key] = self._missing_text()
         return flat
+
+    def _replace_placeholder_in_cell(self, cell, key: str, value: str) -> None:
+        placeholder = f"{{{{{key}}}}}"
+        for paragraph in cell.paragraphs:
+            if placeholder not in paragraph.text:
+                continue
+
+            replacement = value if value else self._missing_text()
+            if paragraph.runs:
+                first_run = paragraph.runs[0]
+                is_bold = first_run.font.bold
+                is_italic = first_run.font.italic
+
+                new_text = paragraph.text.replace(placeholder, replacement)
+                for run in list(paragraph.runs):
+                    run.clear()
+
+                if new_text:
+                    new_run = paragraph.add_run(new_text)
+                    self._apply_font(new_run, bold=is_bold)
+                    new_run.font.italic = is_italic
+            else:
+                paragraph.text = paragraph.text.replace(placeholder, replacement)
+                for run in paragraph.runs:
+                    self._apply_font(run, bold=False)
+            break
+
+    def _replace_placeholder_in_paragraph(self, paragraph, key: str, value: str, indent_4_chars: bool = False) -> None:
+        placeholder = f"{{{{{key}}}}}"
+        if placeholder not in paragraph.text:
+            return
+
+        replacement = value if value else self._missing_text()
+        if paragraph.runs:
+            first_run = paragraph.runs[0]
+            is_bold = first_run.font.bold
+            is_italic = first_run.font.italic
+
+            new_text = paragraph.text.replace(placeholder, replacement)
+            for run in list(paragraph.runs):
+                run.clear()
+
+            if new_text:
+                new_run = paragraph.add_run(new_text)
+                self._apply_font(new_run, bold=is_bold)
+                new_run.font.italic = is_italic
+            paragraph.paragraph_format.first_line_indent = Cm(1.48 if indent_4_chars else 0.74)
+        else:
+            paragraph.text = paragraph.text.replace(placeholder, replacement)
+            paragraph.paragraph_format.first_line_indent = Cm(1.48 if indent_4_chars else 0.74)
+            for run in paragraph.runs:
+                self._apply_font(run, bold=False)
 
     def _clear_cell(self, cell) -> None:
         """清空单元格内容"""
