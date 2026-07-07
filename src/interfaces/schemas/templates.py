@@ -161,43 +161,43 @@ class BasicSpecificationParameters(BaseTemplateParameters):
     production_area: str = Field(default="", description="生产地")
 
     # ========== 产品概述 ==========
-    product_overview: str = Field(default="", description="产品设计规格书中的产品概述，支持Markdown语法")
+    product_overview: str = Field(default="", description="产品设计规格书中的产品概述，支持复合Markdown，包含文本、表格、图片")
 
     # ========== 参考文件和适用范围 ==========
-    reference_document: str = Field(default="", description="参考文件")
-    scope: str = Field(default="", description="适用范围，支持Markdown语法")
+    reference_document: str = Field(default="", description="参考文件，支持复合Markdown，包含文本、表格、图片")
+    scope: str = Field(default="", description="适用范围，支持复合Markdown，包含文本、表格、图片")
 
     # ========== 术语定义 ==========
-    definition_term_table: str = Field(default="", description="定义术语，支持Markdown语法")
+    definition_term_table: str = Field(default="", description="定义术语，支持复合Markdown，包含文本、表格、图片")
 
     # ========== 使用目的与对象 ==========
-    use_purpose: str = Field(default="", description="商品目的/使用范围，支持Markdown语法")
-    intended_patients: str = Field(default="", description="目标用户或患者，支持Markdown语法")
-    intended_user: str = Field(default="", description="使用者或操作者，支持Markdown语法")
-    environment: str = Field(default="", description="使用场所，支持Markdown语法")
+    use_purpose: str = Field(default="", description="商品目的/使用范围，支持复合Markdown，包含文本、表格、图片")
+    intended_patients: str = Field(default="", description="目标用户或患者，支持复合Markdown，包含文本、表格、图片")
+    intended_user: str = Field(default="", description="使用者或操作者，支持复合Markdown，包含文本、表格、图片")
+    environment: str = Field(default="", description="使用场所，支持复合Markdown，包含文本、表格、图片")
 
     # ========== 尺寸及重量 ==========
-    dimensions: str = Field(default="", description="尺寸，支持Markdown语法")
-    weight: str = Field(default="", description="质量，支持Markdown语法")
+    dimensions: str = Field(default="", description="尺寸，支持复合Markdown，包含文本、表格、图片")
+    weight: str = Field(default="", description="质量，支持复合Markdown，包含文本、表格、图片")
 
     # ========== 法律法规及标准 ==========
-    regulations_and_standards: str = Field(default="", description="法律法规及标准，支持Markdown语法")
+    regulations_and_standards: str = Field(default="", description="法律法规及标准，支持复合Markdown，包含文本、表格、图片")
 
     # ========== 附带品或附件 ==========
-    accessories: str = Field(default="", description="附带品或附件，支持Markdown语法")
+    accessories: str = Field(default="", description="附带品或附件，支持复合Markdown，包含文本、表格、图片")
 
     # ========== 机能及性能 ==========
-    performance_table: str = Field(default="", description="机能及性能，支持Markdown语法")
+    performance_table: str = Field(default="", description="机能及性能，支持复合Markdown，包含文本、表格、图片")
 
     # ========== 安全性和风险评估 ==========
-    safety_protection_info: str = Field(default="", description="安全性和风险评估，支持Markdown语法")
+    safety_protection_info: str = Field(default="", description="安全性和风险评估，支持复合Markdown，包含文本、表格、图片")
 
     # ========== 出厂设定 ==========
-    various_settings: str = Field(default="", description="出厂设定，支持Markdown语法")
+    various_settings: str = Field(default="", description="出厂设定，支持复合Markdown，包含文本、表格、图片")
 
     # ========== 维修和保养 & 废弃处理 ==========
-    maintenance: str = Field(default="", description="维修和保养，支持Markdown语法")
-    disposal: str = Field(default="", description="废弃处理，支持Markdown语法")
+    maintenance: str = Field(default="", description="维修和保养，支持复合Markdown，包含文本、表格、图片")
+    disposal: str = Field(default="", description="废弃处理，支持复合Markdown，包含文本、表格、图片")
 
     # ========== 文件编号 ==========
     dimensional_number: str = Field(default="", description="外形尺寸图文件编号")

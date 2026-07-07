@@ -239,8 +239,8 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                         key in parameters and parameters[key] not in (None, ""),
                     )
 
-                # 1）如果是 markdown 表格类字段或派生的商品型号表，占位符独占一行时直接在该位置插入 Word 表格
-                if is_table_field and is_standalone:
+                # 1）对于 definition_term_table / performance_table，即使独占占位符也优先走混合渲染，支持文本+表格+图片
+                if is_table_field and is_standalone and key not in target_fields:
                     # 在删除之前保存插入位置
                     insert_idx = parent.index(parent_element)
                     # 删除占位符段落
@@ -706,6 +706,18 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
             line = lines[i]
             line_stripped = line.strip()
 
+            # 检查是否是图片行（markdown 图片语法或 HTML img 标签）
+            image_url = self._extract_image_url(line_stripped)
+            if image_url:
+                if current_text_lines:
+                    text_content = "\n".join(current_text_lines)
+                    if text_content.strip():
+                        parts.append({"type": "text", "content": text_content})
+                    current_text_lines = []
+                parts.append({"type": "image", "content": image_url})
+                i += 1
+                continue
+
             # 检查从当前行开始是否是表格的开始
             # 表格需要至少2行：表头行和分隔符行
             if i + 1 < len(lines):
@@ -822,27 +834,29 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                 for element in text_elements:
                     parent.insert(current_idx, element)
                     current_idx += 1
+            elif part["type"] == "image":
+                image_url = part.get("content", "")
+                if image_url:
+                    self._insert_images_at_block(doc, parent, current_idx, [image_url])
+                    current_idx += 1
             elif part["type"] == "table":
-                # 处理表格内容
-                table_content = part["content"]
-                # 插入表格前的缩进段落
-                indent_para_before = doc.add_paragraph()
-                indent_para_before.paragraph_format.left_indent = Cm(0.74)
-                indent_para_before.paragraph_format.right_indent = Cm(0.74)
-                parent.insert(current_idx, indent_para_before._element)
-                current_idx += 1
+                table_content = part.get("content", "")
+                if table_content:
+                    indent_para_before = doc.add_paragraph()
+                    indent_para_before.paragraph_format.left_indent = Cm(0.74)
+                    indent_para_before.paragraph_format.right_indent = Cm(0.74)
+                    parent.insert(current_idx, indent_para_before._element)
+                    current_idx += 1
 
-                # 插入表格
-                self._insert_markdown_table_at_position(doc, parent, current_idx, table_content,
-                                                        merge_same_column=False)
-                current_idx += 1  # 表格本身占一个位置
+                    self._insert_markdown_table_at_position(doc, parent, current_idx, table_content,
+                                                            merge_same_column=False)
+                    current_idx += 1
 
-                # 插入表格后的缩进段落
-                indent_para_after = doc.add_paragraph()
-                indent_para_after.paragraph_format.left_indent = Cm(0.74)
-                indent_para_after.paragraph_format.right_indent = Cm(1.48)
-                parent.insert(current_idx, indent_para_after._element)
-                current_idx += 1
+                    indent_para_after = doc.add_paragraph()
+                    indent_para_after.paragraph_format.left_indent = Cm(0.74)
+                    indent_para_after.paragraph_format.right_indent = Cm(1.48)
+                    parent.insert(current_idx, indent_para_after._element)
+                    current_idx += 1
 
     def _render_text_to_elements(self, doc: Document, text: str, indent_4_chars: bool = False) -> List:
         """将文本内容渲染为段落元素列表"""
@@ -1232,6 +1246,26 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
 
         # 去重并返回
         return list(dict.fromkeys(urls))  # 保持顺序的去重
+
+    def _extract_image_url(self, line: str) -> Optional[str]:
+        """
+        从文本行中提取图片 URL
+
+        支持格式：
+        - Markdown 图片语法：![alt](url)
+        - HTML img 标签：<img src="url"> 或 <img src='url'>
+        """
+        # Markdown 图片语法：![alt](url)
+        md_match = re.search(r'!\[.*?\]\((.*?)\)', line)
+        if md_match:
+            return md_match.group(1)
+
+        # HTML img 标签：<img src="url"> 或 <img src='url'>
+        html_match = re.search(r'<img[^>]+src=["\'](.*?)["\']', line, re.IGNORECASE)
+        if html_match:
+            return html_match.group(1)
+
+        return None
 
     def _download_image(self, url: str) -> bytes:
         """下载图片内容，失败时返回空字节串"""
