@@ -440,12 +440,14 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         for paragraph in doc.paragraphs:
             replace_in_runs(paragraph, flat_parameters)
 
-        # 处理表格单元格：只替换包含占位符的单元格
+        # 处理表格单元格：只替换包含占位符的单元格（先保存列宽，避免被重写）
         for table in doc.tables:
+            saved_widths = self._preserve_column_widths(table)
             for row in table.rows:
                 for cell in row.cells:
                     for paragraph in cell.paragraphs:
                         replace_in_runs(paragraph, flat_parameters)
+            self._restore_column_widths(table, saved_widths)
 
     def _insert_product_model_table(self, cell, rows: List[Dict[str, str]]) -> None:
         """在单元格中插入商品型号表"""
