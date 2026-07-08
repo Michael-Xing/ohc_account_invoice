@@ -199,6 +199,9 @@ class BasicSpecificationParameters(BaseTemplateParameters):
     maintenance: str = Field(default="", description="维修和保养，支持复合Markdown，包含文本、表格、图片")
     disposal: str = Field(default="", description="废弃处理，支持复合Markdown，包含文本、表格、图片")
 
+    # ========== 环境条件 ==========
+    environmental_conditions: str = Field(default="", description="环境条件，支持复合Markdown，包含文本、表格、图片")
+
     # ========== 文件编号 ==========
     dimensional_number: str = Field(default="", description="外形尺寸图文件编号")
     dustomer_specific_numner: str = Field(default="", description="客先仕样图")

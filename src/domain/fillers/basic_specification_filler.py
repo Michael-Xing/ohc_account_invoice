@@ -27,6 +27,7 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
     MARKDOWN_TABLE_FIELDS = {
         "definition_term_table",
         "performance_table",
+        "environmental_conditions",
     }
 
     # 图片列表字段
@@ -451,6 +452,9 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         headers = ["销售名称", "Catalog number", "OHQ商品型式名", "Basic UDI-DI code", "医疗器械类别分类"]
         table = cell.add_table(rows=1 + len(rows), cols=len(headers))
 
+        # 提取并保存原表格列宽
+        saved_widths = self._preserve_column_widths(table)
+
         # 设置表头
         hdr_cells = table.rows[0].cells
         for idx, header in enumerate(headers):
@@ -466,6 +470,9 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
             row_cells[2].text = data.get("ohq_product_model", "")
             row_cells[3].text = data.get("basic_udi_di_code", "")
             row_cells[4].text = data.get("device_category", "")
+
+        # 恢复列宽并启用自动换行
+        self._restore_column_widths(table, saved_widths)
 
         # 应用正文字体样式
         for row in table.rows:
@@ -480,6 +487,9 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
         headers = ["销售名称", "Catalog number", "OHQ商品型式名", "Basic UDI-DI code", "医疗器械类别分类"]
         table = doc.add_table(rows=1 + len(rows), cols=len(headers))
 
+        # 提取并保存原表格列宽
+        saved_widths = self._preserve_column_widths(table)
+
         # 设置表头
         hdr_cells = table.rows[0].cells
         for idx, header in enumerate(headers):
@@ -495,6 +505,9 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
             row_cells[2].text = data.get("ohq_product_model", "")
             row_cells[3].text = data.get("basic_udi_di_code", "")
             row_cells[4].text = data.get("device_category", "")
+
+        # 恢复列宽并启用自动换行
+        self._restore_column_widths(table, saved_widths)
 
         # 应用正文字体样式
         for row in table.rows:
@@ -1053,6 +1066,48 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                             # 如果不是最后一行，添加换行符
                             if idx < len(lines) - 1:
                                 paragraph.add_run().add_break()
+
+    def _preserve_column_widths(self, table) -> List[Optional[int]]:
+        """从表格中提取每列的宽度（单位 twips），用于后续恢复"""
+        widths: List[Optional[int]] = []
+        tbl_grid = table._element.find(qn("w:tblGrid"))
+        if tbl_grid is not None:
+            for grid_col in tbl_grid.findall(qn("w:gridCol")):
+                w = grid_col.get(qn("w:w"))
+                widths.append(int(w) if w is not None else None)
+        else:
+            # fallback：每列均分
+            for _ in range(len(table.columns)):
+                widths.append(None)
+        return widths
+
+    def _restore_column_widths(self, table, widths: List[Optional[int]]) -> None:
+        """将提取的列宽恢复到表格，并强制每列启用自动换行"""
+        tbl_grid = table._element.find(qn("w:tblGrid"))
+        if tbl_grid is None:
+            tbl_grid = OxmlElement("w:tblGrid")
+            table._element.insert(0, tbl_grid)
+
+        # 清空旧的 gridCol，重新写入
+        for old in tbl_grid.findall(qn("w:gridCol")):
+            tbl_grid.remove(old)
+        for w in widths:
+            grid_col = OxmlElement("w:gridCol")
+            if w is not None:
+                grid_col.set(qn("w:w"), str(w))
+            tbl_grid.append(grid_col)
+
+        # 为每个单元格设置 tcPr.noWrap = False（允许换行）
+        for row in table.rows:
+            for col_idx, cell in enumerate(row.cells):
+                tc = cell._tc
+                tc_pr = tc.find(qn("w:tcPr"))
+                if tc_pr is None:
+                    tc_pr = OxmlElement("w:tcPr")
+                    tc.insert(0, tc_pr)
+                # 确保 noWrap 不为 true（默认允许换行）
+                if tc_pr.get(qn("w:noWrap")) == "1":
+                    del tc_pr.attrib[qn("w:noWrap")]
 
     def _merge_same_content_columns(self, table) -> None:
         """对表中每一列内容相同的连续单元格进行纵向合并"""
