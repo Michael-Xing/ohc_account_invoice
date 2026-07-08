@@ -108,8 +108,10 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
 
     def _process_tables(self, doc: Document, parameters: Dict[str, Any]) -> None:
         """处理所有表格中的占位符：markdown表格、商品型号表、图片等"""
-        target_fields = {"definition_term_table", "performance_table", "scope"}
+        target_fields = {"definition_term_table", "performance_table", "scope", "environmental_conditions"}
         for table in doc.tables:
+            # 保存列宽，避免单元格内容写入时破坏
+            saved_widths = self._preserve_column_widths(table)
             for row in table.rows:
                 for cell in row.cells:
                     text = cell.text or ""
@@ -137,11 +139,14 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
 
                         if is_table_field:
                             markdown_text = str(self._get_param(parameters, key) or "").strip()
-                            if markdown_text:
+                            if markdown_text and self._is_markdown_table(markdown_text):
                                 self._clear_cell(cell)
                                 self._insert_markdown_table_into_cell(cell, markdown_text, merge_same_column=False)
                                 if key in target_fields:
                                     logger.info("表格字段 %s 已插入单元格表格", key)
+                            else:
+                                # 内容不是 markdown 表格，按普通文本处理
+                                self._replace_placeholder_in_cell(cell, key, markdown_text)
                         elif key == self.PRODUCT_MODEL_TABLE_FIELD:
                             rows = parameters.get(self.PRODUCT_MODEL_TABLE_FIELD) or []
                             if rows:
@@ -204,9 +209,12 @@ class BasicSpecificationFiller(TemplateFillerStrategy):
                                         # 没有 run，直接替换
                                         paragraph.text = paragraph.text.replace(f"{{{{{key}}}}}", "")
 
+            # 恢复列宽
+            self._restore_column_widths(table, saved_widths)
+
     def _process_paragraphs(self, doc: Document, parameters: Dict[str, Any]) -> None:
         """处理文档中普通段落的占位符，将 markdown 文本转换为段落/列表/加粗等结构"""
-        target_fields = {"definition_term_table", "performance_table", "scope"}
+        target_fields = {"definition_term_table", "performance_table", "scope", "environmental_conditions"}
         for paragraph in list(doc.paragraphs):
             text = paragraph.text or ""
             placeholders = self._extract_placeholders(text)
